@@ -91,8 +91,8 @@ export default defineConfig(() => {
           if (id.includes('vite/dist/client/client.mjs')) {
             return {
               code: code.replace(
-                'transport.connect(createHMRHandler(handleMessage));',
-                '/* HMR WebSocket connection disabled */'
+                /const transport = normalizeModuleRunnerTransport\([\s\S]*?\}\)\(\)\);/,
+                'const transport = normalizeModuleRunnerTransport({ connect() {}, disconnect() {}, send() {} });'
               ),
               map: null,
             };
