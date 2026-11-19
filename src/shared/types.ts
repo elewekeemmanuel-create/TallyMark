@@ -5,7 +5,7 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
-  authProvider: 'google' | 'magic_link';
+  authProvider: 'password' | 'google' | 'magic_link';
   createdAt: string;
 }
 

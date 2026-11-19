@@ -177,6 +177,10 @@ function TallymarkRoutes() {
   }
 
   if (pathname === '/login') {
+    if (user) {
+      setTimeout(() => navigate(business ? '/app' : '/onboarding', { replace: true }), 0);
+      return null;
+    }
     return (
       <Suspense fallback={<RouteLoadingFallback />}>
         <LoginPage
@@ -213,7 +217,7 @@ function TallymarkRoutes() {
   }
 
   const renderInShell = (title: string, content: React.ReactNode) => (
-    <AppShell business={business} title={title}>
+    <AppShell business={business} user={user} title={title}>
       <Suspense fallback={<RouteLoadingFallback />}>{content}</Suspense>
     </AppShell>
   );

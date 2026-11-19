@@ -88,7 +88,11 @@ export function SettingsPage({
           Settings
         </h1>
         <p className="mt-1 text-xs text-[#5C635D] dark:text-[#9BA39D]">
-          Signed in as <strong className="text-[#121513] dark:text-[#F4F1EA]">{user.email}</strong>
+          Signed in as{' '}
+          <strong className="text-[#121513] dark:text-[#F4F1EA]">{user.name || user.email}</strong>
+          {user.name && user.name !== user.email && (
+            <span className="ml-1 text-[#5C635D] dark:text-[#9BA39D]">({user.email})</span>
+          )}
         </p>
       </div>
 

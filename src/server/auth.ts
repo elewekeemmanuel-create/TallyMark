@@ -49,10 +49,89 @@ export function clearSessionCookie(res: Response) {
   });
 }
 
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `scrypt:${salt}:${derived}`;
+}
+
+function verifyPassword(password: string, storedHash: string | null | undefined): boolean {
+  if (!storedHash || !storedHash.startsWith('scrypt:')) return false;
+  const parts = storedHash.split(':');
+  if (parts.length !== 3) return false;
+  const [, salt, hex] = parts;
+  const expected = Buffer.from(hex, 'hex');
+  const actual = crypto.scryptSync(password, salt, expected.length);
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+}
+
+export function registerPasswordUser(params: {
+  name: string;
+  email: string;
+  password: string;
+}): { ok: true; user: UserProfile } | { ok: false; code: 'DUPLICATE_EMAIL' } {
+  const email = params.email.trim().toLowerCase();
+  const displayName = params.name.trim() || email;
+  const passwordHash = hashPassword(params.password);
+
+  return runTransaction(() => {
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as { id: string } | undefined;
+    if (existing) {
+      return { ok: false as const, code: 'DUPLICATE_EMAIL' as const };
+    }
+    const id = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+    db.prepare(
+      'INSERT INTO users (id, email, name, auth_provider, password_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, email, displayName, 'password', passwordHash, createdAt);
+    return {
+      ok: true as const,
+      user: {
+        id,
+        email,
+        name: displayName,
+        authProvider: 'password' as const,
+        createdAt,
+      },
+    };
+  });
+}
+
+export function authenticatePasswordUser(params: {
+  email: string;
+  password: string;
+}): UserProfile | null {
+  const email = params.email.trim().toLowerCase();
+  const row = db
+    .prepare('SELECT id, email, name, auth_provider, password_hash, created_at FROM users WHERE email = ?')
+    .get(email) as
+    | {
+        id: string;
+        email: string;
+        name: string;
+        auth_provider: 'password' | 'google' | 'magic_link';
+        password_hash: string | null;
+        created_at: string;
+      }
+    | undefined;
+
+  if (!row || !verifyPassword(params.password, row.password_hash)) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name || row.email,
+    authProvider: row.auth_provider,
+    createdAt: row.created_at,
+  };
+}
+
 export function upsertUser(params: {
   email: string;
   name?: string;
-  authProvider: 'google' | 'magic_link';
+  authProvider: 'password' | 'google' | 'magic_link';
 }): UserProfile {
   const email = params.email.trim().toLowerCase();
   const fallbackName = email.split('@')[0] || 'Business Owner';
@@ -62,7 +141,7 @@ export function upsertUser(params: {
     const existing = db
       .prepare('SELECT id, email, name, auth_provider, created_at FROM users WHERE email = ?')
       .get(email) as
-      | { id: string; email: string; name: string; auth_provider: 'google' | 'magic_link'; created_at: string }
+      | { id: string; email: string; name: string; auth_provider: 'password' | 'google' | 'magic_link'; created_at: string }
       | undefined;
 
     if (existing) {
@@ -168,7 +247,7 @@ function lookupSqliteSession(token: string): { user: UserProfile; tokenHash: str
         id: string;
         email: string;
         name: string;
-        auth_provider: 'google' | 'magic_link';
+        auth_provider: 'password' | 'google' | 'magic_link';
         created_at: string;
       }
     | undefined;
@@ -184,7 +263,7 @@ function lookupSqliteSession(token: string): { user: UserProfile; tokenHash: str
     user: {
       id: row.id,
       email: row.email,
-      name: row.name,
+      name: row.name || row.email,
       authProvider: row.auth_provider,
       createdAt: row.created_at,
     },
@@ -228,11 +307,13 @@ export async function verifySupabaseJwt(token: string): Promise<UserProfile | nu
     if (!res.ok) return null;
     const data = (await res.json()) as any;
     if (!data?.id) return null;
+    const email = String(data.email || '');
+    const fullName = String(data.user_metadata?.full_name || data.user_metadata?.name || '').trim();
     return {
       id: String(data.id),
-      email: String(data.email || ''),
-      name: String(data.user_metadata?.full_name || data.user_metadata?.name || ''),
-      authProvider: data.app_metadata?.provider === 'google' ? 'google' : 'magic_link',
+      email,
+      name: fullName || email,
+      authProvider: data.app_metadata?.provider === 'google' ? 'google' : 'password',
       createdAt: String(data.created_at || new Date().toISOString()),
     };
   } catch {

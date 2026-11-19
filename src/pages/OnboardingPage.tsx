@@ -30,7 +30,12 @@ export function OnboardingPage({
             Set up your business receipt header
           </h1>
           <p className="mt-1.5 text-sm text-[#5C635D] dark:text-[#9BA39D]">
-            Signed in as <strong className="text-[#121513] dark:text-[#F4F1EA]">{user.email}</strong>. You can edit any of these details later in Settings.
+            Signed in as{' '}
+            <strong className="text-[#121513] dark:text-[#F4F1EA]">{user.name || user.email}</strong>
+            {user.name && user.name !== user.email && (
+              <span className="ml-1">({user.email})</span>
+            )}
+            . You can edit any of these details later in Settings.
           </p>
 
           <div className="mt-6">

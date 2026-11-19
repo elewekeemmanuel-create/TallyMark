@@ -393,16 +393,39 @@ export const api = {
       }
     );
   },
+  signUpWithPassword(name: string, email: string, password: string) {
+    return request<{ user: UserProfile; business: BusinessProfile | null; sessionToken: string }>(
+      '/api/auth/signup',
+      {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password }),
+      }
+    );
+  },
+  signInWithPassword(email: string, password: string) {
+    return request<{ user: UserProfile; business: BusinessProfile | null; sessionToken: string }>(
+      '/api/auth/login',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      }
+    );
+  },
   async getMe() {
     if (isSupabaseConfigured && supabase) {
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes.user) throw new ApiError('Authentication required', 401);
       const u = userRes.user;
+      const email = u.email || '';
+      const fullName =
+        (typeof u.user_metadata?.full_name === 'string' && u.user_metadata.full_name.trim()) ||
+        (typeof u.user_metadata?.name === 'string' && u.user_metadata.name.trim()) ||
+        '';
       const user: UserProfile = {
         id: u.id,
-        email: u.email || '',
-        name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || '',
-        authProvider: u.app_metadata?.provider === 'google' ? 'google' : 'magic_link',
+        email,
+        name: fullName || email,
+        authProvider: u.app_metadata?.provider === 'google' ? 'google' : 'password',
         createdAt: u.created_at || new Date().toISOString(),
       };
       const { data: bizRow, error: bizErr } = await supabase
@@ -410,7 +433,16 @@ export const api = {
         .select('*')
         .eq('owner_id', u.id)
         .maybeSingle();
-      if (bizErr) throw new ApiError(bizErr.message, 400);
+      if (bizErr) {
+        const isMissingTable =
+          bizErr.code === 'PGRST205' ||
+          bizErr.code === '42P01' ||
+          (bizErr.message || '').includes("public.businesses");
+        if (isMissingTable) {
+          return { user, business: null };
+        }
+        throw new ApiError(bizErr.message, 400);
+      }
       return { user, business: bizRow ? mapSupaBusiness(bizRow) : null };
     }
     return request<{ user: UserProfile; business: BusinessProfile | null }>('/api/auth/me');
@@ -448,7 +480,19 @@ export const api = {
         .upsert(rowPayload, { onConflict: 'owner_id' })
         .select('*')
         .single();
-      if (error) throw new ApiError(error.message, 400);
+      if (error) {
+        const isMissingTable =
+          error.code === 'PGRST205' ||
+          error.code === '42P01' ||
+          (error.message || '').includes("public.businesses");
+        if (isMissingTable) {
+          throw new ApiError(
+            'Your Supabase database tables have not been created yet. Run the SQL files in supabase/migrations/ (001 through 004) in your Supabase SQL Editor, then save again.',
+            400
+          );
+        }
+        throw new ApiError(error.message, 400);
+      }
       return { business: mapSupaBusiness(data) };
     }
     return request<{ business: BusinessProfile }>('/api/business', {

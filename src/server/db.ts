@@ -298,6 +298,7 @@ function ensureColumn(table: string, column: string, definition: string) {
   }
 }
 
+ensureColumn('users', 'password_hash', 'TEXT');
 ensureColumn('businesses', 'close_day_reminder_time', "TEXT NOT NULL DEFAULT '19:00'");
 ensureColumn('ledger_entries', 'entry_kind', "TEXT NOT NULL DEFAULT 'RECEIPT'");
 ensureColumn('ledger_entries', 'credit_sale_id', 'TEXT REFERENCES credit_sales(id)');

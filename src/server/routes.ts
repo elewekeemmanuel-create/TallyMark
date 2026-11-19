@@ -5,10 +5,12 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { db, EXPENSE_PROOFS_DIR, isDayClosed, logError, runTransaction } from './db.ts';
 import {
   type AuthenticatedRequest,
+  authenticatePasswordUser,
   clearSessionCookie,
   consumeMagicLinkToken,
   createMagicLinkToken,
   createSessionForUser,
+  registerPasswordUser,
   requireAnyAuth,
   requireAuth,
   setSessionCookie,
@@ -17,6 +19,8 @@ import {
 import {
   AnalyticsEventSchema,
   AuthGoogleSchema,
+  AuthSignInSchema,
+  AuthSignUpSchema,
   BusinessInputSchema,
   CloseDaySchema,
   CorrectionEntrySchema,
@@ -386,6 +390,145 @@ export function createApiRouter() {
     res.json({ ok: true, timezone: 'Africa/Lagos' });
   });
 
+  // Same-origin proxy for Supabase Auth, PostgREST, and Storage requests.
+  // Prevents "Failed to fetch" when direct browser requests to *.supabase.co
+  // are blocked by mobile ISPs, privacy shields, or sandboxed iframes.
+  const supabaseRawParser = express.raw({ type: '*/*', limit: '6mb' });
+  router.all('/supabase/*', supabaseRawParser, async (req, res) => {
+    const rawUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '')
+      .trim()
+      .replace(/^["']+|["']+$/g, '')
+      .trim();
+    let supaOrigin = '';
+    try {
+      if (rawUrl) {
+        const withProtocol = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+        const parsed = new URL(withProtocol);
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+          supaOrigin = parsed.origin;
+        }
+      }
+    } catch {
+      supaOrigin = '';
+    }
+
+    if (!supaOrigin) {
+      res.status(503).json({
+        error: 'Supabase is not configured on this server.',
+        code: 'SUPABASE_NOT_CONFIGURED',
+      });
+      return;
+    }
+
+    const forwardPathAndQuery = req.url.replace(/^\/supabase(?=\/|\?|$)/, '') || '/';
+    const pathnameOnly = forwardPathAndQuery.split('?')[0] || '/';
+    const allowedPrefix =
+      pathnameOnly.startsWith('/auth/v1/') ||
+      pathnameOnly.startsWith('/rest/v1/') ||
+      pathnameOnly.startsWith('/storage/v1/');
+    if (!allowedPrefix || pathnameOnly.includes('..') || pathnameOnly.includes('\\')) {
+      res.status(403).json({ error: 'Unsupported Supabase proxy path' });
+      return;
+    }
+
+    const targetUrl = `${supaOrigin}${forwardPathAndQuery}`;
+    const forwardHeaders = new Headers();
+    const allowlistedReqHeaders = [
+      'apikey',
+      'authorization',
+      'content-type',
+      'accept',
+      'accept-profile',
+      'content-profile',
+      'prefer',
+      'range',
+      'x-client-info',
+      'x-supabase-api-version',
+      'x-upsert',
+      'cache-control',
+      'if-none-match',
+      'if-match',
+    ];
+    for (const name of allowlistedReqHeaders) {
+      const value = req.headers[name];
+      if (typeof value === 'string' && value.trim()) {
+        forwardHeaders.set(name, value);
+      }
+    }
+
+    if (!forwardHeaders.has('apikey')) {
+      const publicKey = (
+        process.env.VITE_SUPABASE_ANON_KEY ||
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        ''
+      )
+        .trim()
+        .replace(/^["']+|["']+$/g, '')
+        .trim();
+      if (publicKey) {
+        forwardHeaders.set('apikey', publicKey);
+      }
+    }
+
+    const method = req.method.toUpperCase();
+    const hasExplicitEmptyLength = req.headers['content-length'] === '0';
+    let body: BodyInit | undefined;
+    if (method !== 'GET' && method !== 'HEAD' && !hasExplicitEmptyLength) {
+      if (Buffer.isBuffer(req.body)) {
+        if (req.body.length > 0) {
+          body = new Uint8Array(req.body);
+        }
+      } else if (typeof req.body === 'string') {
+        if (req.body.length > 0) {
+          body = req.body;
+        }
+      } else if (req.body !== undefined && req.body !== null) {
+        body = JSON.stringify(req.body);
+        if (!forwardHeaders.has('content-type')) {
+          forwardHeaders.set('content-type', 'application/json;charset=UTF-8');
+        }
+      }
+    }
+
+    try {
+      const upstream = await fetch(targetUrl, {
+        method,
+        headers: forwardHeaders,
+        body,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(25_000),
+      });
+
+      res.status(upstream.status);
+      const allowlistedResHeaders = [
+        'content-type',
+        'content-range',
+        'x-total-count',
+        'x-supabase-api-version',
+        'x-sb-error-code',
+        'cache-control',
+        'etag',
+        'location',
+      ];
+      for (const name of allowlistedResHeaders) {
+        const value = upstream.headers.get(name);
+        if (value) {
+          res.setHeader(name, value);
+        }
+      }
+
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      res.send(buf);
+    } catch (err) {
+      logError('supabase_proxy', err, { method, path: pathnameOnly });
+      res.status(502).json({
+        error: 'Unable to reach Supabase right now. Please try again in a moment.',
+        code: 'SUPABASE_PROXY_UNREACHABLE',
+      });
+    }
+  });
+
   // Auth routes
   router.get('/auth/config', (_req, res) => {
     const googleOAuthConfigured = Boolean(
@@ -394,7 +537,64 @@ export function createApiRouter() {
     const directEmailSignInEnabled =
       !googleOAuthConfigured &&
       !(process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_AUTH !== 'true');
-    res.json({ googleOAuthConfigured, directEmailSignInEnabled });
+    res.json({ googleOAuthConfigured, directEmailSignInEnabled, passwordAuthEnabled: true });
+  });
+
+  router.post('/auth/signup', authLimiter, (req, res) => {
+    const parsed = AuthSignUpSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Check your sign-up details' });
+      return;
+    }
+    try {
+      const created = registerPasswordUser({
+        name: parsed.data.name,
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      if (!created.ok) {
+        res.status(409).json({
+          error: 'An account with this email already exists. Try signing in instead.',
+          code: 'DUPLICATE_EMAIL',
+        });
+        return;
+      }
+      const session = createSessionForUser(created.user.id);
+      setSessionCookie(res, session.token, session.expiresAt);
+      const business = getOwnedBusiness(created.user.id);
+      res.status(201).json({ user: created.user, business, sessionToken: session.token });
+    } catch (err) {
+      logError('auth_signup', err);
+      res.status(500).json({ error: 'Unable to create account right now' });
+    }
+  });
+
+  router.post('/auth/login', authLimiter, (req, res) => {
+    const parsed = AuthSignInSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Enter your email and password' });
+      return;
+    }
+    try {
+      const user = authenticatePasswordUser({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      if (!user) {
+        res.status(401).json({
+          error: 'Incorrect email or password. Please check your details and try again.',
+          code: 'INVALID_CREDENTIALS',
+        });
+        return;
+      }
+      const session = createSessionForUser(user.id);
+      setSessionCookie(res, session.token, session.expiresAt);
+      const business = getOwnedBusiness(user.id);
+      res.json({ user, business, sessionToken: session.token });
+    } catch (err) {
+      logError('auth_login', err);
+      res.status(500).json({ error: 'Unable to sign in right now' });
+    }
   });
 
   router.get('/auth/google/url', authLimiter, (req, res) => {

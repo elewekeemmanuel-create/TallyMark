@@ -187,6 +187,17 @@ export const CorrectionEntrySchema = z.object({
   expenseId: z.string().optional().nullable(),
 });
 
+export const AuthSignUpSchema = z.object({
+  name: z.string().trim().min(1, 'Enter your full name').max(120),
+  email: z.string().trim().email('Enter a valid email address').max(160),
+  password: z.string().min(6, 'Password must be at least 6 characters').max(128),
+});
+
+export const AuthSignInSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address').max(160),
+  password: z.string().min(1, 'Enter your password').max(128),
+});
+
 export const AuthGoogleSchema = z.object({
   email: z.string().trim().email('Valid Google email required').max(160),
   name: z.string().trim().min(1).max(120).optional(),

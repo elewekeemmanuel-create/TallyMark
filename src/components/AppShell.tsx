@@ -20,11 +20,12 @@ import {
 import { OfflineIndicator, PWAInstallButton } from '../lib/pwa';
 import { Link, useRouter } from '../lib/router';
 import { useTheme } from '../lib/theme';
-import type { BusinessProfile } from '../shared/types';
+import type { BusinessProfile, UserProfile } from '../shared/types';
 import { TallymarkWordmark } from './TallymarkLogo';
 
 interface AppShellProps {
   business: BusinessProfile;
+  user?: UserProfile | null;
   title: string;
   children: React.ReactNode;
 }
@@ -83,7 +84,7 @@ const MORE_LINKS = [
   { to: '/app/settings', label: 'Business Settings', subtitle: 'Logo, prefix, VAT, close-day reminder', icon: Settings },
 ] as const;
 
-export function AppShell({ business, title, children }: AppShellProps) {
+export function AppShell({ business, user, title, children }: AppShellProps) {
   const { pathname, navigate } = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [newSheetOpen, setNewSheetOpen] = useState(false);
@@ -146,7 +147,14 @@ export function AppShell({ business, title, children }: AppShellProps) {
                 {business.name.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span className="text-sm font-semibold truncate">{business.name}</span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate">{business.name}</p>
+              {user && (
+                <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] truncate">
+                  {user.name || user.email}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
