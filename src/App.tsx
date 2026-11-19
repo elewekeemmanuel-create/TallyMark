@@ -118,13 +118,39 @@ function TallymarkRoutes() {
   }, []);
 
   useEffect(() => {
-    refreshMe();
+    let active = true;
+    const init = async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await supabase.auth.getSession();
+        } catch {
+          // ignore session bootstrap error; refreshMe handles unauthenticated state
+        }
+      }
+      if (active) {
+        await refreshMe();
+      }
+    };
+    init();
+
     if (isSupabaseConfigured && supabase) {
-      const { data: sub } = supabase.auth.onAuthStateChange(() => {
-        refreshMe();
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+          refreshMe();
+        } else {
+          setUser(null);
+          setBusiness(null);
+          setAuthLoading(false);
+        }
       });
-      return () => sub.subscription.unsubscribe();
+      return () => {
+        active = false;
+        sub.subscription.unsubscribe();
+      };
     }
+    return () => {
+      active = false;
+    };
   }, [refreshMe]);
 
   // Public receipt route (/r/:id) works immediately even while auth loads or logged out

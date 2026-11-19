@@ -404,7 +404,9 @@ export function createApiRouter() {
       res.status(400).json({ error: 'Google OAuth credentials not configured' });
       return;
     }
-    const baseUrl = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const reqOrigin = `${req.protocol}://${req.get('host')}`.replace(/\/$/, '');
+    const envAppUrl = (process.env.APP_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/+$/, '');
+    const baseUrl = envAppUrl && !envAppUrl.includes('.supabase.co') ? envAppUrl : reqOrigin;
     const redirectUri = `${baseUrl}/api/auth/google/callback`;
     const state = crypto.randomBytes(16).toString('hex');
     const params = new URLSearchParams({
@@ -428,7 +430,9 @@ export function createApiRouter() {
       return;
     }
     try {
-      const baseUrl = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+      const reqOrigin = `${req.protocol}://${req.get('host')}`.replace(/\/$/, '');
+      const envAppUrl = (process.env.APP_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/+$/, '');
+      const baseUrl = envAppUrl && !envAppUrl.includes('.supabase.co') ? envAppUrl : reqOrigin;
       const redirectUri = `${baseUrl}/api/auth/google/callback`;
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -513,7 +517,9 @@ export function createApiRouter() {
     }
     try {
       const { token, expiresAt } = createMagicLinkToken(parsed.data.email, parsed.data.name);
-      const origin = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+      const reqOrigin = `${req.protocol}://${req.get('host')}`.replace(/\/$/, '');
+      const envAppUrl = (process.env.APP_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/+$/, '');
+      const origin = envAppUrl && !envAppUrl.includes('.supabase.co') ? envAppUrl : reqOrigin;
       const magicLinkUrl = `${origin}/login?magicToken=${encodeURIComponent(token)}`;
       res.json({ ok: true, expiresAt, magicLinkUrl, token });
     } catch (err) {
@@ -3239,10 +3245,27 @@ export function createApiRouter() {
       );
 
       // Best-effort mirror to Supabase analytics_events when configured (no IP/UA/user PII sent)
-      const supaUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
-      const supaKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '').trim();
+      const rawSupaUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '')
+        .trim()
+        .replace(/^["']+|["']+$/g, '');
+      let supaUrl = '';
+      try {
+        if (rawSupaUrl) supaUrl = new URL(rawSupaUrl).origin;
+      } catch {
+        supaUrl = '';
+      }
+      const supaKey = (
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        process.env.VITE_SUPABASE_ANON_KEY ||
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        ''
+      )
+        .trim()
+        .replace(/^["']+|["']+$/g, '')
+        .trim();
       if (supaUrl && supaKey) {
-        fetch(`${supaUrl.replace(/\/+$/, '')}/rest/v1/analytics_events`, {
+        fetch(`${supaUrl}/rest/v1/analytics_events`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -3269,8 +3292,19 @@ export function createApiRouter() {
     const userId = req.user!.id;
     try {
       if (req.isSupabaseUser) {
-        const supaUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-        const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+        const rawSupaUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '')
+          .trim()
+          .replace(/^["']+|["']+$/g, '');
+        let supaUrl = '';
+        try {
+          if (rawSupaUrl) supaUrl = new URL(rawSupaUrl).origin;
+        } catch {
+          supaUrl = '';
+        }
+        const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '')
+          .trim()
+          .replace(/^["']+|["']+$/g, '')
+          .trim();
         let deletedAuthUser = false;
 
         if (supaUrl && serviceKey) {

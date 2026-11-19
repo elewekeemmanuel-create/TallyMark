@@ -78,6 +78,20 @@ If deploying against a hosted Supabase project, run the numbered SQL migration f
 
 ---
 
+## Deploying to Vercel
+
+`vercel.json` and `api/index.ts` are included so Vercel deploys both the Vite SPA (`dist/`) and the Express `/api/*` serverless function (for `/api/voice/parse`, `DELETE /api/account`, `/api/analytics`, and auth fallback).
+
+1. **Set Environment Variables** in Vercel (**Project Settings -> Environment Variables**) and **Redeploy**:
+   - `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` *(required for persistent production auth, receipts, cash book, and storage on Vercel — serverless `/tmp` SQLite is ephemeral across cold starts)*
+   - `SUPABASE_SERVICE_ROLE_KEY` *(optional; enables full `auth.users` deletion in `DELETE /api/account`)*
+   - `GEMINI_API_KEY` *(required for Phase 3 "Speak Your Day")*
+   - `APP_URL` *(your Vercel domain, e.g. `https://your-app.vercel.app`)*
+2. **Configure Supabase Redirect URLs**:
+   - In Supabase (**Authentication -> URL Configuration**), set **Site URL** to `https://your-app.vercel.app` and add `https://your-app.vercel.app/**` under **Redirect URLs** so Google Sign-In and Email Magic Links redirect back to `/app` cleanly.
+
+---
+
 ## Future Automation Architecture (Adding Webhooks & Payment Links Later)
 
 Tallymark V1 is deliberately manual (typed or spoken) so the ledger remains clean and auditable. Because every money movement already flows through a single unified schema (`ledger_entries` + `receipts` + `credit_sales`), payment automation can be plugged in later without redesigning the database:

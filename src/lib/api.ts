@@ -113,8 +113,12 @@ async function request<T>(path: string, init: RequestInit = {}, timeoutMs?: numb
   }
 
   if (!res.ok) {
+    const fallbackMessage =
+      res.status === 404 && !data && path.startsWith('/api/')
+        ? 'API endpoint unavailable (404). Ensure the backend function is deployed or configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
+        : `Request failed (${res.status})`;
     throw new ApiError(
-      data?.error || `Request failed (${res.status})`,
+      data?.error || fallbackMessage,
       res.status,
       data?.code,
       data?.closedDate

@@ -1,9 +1,12 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 const DATA_DIR = process.env.TALLYMARK_DATA_DIR
   ? path.resolve(process.env.TALLYMARK_DATA_DIR)
+  : process.env.VERCEL
+  ? path.join(os.tmpdir(), 'tallymark-data')
   : path.resolve(process.cwd(), 'data');
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });

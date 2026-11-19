@@ -191,12 +191,34 @@ function lookupSqliteSession(token: string): { user: UserProfile; tokenHash: str
   };
 }
 
+function cleanServerEnv(raw: string | undefined): string {
+  if (!raw) return '';
+  return raw.trim().replace(/^["']+|["']+$/g, '').trim();
+}
+
+function normalizeServerUrl(raw: string | undefined): string {
+  const cleaned = cleanServerEnv(raw);
+  if (!cleaned) return '';
+  try {
+    const parsed = new URL(cleaned);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '';
+    return parsed.origin;
+  } catch {
+    return '';
+  }
+}
+
 export async function verifySupabaseJwt(token: string): Promise<UserProfile | null> {
-  const supaUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
-  const supaKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '').trim();
+  const supaUrl = normalizeServerUrl(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL);
+  const supaKey = cleanServerEnv(
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.SUPABASE_ANON_KEY
+  );
   if (!supaUrl || !supaKey) return null;
   try {
-    const res = await fetch(`${supaUrl.replace(/\/+$/, '')}/auth/v1/user`, {
+    const res = await fetch(`${supaUrl}/auth/v1/user`, {
       headers: {
         apikey: supaKey,
         Authorization: `Bearer ${token}`,
