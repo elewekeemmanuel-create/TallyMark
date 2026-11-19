@@ -1,0 +1,8 @@
+{
+  "name": "Tallymark",
+  "description": "Issue the receipt. Keep the book. Know your day. Professional digital receipts and cash book for Nigerian small businesses.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
