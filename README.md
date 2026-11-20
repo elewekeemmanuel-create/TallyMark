@@ -63,7 +63,11 @@ NODE_ENV=production npm start
 | `GOOGLE_CLIENT_SECRET` | **Server Secret** | Optional Google OAuth client secret for standalone Express auth mode. |
 | `SESSION_SECRET` | **Server Secret** | HMAC secret used to hash session and magic-link tokens in standalone SQLite mode. |
 | `VOICE_RATE_LIMIT_MAX` | Server | Per-user max requests to `/api/voice/parse` per 10-minute window (default: `12`). |
-| `TALLYMARK_DATA_DIR` | Server | Optional directory path for standalone SQLite database and private expense proof files (default: `./data`). |
+| `TALLYMARK_DATA_DIR` | Server | Optional directory path for standalone SQLite database and private expense/claim proof files (default: `./data`). |
+| `DISABLE_PUBLIC_CLAIMS` | Server | Set `true` to immediately return `503` on public `"I've paid"` claim submissions and proof uploads. |
+| `DISABLE_PUBLIC_QUOTE_ACTIONS` | Server | Set `true` to immediately return `503` on public quote accept/decline actions. |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | **Server Secret** | Optional VAPID keypair for opt-in Web Push alerts (never sent with personal data). |
+| `RETENTION_CRON_SECRET` | **Server Secret** | Secret header for `POST /api/v2/internal/retention-run` (90-day claim proof purge job). |
 
 ---
 
@@ -75,6 +79,11 @@ If deploying against a hosted Supabase project, run the numbered SQL migration f
 2. `supabase/migrations/002_phase2_cashbook.sql` — Cash book extensions (`credit_sales`, `creditors`, `expenses`, `expense_revisions`, `day_closures`), private `expense-proofs` storage bucket policies, and `record_credit_payment` / `issue_receipt_for_quick_sale` RPCs.
 3. `supabase/migrations/003_phase4_analytics.sql` — First-party privacy-safe `analytics_events` table.
 4. `supabase/migrations/004_phase5_hardening.sql` — Revokes direct table select on `public_receipts` (forcing single-lookup via `get_public_receipt(p_public_id)`), tightens `expense-proofs` owner-folder storage policies, enforces closed-day guards inside RPCs, and allows `void_receipt` after day close as a visible correction entry.
+5. `supabase/migrations/005_v2_quotations_invoices.sql` — Additive, idempotent, transactional V2 schema for Quotations, Invoices, unified `debts`, `payments`, `payment_claims`, `payment_reminders`, `audit_log`, `usage_counters`, `push_subscriptions`, `rate_limits`, private `claim-proofs` bucket, RLS on every table (anon revoked), backfill of open V1 balances into `public.debts`, and hardened `SECURITY DEFINER` RPCs (`record_payment`, `v2_send_invoice`, `v2_void_payment_receipt`, `get_public_invoice`, etc.). Tested rollback script: `supabase/migrations/005_v2_quotations_invoices.rollback.sql`.
+6. `supabase/migrations/006_v2_slice2_claims_push.sql` — Additive Slice 2 RPCs (`v2_confirm_claim`, `v2_reject_claim`, `v2_purge_expired_claim_proofs`) and updated `get_public_invoice` exposing only safe pending/rejected status flags (never private `decision_reason`). Rollback script: `supabase/migrations/006_v2_slice2_claims_push.rollback.sql`.
+7. `supabase/migrations/007_v2_slice3_quotations.sql` — Additive Slice 3 quotation RPCs (`v2_save_quote_draft`, `v2_send_quote`, `v2_void_quote`, `v2_revise_quote`, `v2_regenerate_quote_link`, `v2_convert_quote_to_invoice`, `get_public_quote`, `v2_record_public_quote_decision`) and partial unique index `idx_invoices_source_quote_unique` preventing duplicate conversions under parallel requests. Rollback script: `supabase/migrations/007_v2_slice3_quotations.rollback.sql`.
+
+> **VAT Notice**: When VAT is enabled on a business profile, Tallymark prints the business TIN/RC and a VAT line (exclusive or inclusive) on invoices and receipts. VAT wording, invoice disclosures, and tax compliance should be reviewed by a qualified Nigerian tax professional before statutory filing.
 
 ---
 

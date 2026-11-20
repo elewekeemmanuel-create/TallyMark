@@ -289,7 +289,10 @@ export function groupDebtsByCustomer(params: {
 
 export function buildCsv(headers: string[], rows: Array<Array<string | number | null | undefined>>): string {
   const escapeCell = (val: string | number | null | undefined) => {
-    const s = val === null || val === undefined ? '' : String(val);
+    let s = val === null || val === undefined ? '' : String(val);
+    if (/^[=+\-@\t\r]/.test(s)) {
+      s = `'${s}`;
+    }
     if (/[",\n\r]/.test(s)) {
       return `"${s.replace(/"/g, '""')}"`;
     }

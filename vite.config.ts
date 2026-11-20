@@ -12,7 +12,7 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'icon.svg', 'apple-touch-icon.png', 'fonts/*.ttf'],
+        includeAssets: ['favicon.svg', 'icon.svg', 'apple-touch-icon.png', 'fonts/*.ttf', 'push-sw.js'],
         manifest: {
           id: '/',
           name: 'Tallymark',
@@ -45,12 +45,19 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
+          importScripts: ['/push-sw.js'],
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,ttf,woff,woff2}'],
           navigateFallback: '/index.html',
-          navigateFallbackDenylist: [/^\/api\//, /^\/robots\.txt$/, /^\/sitemap\.xml$/],
+          navigateFallbackDenylist: [
+            /^\/api\//,
+            /^\/i\//,
+            /^\/q\//,
+            /^\/robots\.txt$/,
+            /^\/sitemap\.xml$/,
+          ],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -122,6 +129,14 @@ export default defineConfig(() => {
         },
       },
     ],
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          publicDoc: path.resolve(__dirname, 'public-doc.html'),
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

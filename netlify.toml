@@ -13,9 +13,40 @@
   force = true
 
 [[redirects]]
+  from = "/i/*"
+  to = "/public-doc.html"
+  status = 200
+
+[[redirects]]
+  from = "/q/*"
+  to = "/public-doc.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[headers]]
+  for = "/i/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "private, no-store, max-age=0"
+
+[[headers]]
+  for = "/q/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "private, no-store, max-age=0"
+
+[[headers]]
+  for = "/public-doc.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "private, no-store, max-age=0"
 
 [[headers]]
   for = "/index.html"

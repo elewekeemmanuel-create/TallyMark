@@ -4,6 +4,7 @@ import { RouterProvider, useRouter } from './lib/router';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { ThemeProvider } from './lib/theme';
 import type { BusinessProfile, UserProfile } from './shared/types';
+import { isInvoicesQuotesModuleEnabled } from './shared/v2/entitlements';
 import { AppShell } from './components/AppShell';
 import { LandingPage } from './pages/LandingPage';
 import { PrivacyPage, TermsPage } from './pages/LegalPages';
@@ -46,6 +47,24 @@ const ReportsPage = lazy(() =>
 );
 const SpeakDayPage = lazy(() =>
   import('./pages/SpeakDayPage').then((m) => ({ default: m.SpeakDayPage }))
+);
+const DocumentsPage = lazy(() =>
+  import('./v2/pages/DocumentsPage').then((m) => ({ default: m.DocumentsPage }))
+);
+const InvoiceEditorPage = lazy(() =>
+  import('./v2/pages/InvoiceEditorPage').then((m) => ({ default: m.InvoiceEditorPage }))
+);
+const InvoiceDetailPage = lazy(() =>
+  import('./v2/pages/InvoiceDetailPage').then((m) => ({ default: m.InvoiceDetailPage }))
+);
+const ClaimsReviewPage = lazy(() =>
+  import('./v2/pages/ClaimsReviewPage').then((m) => ({ default: m.ClaimsReviewPage }))
+);
+const QuoteEditorPage = lazy(() =>
+  import('./v2/pages/QuoteEditorPage').then((m) => ({ default: m.QuoteEditorPage }))
+);
+const QuoteDetailPage = lazy(() =>
+  import('./v2/pages/QuoteDetailPage').then((m) => ({ default: m.QuoteDetailPage }))
 );
 
 function parseOAuthCallbackParams() {
@@ -464,7 +483,69 @@ function TallymarkRoutes() {
     );
   }
 
-  return renderInShell('Home', <HomePage business={business} />);
+  const v2Enabled = isInvoicesQuotesModuleEnabled(business);
+
+  if (v2Enabled) {
+    if (pathname === '/app/documents') {
+      return renderInShell('Documents', <DocumentsPage business={business} />);
+    }
+
+    if (pathname === '/app/claims') {
+      return renderInShell('Payment Reports', <ClaimsReviewPage business={business} />);
+    }
+
+    if (pathname === '/app/invoices/new') {
+      return renderInShell(
+        'New Invoice',
+        <InvoiceEditorPage business={business} onBusinessUpdated={(nextBiz) => setBusiness(nextBiz)} />
+      );
+    }
+
+    const invoiceEditMatch = /^\/app\/invoices\/([A-Za-z0-9_-]+)\/edit$/.exec(pathname);
+    if (invoiceEditMatch) {
+      return renderInShell(
+        'Edit Invoice',
+        <InvoiceEditorPage
+          business={business}
+          invoiceId={invoiceEditMatch[1]}
+          onBusinessUpdated={(nextBiz) => setBusiness(nextBiz)}
+        />
+      );
+    }
+
+    const invoiceDetailMatch = /^\/app\/invoices\/([A-Za-z0-9_-]+)$/.exec(pathname);
+    if (invoiceDetailMatch) {
+      return renderInShell(
+        'Invoice Details',
+        <InvoiceDetailPage business={business} invoiceId={invoiceDetailMatch[1]} />
+      );
+    }
+
+    if (pathname === '/app/quotes/new') {
+      return renderInShell('New Quote', <QuoteEditorPage business={business} />);
+    }
+
+    const quoteEditMatch = /^\/app\/quotes\/([A-Za-z0-9_-]+)\/edit$/.exec(pathname);
+    if (quoteEditMatch) {
+      return renderInShell(
+        'Edit Quote',
+        <QuoteEditorPage business={business} quoteId={quoteEditMatch[1]} />
+      );
+    }
+
+    const quoteDetailMatch = /^\/app\/quotes\/([A-Za-z0-9_-]+)$/.exec(pathname);
+    if (quoteDetailMatch) {
+      return renderInShell(
+        'Quote Details',
+        <QuoteDetailPage business={business} quoteId={quoteDetailMatch[1]} />
+      );
+    }
+  }
+
+  return renderInShell(
+    'Home',
+    <HomePage business={business} onBusinessUpdated={(nextBiz) => setBusiness(nextBiz)} />
+  );
 }
 
 export default function App() {

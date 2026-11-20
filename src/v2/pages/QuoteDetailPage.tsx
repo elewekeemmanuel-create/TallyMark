@@ -1,0 +1,541 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Copy,
+  Download,
+  ExternalLink,
+  MoreHorizontal,
+  RefreshCw,
+  Send,
+  Share2,
+  XCircle,
+} from 'lucide-react';
+import { Link, useRouter } from '../../lib/router';
+import { formatKobo, formatLagosDateOnly } from '../../shared/money';
+import type { BusinessProfile } from '../../shared/types';
+import type { PublicQuoteRecord, QuoteRecord } from '../../shared/v2/types';
+import { v2Api } from '../api';
+import { QuoteDocument } from '../components/QuoteDocument';
+import { downloadQuotePdf } from '../pdf';
+
+function formatLagosTimestamp(iso: string | null): string {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat('en-NG', {
+      timeZone: 'Africa/Lagos',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso));
+  } catch {
+    return iso.slice(0, 16).replace('T', ' ');
+  }
+}
+
+function buildQuotePublicPreview(quote: QuoteRecord, business: BusinessProfile): PublicQuoteRecord {
+  const snap = quote.snapshot || {
+    quoteNumber: quote.quoteNumber || 'DRAFT',
+    business: {
+      name: business.name,
+      logoDataUrl: business.logoDataUrl,
+      address: business.address,
+      phone: business.phone,
+      email: business.email,
+      tinRc: business.tinRc || '',
+      brandColor: business.brandColor,
+      currency: business.currency,
+    },
+    customer: {
+      name: quote.customerName,
+      address: quote.customerAddress,
+    },
+    bankAccounts: (business.bankAccounts || []).filter((b) => quote.bankAccountIds.includes(b.id)),
+    issueDate: quote.issueDate,
+    validUntil: quote.validUntil,
+    termsKind: quote.termsKind,
+    lines: quote.lines,
+    subtotalKobo: quote.subtotalKobo,
+    lineDiscountTotalKobo: quote.lineDiscountTotalKobo,
+    invoiceDiscountKobo: quote.invoiceDiscountKobo,
+    vatEnabled: quote.vatEnabled,
+    vatMode: quote.vatMode,
+    vatRateBps: quote.vatRateBps,
+    vatKobo: quote.vatKobo,
+    totalKobo: quote.totalKobo,
+    depositType: quote.depositType,
+    depositValue: quote.depositValue,
+    amountDueNowKobo: quote.amountDueNowKobo,
+    notes: quote.notes,
+    template: quote.template,
+    showBranding: true,
+  };
+
+  return {
+    publicId: quote.publicId,
+    status: quote.status,
+    isExpired: quote.isExpired,
+    sentAt: quote.sentAt,
+    decisionName: quote.decisionName,
+    decisionNote: quote.decisionNote,
+    decisionAt: quote.decisionAt,
+    voidReason: quote.voidReason,
+    voidedAt: quote.voidedAt,
+    snapshot: snap,
+  };
+}
+
+export function QuoteDetailPage({
+  business,
+  quoteId,
+}: {
+  business: BusinessProfile;
+  quoteId: string;
+}) {
+  const { navigate } = useRouter();
+  const [quote, setQuote] = useState<QuoteRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [busyAction, setBusyAction] = useState(false);
+  const [voidModalOpen, setVoidModalOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await v2Api.getQuote(quoteId);
+      setQuote(res.quote);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to load quote');
+    } finally {
+      setLoading(false);
+    }
+  }, [quoteId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const showNotice = (msg: string) => {
+    setNotice(msg);
+    setTimeout(() => setNotice(null), 3500);
+  };
+
+  if (loading) {
+    return <div className="py-16 text-center text-xs text-[#5C635D]">Loading quote…</div>;
+  }
+
+  if (!quote) {
+    return (
+      <div className="rounded-2xl border border-[#E5DEC9] bg-white p-8 text-center space-y-3">
+        <h1 className="font-display text-2xl">Quote not found</h1>
+        {error && <p className="text-xs text-[#B91C1C]">{error}</p>}
+        <Link
+          to="/app/documents"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white"
+        >
+          Back to Documents
+        </Link>
+      </div>
+    );
+  }
+
+  const publicPreview = buildQuotePublicPreview(quote, business);
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const publicUrl = `${origin}/q/${quote.publicId}`;
+  const docNumber = quote.quoteNumber || 'Draft Quote';
+
+  const canConvert =
+    (quote.status === 'SENT' && !quote.isExpired) || quote.status === 'ACCEPTED';
+  const canRevise = quote.status === 'SENT' || quote.status === 'DECLINED';
+  const canVoid = quote.status !== 'VOID' && quote.status !== 'CONVERTED';
+
+  const handleSend = async () => {
+    setBusyAction(true);
+    setError(null);
+    try {
+      const res = await v2Api.sendQuote(quote.id);
+      setQuote(res.quote);
+      showNotice(`Quote ${res.quote.quoteNumber} issued and ready to share`);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to send quote');
+    } finally {
+      setBusyAction(false);
+    }
+  };
+
+  const handleConvert = async () => {
+    setBusyAction(true);
+    setError(null);
+    try {
+      const res = await v2Api.convertQuoteToInvoice(quote.id, false);
+      navigate(`/app/invoices/${res.invoice.id}/edit`);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to convert quote to invoice');
+      setBusyAction(false);
+    }
+  };
+
+  const handleRevise = async () => {
+    setBusyAction(true);
+    setMoreOpen(false);
+    setError(null);
+    try {
+      const res = await v2Api.reviseQuote(quote.id);
+      navigate(`/app/quotes/${res.quote.id}/edit`);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to revise quote');
+      setBusyAction(false);
+    }
+  };
+
+  const handleRegenerateLink = async () => {
+    setBusyAction(true);
+    setMoreOpen(false);
+    setError(null);
+    try {
+      const res = await v2Api.regenerateQuoteLink(quote.id);
+      setQuote(res.quote);
+      showNotice('New public link created. The old link no longer works.');
+    } catch (err: any) {
+      setError(err?.message || 'Unable to regenerate link');
+    } finally {
+      setBusyAction(false);
+    }
+  };
+
+  const handleVoid = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (voidReason.trim().length < 3) {
+      setError('Enter a short reason (at least 3 characters).');
+      return;
+    }
+    setBusyAction(true);
+    setError(null);
+    try {
+      const res = await v2Api.voidQuote(quote.id, voidReason.trim());
+      setQuote(res.quote);
+      setVoidModalOpen(false);
+      setVoidReason('');
+      showNotice('Quote voided');
+    } catch (err: any) {
+      setError(err?.message || 'Unable to void quote');
+    } finally {
+      setBusyAction(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      showNotice('Quote link copied');
+    } catch {
+      showNotice(publicUrl);
+    }
+  };
+
+  const cleanPhone = (quote.customerPhone || '').replace(/[^0-9]/g, '');
+  const waPhone =
+    cleanPhone.startsWith('0') && cleanPhone.length === 11
+      ? `234${cleanPhone.slice(1)}`
+      : cleanPhone;
+  const safeBiz = (publicPreview.snapshot.business.name || 'Business').replace(/[\r\n]+/g, ' ');
+  const safeDoc = docNumber.replace(/[\r\n]+/g, ' ');
+  const waMsg = [
+    `Quotation ${safeDoc} from ${safeBiz}`,
+    `Total: ${formatKobo(quote.totalKobo, quote.currency)}`,
+    `Valid until: ${formatLagosDateOnly(quote.validUntil)}`,
+    `View and respond here: ${publicUrl}`,
+  ].join('\n');
+  const whatsappUrl = waPhone
+    ? `https://wa.me/${encodeURIComponent(waPhone)}?text=${encodeURIComponent(waMsg)}`
+    : `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
+
+  const handleWebShare = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${docNumber} · ${publicPreview.snapshot.business.name}`,
+          text: `Quotation ${docNumber} — ${formatKobo(quote.totalKobo, quote.currency)}`,
+          url: publicUrl,
+        });
+        return;
+      } catch {
+        // fall through to copy
+      }
+    }
+    await handleCopyLink();
+  };
+
+  const handleDownloadPdf = async () => {
+    setBusyAction(true);
+    try {
+      await downloadQuotePdf(publicPreview);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to generate PDF');
+    } finally {
+      setBusyAction(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl space-y-5">
+      {/* Header & Single Primary Action */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <Link
+            to="/app/documents"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] hover:text-[#121513] dark:text-[#9BA39D]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Documents</span>
+          </Link>
+          <h1 className="mt-1 font-display text-3xl sm:text-4xl">{docNumber}</h1>
+          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            {quote.customerName} · Valid until {formatLagosDateOnly(quote.validUntil)}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {quote.status === 'DRAFT' && (
+            <>
+              <button
+                type="button"
+                disabled={busyAction}
+                onClick={handleSend}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+              >
+                <Send className="w-4 h-4" />
+                <span>Send quote</span>
+              </button>
+              <Link
+                to={`/app/quotes/${quote.id}/edit`}
+                className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 py-2.5 text-xs font-semibold min-h-[44px]"
+              >
+                Edit draft
+              </Link>
+            </>
+          )}
+
+          {canConvert && (
+            <button
+              type="button"
+              disabled={busyAction}
+              onClick={handleConvert}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] disabled:opacity-60 min-h-[44px]"
+            >
+              <span>{busyAction ? 'Converting…' : 'Convert to invoice'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
+
+          {quote.status === 'CONVERTED' && quote.convertedInvoiceId && (
+            <Link
+              to={`/app/invoices/${quote.convertedInvoiceId}`}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+            >
+              <span>
+                Open {quote.convertedInvoiceNumber ? quote.convertedInvoiceNumber : 'invoice'}
+              </span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
+
+          {(quote.isExpired || quote.status === 'DECLINED') && (
+            <button
+              type="button"
+              disabled={busyAction}
+              onClick={handleRevise}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Revise quote</span>
+            </button>
+          )}
+
+          {(canRevise || canVoid || quote.status !== 'DRAFT') && (
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="More quote actions"
+                onClick={() => setMoreOpen((v) => !v)}
+                className="inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2.5 min-h-[44px]"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 mt-1.5 w-52 rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] shadow-lg py-1.5 z-20 text-xs">
+                  {canRevise && (
+                    <button
+                      type="button"
+                      onClick={handleRevise}
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] font-medium"
+                    >
+                      Revise quote (void &amp; copy)
+                    </button>
+                  )}
+                  {quote.status !== 'DRAFT' && (
+                    <button
+                      type="button"
+                      onClick={handleRegenerateLink}
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] font-medium"
+                    >
+                      Regenerate public link
+                    </button>
+                  )}
+                  {canVoid && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMoreOpen(false);
+                        setVoidModalOpen(true);
+                      }}
+                      className="w-full text-left px-3.5 py-2.5 text-[#B91C1C] hover:bg-[#FEF2F2] font-medium"
+                    >
+                      Void quote
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {notice && (
+        <div className="rounded-xl border border-[#064E3B]/25 bg-[#ECFDF5] p-3 text-xs text-[#064E3B] font-medium">
+          {notice}
+        </div>
+      )}
+      {error && (
+        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
+          {error}
+        </div>
+      )}
+
+      {/* Customer Acceptance / Decline Banner */}
+      {(quote.status === 'ACCEPTED' || quote.status === 'CONVERTED') && quote.decisionName && (
+        <div className="rounded-2xl border border-[#064E3B]/25 bg-[#ECFDF5] p-4 flex items-start gap-3">
+          <CheckCircle2 className="w-5 h-5 text-[#064E3B] shrink-0 mt-0.5" />
+          <div className="text-xs text-[#064E3B] space-y-0.5">
+            <p className="font-semibold">
+              Accepted by {quote.decisionName}
+              {quote.decisionAt ? ` · ${formatLagosTimestamp(quote.decisionAt)}` : ''}
+            </p>
+            {quote.decisionNote && <p>Note: {quote.decisionNote}</p>}
+          </div>
+        </div>
+      )}
+
+      {quote.status === 'DECLINED' && quote.decisionName && (
+        <div className="rounded-2xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-4 flex items-start gap-3">
+          <XCircle className="w-5 h-5 text-[#B91C1C] shrink-0 mt-0.5" />
+          <div className="text-xs text-[#991B1B] space-y-0.5">
+            <p className="font-semibold">
+              Declined by {quote.decisionName}
+              {quote.decisionAt ? ` · ${formatLagosTimestamp(quote.decisionAt)}` : ''}
+            </p>
+            {quote.decisionNote && <p>Note: {quote.decisionNote}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Share & PDF Bar (when sent) */}
+      {quote.status !== 'DRAFT' && (
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#064E3B] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-semibold text-[#064E3B] dark:text-[#10B981] min-h-[40px]"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Share on WhatsApp</span>
+          </a>
+          <button
+            type="button"
+            onClick={handleWebShare}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[40px]"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            <span>Copy link</span>
+          </button>
+          <button
+            type="button"
+            disabled={busyAction}
+            onClick={handleDownloadPdf}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[40px]"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
+          </button>
+          <a
+            href={publicUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[40px]"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Public view</span>
+          </a>
+        </div>
+      )}
+
+      {/* Document Template */}
+      <QuoteDocument quote={publicPreview} />
+
+      {/* Void Modal */}
+      {voidModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <form
+            onSubmit={handleVoid}
+            className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"
+          >
+            <h2 className="font-display text-2xl">Void {docNumber}?</h2>
+            <p className="text-xs text-[#5C635D]">
+              Voiding marks this quote inactive while keeping its quote number in your records.
+            </p>
+            <div>
+              <label className="block text-xs font-semibold mb-1" htmlFor="void-quote-reason">
+                Reason
+              </label>
+              <input
+                id="void-quote-reason"
+                type="text"
+                required
+                minLength={3}
+                maxLength={240}
+                value={voidReason}
+                onChange={(e) => setVoidReason(e.target.value)}
+                placeholder="e.g. Customer changed specification"
+                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2.5 text-sm min-h-[44px]"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setVoidModalOpen(false)}
+                className="rounded-xl border border-[#DED6C2] px-4 py-2 text-xs font-semibold min-h-[40px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={busyAction}
+                className="rounded-xl bg-[#B91C1C] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
+              >
+                Void quote
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}

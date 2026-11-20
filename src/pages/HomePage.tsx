@@ -1,18 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
   BookOpen,
   CreditCard,
+  FileText,
   Mic,
   PlusCircle,
   ReceiptText,
   Wallet,
+  X,
   Zap,
 } from 'lucide-react';
 import { ReceiveBalanceModal } from '../components/ReceiptActionsModal';
 import { api } from '../lib/api';
 import { Link } from '../lib/router';
+import { toggleInvoicesQuotesModule } from '../lib/v2ModuleToggle';
 import { formatKobo, formatLagosDateOnly } from '../shared/money';
 import type {
   BusinessProfile,
@@ -21,8 +24,19 @@ import type {
   HomeSummary,
   ReceiptRecord,
 } from '../shared/types';
+import { isInvoicesQuotesModuleEnabled } from '../shared/v2/entitlements';
 
-export function HomePage({ business }: { business: BusinessProfile }) {
+const V2HomeSummaryCards = lazy(() =>
+  import('../v2/components/V2HomeSummaryCards').then((m) => ({ default: m.V2HomeSummaryCards }))
+);
+
+export function HomePage({
+  business,
+  onBusinessUpdated,
+}: {
+  business: BusinessProfile;
+  onBusinessUpdated?: (biz: BusinessProfile) => void;
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<HomeSummary | null>(null);
@@ -31,6 +45,34 @@ export function HomePage({ business }: { business: BusinessProfile }) {
   const [debtorsPreview, setDebtorsPreview] = useState<DebtorCustomerGroup[]>([]);
   const [todayEntries, setTodayEntries] = useState<CashBookRow[]>([]);
   const [balanceTarget, setBalanceTarget] = useState<ReceiptRecord | null>(null);
+  const [moduleBusy, setModuleBusy] = useState(false);
+
+  const v2Enabled = isInvoicesQuotesModuleEnabled(business);
+
+  const handleEnableV2 = async () => {
+    setModuleBusy(true);
+    setError(null);
+    try {
+      const res = await toggleInvoicesQuotesModule({ enabled: true });
+      onBusinessUpdated?.(res.business);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to turn on Invoices & Quotes');
+    } finally {
+      setModuleBusy(false);
+    }
+  };
+
+  const handleDismissPromo = async () => {
+    setModuleBusy(true);
+    try {
+      const res = await toggleInvoicesQuotesModule({ dismissPromo: true });
+      onBusinessUpdated?.(res.business);
+    } catch {
+      // ignore
+    } finally {
+      setModuleBusy(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -254,6 +296,50 @@ export function HomePage({ business }: { business: BusinessProfile }) {
           </p>
         </Link>
       </div>
+
+      {/* Optional Invoices & Quotes Module: one dismissible card when OFF; summary cards when ON */}
+      {!v2Enabled && !business.v2PromoDismissed && (
+        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-[#F3EFE6] dark:bg-[#1B231F] text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#121513] dark:text-[#F4F1EA]">
+                Invoices &amp; Quotes
+              </p>
+              <p className="mt-0.5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                Send company-grade invoices with bank transfer details and issue receipts when paid. You can turn this off anytime in Settings.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              disabled={moduleBusy}
+              onClick={handleEnableV2}
+              className="min-h-[40px] rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
+            >
+              {moduleBusy ? 'Turning on…' : 'Turn on'}
+            </button>
+            <button
+              type="button"
+              disabled={moduleBusy}
+              onClick={handleDismissPromo}
+              aria-label="Dismiss"
+              className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] hover:bg-[#F5F1E7] dark:hover:bg-[#1B231F]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {v2Enabled && (
+        <Suspense fallback={null}>
+          <V2HomeSummaryCards business={business} />
+        </Suspense>
+      )}
 
       {/* Empty State when 0 receipts/entries exist */}
       {!loading && summary && !hasAnyActivity ? (

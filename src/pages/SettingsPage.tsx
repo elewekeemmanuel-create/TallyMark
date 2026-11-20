@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
-import { Download, LogOut, Moon, Sun, Trash2 } from 'lucide-react';
+import React, { Suspense, lazy, useState } from 'react';
+import { Download, FileText, LogOut, Moon, Sun, Trash2 } from 'lucide-react';
 import { api, setStoredSessionToken } from '../lib/api';
 import { PWAInstallButton } from '../lib/pwa';
 import { useRouter } from '../lib/router';
 import { useTheme } from '../lib/theme';
+import { toggleInvoicesQuotesModule } from '../lib/v2ModuleToggle';
 import type { BusinessProfile, UserProfile } from '../shared/types';
+import { isInvoicesQuotesModuleEnabled } from '../shared/v2/entitlements';
 import { BusinessProfileForm } from '../components/BusinessProfileForm';
+
+const BankAccountsSettingsCard = lazy(() =>
+  import('../v2/components/BankAccountsSettingsCard').then((m) => ({
+    default: m.BankAccountsSettingsCard,
+  }))
+);
+const PushNotificationsCard = lazy(() =>
+  import('../v2/components/PushNotificationsCard').then((m) => ({
+    default: m.PushNotificationsCard,
+  }))
+);
 
 export function SettingsPage({
   user,
@@ -24,7 +37,23 @@ export function SettingsPage({
   const [exporting, setExporting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [moduleSaving, setModuleSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const v2Enabled = isInvoicesQuotesModuleEnabled(business);
+
+  const handleToggleV2Module = async () => {
+    setModuleSaving(true);
+    setError(null);
+    try {
+      const res = await toggleInvoicesQuotesModule({ enabled: !v2Enabled });
+      onBusinessUpdated(res.business);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to update Invoices & Quotes module');
+    } finally {
+      setModuleSaving(false);
+    }
+  };
 
   const handleSave = async (payload: Record<string, unknown>) => {
     setSavedNotice(false);
@@ -113,6 +142,44 @@ export function SettingsPage({
           onSubmit={handleSave}
         />
       </section>
+
+      {/* Optional Modules */}
+      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#F3EFE6] dark:bg-[#1B231F] text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold">Invoices &amp; Quotes</h2>
+              <p className="mt-0.5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                {v2Enabled
+                  ? 'On. Turning this off hides Invoices & Quotes from navigation without deleting any saved documents.'
+                  : 'Off. Turn on to send invoices, store bank transfer details, and record payments with linked receipts.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={moduleSaving}
+            onClick={handleToggleV2Module}
+            className={`min-h-[44px] rounded-xl px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+              v2Enabled
+                ? 'border border-[#DED6C2] dark:border-[#2B352F] text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F5F1E7] dark:hover:bg-[#1B231F]'
+                : 'bg-[#064E3B] text-white hover:bg-[#04392B]'
+            }`}
+          >
+            {moduleSaving ? 'Updating…' : v2Enabled ? 'Turn off' : 'Turn on'}
+          </button>
+        </div>
+      </section>
+
+      {v2Enabled && (
+        <Suspense fallback={null}>
+          <BankAccountsSettingsCard business={business} onBusinessUpdated={onBusinessUpdated} />
+          <PushNotificationsCard />
+        </Suspense>
+      )}
 
       {/* Appearance & App Install */}
       <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-6 space-y-4">

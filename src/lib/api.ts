@@ -128,6 +128,7 @@ async function request<T>(path: string, init: RequestInit = {}, timeoutMs?: numb
 }
 
 function mapSupaBusiness(row: any): BusinessProfile {
+  const modsRaw = row.modules_enabled || {};
   return {
     id: row.id,
     ownerId: row.owner_id,
@@ -146,6 +147,19 @@ function mapSupaBusiness(row: any): BusinessProfile {
     openingCashKobo: Number(row.opening_cash_kobo ?? 0),
     defaultTemplate: row.default_template || 'modern',
     closeDayReminderTime: row.close_day_reminder_time || '19:00',
+    tinRc: row.tin_rc || '',
+    bankAccounts: Array.isArray(row.bank_accounts) ? row.bank_accounts : [],
+    modulesEnabled: {
+      invoicesQuotes: Boolean(modsRaw.invoices_quotes ?? modsRaw.invoicesQuotes ?? false),
+    },
+    plan: row.plan || 'early_access',
+    invoicePrefix: row.invoice_prefix || 'INV-',
+    nextInvoiceSequence: Number(row.next_invoice_sequence ?? 1),
+    quotePrefix: row.quote_prefix || 'QUO-',
+    nextQuoteSequence: Number(row.next_quote_sequence ?? 1),
+    defaultPaymentTermsDays: Number(row.default_payment_terms_days ?? 7),
+    defaultInvoiceNotes: row.default_invoice_notes || '',
+    v2PromoDismissed: Boolean(row.v2_promo_dismissed),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -1713,6 +1727,27 @@ export const api = {
           .eq('business_id', business.id)
           .order('close_date', { ascending: false }),
       ]);
+      const client = supabase;
+      const safeQuery = async (table: string) => {
+        try {
+          const { data } = await client.from(table).select('*').eq('business_id', business.id);
+          return data || [];
+        } catch {
+          return [];
+        }
+      };
+
+      const [invoices, invoiceLines, quotes, debts, payments, auditLog, usageCounters] =
+        await Promise.all([
+          safeQuery('invoices'),
+          safeQuery('invoice_lines'),
+          safeQuery('quotes'),
+          safeQuery('debts'),
+          safeQuery('payments'),
+          safeQuery('audit_log'),
+          safeQuery('usage_counters'),
+        ]);
+
       return {
         exportedAt: new Date().toISOString(),
         user,
@@ -1723,6 +1758,13 @@ export const api = {
         creditors: (crRes.data || []).map(mapSupaCreditor),
         expenses: (expRes.data || []).map(mapSupaExpense),
         dayClosures: (cloRes.data || []).map(mapSupaClosure),
+        invoices,
+        invoiceLines,
+        quotes,
+        debts,
+        payments,
+        auditLog,
+        usageCounters,
       };
     }
     return request<Record<string, unknown>>('/api/account/export');
@@ -1912,15 +1954,17 @@ export const api = {
       }
 
       if (!deletedAuthUser) {
-        try {
-          const { data: files } = await supabase.storage.from('expense-proofs').list(userId);
-          if (files && files.length > 0) {
-            await supabase.storage
-              .from('expense-proofs')
-              .remove(files.map((f) => `${userId}/${f.name}`));
+        for (const bucket of ['expense-proofs', 'claim-proofs']) {
+          try {
+            const { data: files } = await supabase.storage.from(bucket).list(userId);
+            if (files && files.length > 0) {
+              await supabase.storage
+                .from(bucket)
+                .remove(files.map((f) => `${userId}/${f.name}`));
+            }
+          } catch {
+            // ignore storage cleanup errors
           }
-        } catch {
-          // ignore storage cleanup errors
         }
         const { error: delBizErr } = await supabase
           .from('businesses')

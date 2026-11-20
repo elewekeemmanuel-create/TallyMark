@@ -13,11 +13,53 @@
       "destination": "/api"
     },
     {
+      "source": "/i/(.*)",
+      "destination": "/public-doc.html"
+    },
+    {
+      "source": "/q/(.*)",
+      "destination": "/public-doc.html"
+    },
+    {
       "source": "/((?!api/|assets/|fonts/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/(i|q)/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/public-doc.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        }
+      ]
+    },
     {
       "source": "/(index.html|sw.js|registerSW.js|manifest.webmanifest)",
       "headers": [

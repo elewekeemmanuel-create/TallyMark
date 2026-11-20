@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   BarChart3,
+  Bell,
   BookOpen,
   CreditCard,
+  FileText,
   Home,
   Menu,
   Mic,
@@ -20,7 +22,9 @@ import {
 import { OfflineIndicator, PWAInstallButton } from '../lib/pwa';
 import { Link, useRouter } from '../lib/router';
 import { useTheme } from '../lib/theme';
+import { CLAIMS_UPDATED_EVENT, getPendingClaimsBadgeCount } from '../lib/v2ModuleToggle';
 import type { BusinessProfile, UserProfile } from '../shared/types';
+import { isInvoicesQuotesModuleEnabled } from '../shared/v2/entitlements';
 import { TallymarkWordmark } from './TallymarkLogo';
 
 interface AppShellProps {
@@ -89,6 +93,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
   const { theme, toggleTheme } = useTheme();
   const [newSheetOpen, setNewSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [pendingClaimsCount, setPendingClaimsCount] = useState(0);
 
   useEffect(() => {
     if (!newSheetOpen && !moreSheetOpen) return;
@@ -107,7 +112,93 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
     return pathname === to || pathname.startsWith(`${to}/`);
   };
 
+  const v2Enabled = isInvoicesQuotesModuleEnabled(business);
+
+  useEffect(() => {
+    if (!v2Enabled) {
+      setPendingClaimsCount(0);
+      return;
+    }
+    let active = true;
+    const refreshBadge = () => {
+      getPendingClaimsBadgeCount().then((cnt) => {
+        if (active) setPendingClaimsCount(cnt);
+      });
+    };
+    refreshBadge();
+    window.addEventListener(CLAIMS_UPDATED_EVENT, refreshBadge);
+    return () => {
+      active = false;
+      window.removeEventListener(CLAIMS_UPDATED_EVENT, refreshBadge);
+    };
+  }, [v2Enabled, pathname]);
+
+  const desktopNavItems = v2Enabled
+    ? [
+        { to: '/app', label: 'Home', icon: Home },
+        { to: '/app/speak', label: 'Speak Your Day', icon: Mic },
+        { to: '/app/cashbook', label: 'Cash Book', icon: BookOpen },
+        { to: '/app/documents', label: 'Documents', icon: FileText },
+        { to: '/app/claims', label: 'Payment Reports', icon: Bell, badge: pendingClaimsCount },
+        { to: '/app/invoices/new', label: 'New Invoice', icon: PlusCircle },
+        { to: '/app/quotes/new', label: 'New Quote', icon: FileText },
+        { to: '/app/new', label: 'New Receipt', icon: ReceiptText },
+        { to: '/app/quick-sale', label: 'Quick Sale', icon: Zap },
+        { to: '/app/credit-sale', label: 'Credit Sale', icon: CreditCard },
+        { to: '/app/debtors', label: 'Who owes me', icon: Users },
+        { to: '/app/expenses', label: 'Expenses', icon: Wallet },
+        { to: '/app/reports', label: 'Reports', icon: BarChart3 },
+        { to: '/app/settings', label: 'Settings', icon: Settings },
+      ]
+    : DESKTOP_NAV;
+
+  const newChoices = v2Enabled
+    ? [
+        {
+          to: '/app/invoices/new',
+          title: 'New Invoice',
+          subtitle: 'Send a payment request with bank details and PDF',
+          icon: FileText,
+        },
+        {
+          to: '/app/quotes/new',
+          title: 'New Quote',
+          subtitle: 'Send a price estimate a customer can accept online',
+          icon: FileText,
+        },
+        ...NEW_CHOICES,
+      ]
+    : NEW_CHOICES;
+
+  const moreLinks = v2Enabled
+    ? [
+        {
+          to: '/app/claims',
+          label:
+            pendingClaimsCount > 0
+              ? `Payment Reports (${pendingClaimsCount})`
+              : 'Payment Reports',
+          subtitle: 'Check customer "I\'ve paid" claims and issue receipts',
+          icon: Bell,
+        },
+        {
+          to: '/app/debtors',
+          label: 'Who owes me',
+          subtitle: 'Track unpaid balances and supplier bills',
+          icon: Users,
+        },
+        ...MORE_LINKS.slice(1),
+      ]
+    : MORE_LINKS;
+
+  const isDocumentsActive =
+    isActive('/app/documents') ||
+    isActive('/app/invoices') ||
+    isActive('/app/quotes') ||
+    isActive('/app/receipts');
+
   const isMoreActive =
+    isActive('/app/claims') ||
     isActive('/app/debtors') ||
     isActive('/app/expenses') ||
     isActive('/app/reports') ||
@@ -159,21 +250,35 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5" aria-label="Primary navigation">
-          {DESKTOP_NAV.map((item) => {
-            const active = isActive(item.to);
+          {desktopNavItems.map((item) => {
+            const active =
+              item.to === '/app/documents' ? isDocumentsActive : isActive(item.to);
             const Icon = item.icon;
+            const badgeCount = 'badge' in item ? Number((item as any).badge || 0) : 0;
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors min-h-[42px] ${
+                className={`flex items-center justify-between gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors min-h-[42px] ${
                   active
                     ? 'bg-[#064E3B] text-white'
                     : 'text-[#444A45] dark:text-[#B5BCB7] hover:bg-[#EAE3D3] dark:hover:bg-[#1B231F]'
                 }`}
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap truncate">{item.label}</span>
+                <span className="flex items-center gap-3 min-w-0">
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap truncate">{item.label}</span>
+                </span>
+                {badgeCount > 0 && (
+                  <span
+                    aria-label={`${badgeCount} pending payment reports`}
+                    className={`font-mono text-[11px] font-bold rounded-md px-1.5 py-0.5 leading-none ${
+                      active ? 'bg-white text-[#064E3B]' : 'bg-[#B91C1C] text-white'
+                    }`}
+                  >
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -292,17 +397,31 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
             </button>
           </div>
 
-          <Link
-            to="/app/receipts"
-            className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
-              isActive('/app/receipts')
-                ? 'text-[#064E3B] dark:text-[#10B981]'
-                : 'text-[#5C635D] dark:text-[#9BA39D]'
-            }`}
-          >
-            <ReceiptText className="w-5 h-5" />
-            <span>Receipts</span>
-          </Link>
+          {v2Enabled ? (
+            <Link
+              to="/app/documents"
+              className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
+                isDocumentsActive
+                  ? 'text-[#064E3B] dark:text-[#10B981]'
+                  : 'text-[#5C635D] dark:text-[#9BA39D]'
+              }`}
+            >
+              <FileText className="w-5 h-5" />
+              <span>Documents</span>
+            </Link>
+          ) : (
+            <Link
+              to="/app/receipts"
+              className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
+                isActive('/app/receipts')
+                  ? 'text-[#064E3B] dark:text-[#10B981]'
+                  : 'text-[#5C635D] dark:text-[#9BA39D]'
+              }`}
+            >
+              <ReceiptText className="w-5 h-5" />
+              <span>Receipts</span>
+            </Link>
+          )}
 
           <button
             type="button"
@@ -310,13 +429,23 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
               setNewSheetOpen(false);
               setMoreSheetOpen((v) => !v);
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
+            className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
               isMoreActive || moreSheetOpen
                 ? 'text-[#064E3B] dark:text-[#10B981]'
                 : 'text-[#5C635D] dark:text-[#9BA39D]'
             }`}
           >
-            <Menu className="w-5 h-5" />
+            <span className="relative">
+              <Menu className="w-5 h-5" />
+              {v2Enabled && pendingClaimsCount > 0 && (
+                <span
+                  aria-label={`${pendingClaimsCount} pending payment reports`}
+                  className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-md bg-[#B91C1C] text-white font-mono text-[10px] font-bold flex items-center justify-center leading-none"
+                >
+                  {pendingClaimsCount > 9 ? '9+' : pendingClaimsCount}
+                </span>
+              )}
+            </span>
             <span>More</span>
           </button>
         </div>
@@ -347,7 +476,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-2.5">
-              {NEW_CHOICES.map((c) => {
+              {newChoices.map((c) => {
                 const Icon = c.icon;
                 return (
                   <button
@@ -399,7 +528,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-2.5">
-              {MORE_LINKS.map((item) => {
+              {moreLinks.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button

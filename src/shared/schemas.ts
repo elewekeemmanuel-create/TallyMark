@@ -224,6 +224,17 @@ export const ANALYTICS_EVENT_NAMES = [
   'cta_open_app_clicked',
   'summary_period_changed',
   'faq_toggled',
+  // V2 anonymous events
+  'module_enabled',
+  'invoice_created',
+  'invoice_sent',
+  'payment_recorded',
+  'claim_submitted',
+  'claim_confirmed',
+  'quote_sent',
+  'quote_accepted',
+  'quote_converted',
+  'reminder_sent',
 ] as const;
 
 export const AnalyticsEventSchema = z.object({

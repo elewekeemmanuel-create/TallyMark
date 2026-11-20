@@ -68,6 +68,13 @@ import type {
   ReceiptRecord,
   ReportsSummary,
 } from '../shared/types.ts';
+import {
+  createV2Router,
+  executeVoidV2PaymentByReceipt,
+  parseBankAccounts,
+  parseModulesEnabled,
+} from './v2/routes.ts';
+import { deletePrivateProofFile } from './v2/proofSecurity.ts';
 
 function createRateLimiter(maxRequests: number, windowMs: number) {
   const hits = new Map<string, { count: number; resetAt: number }>();
@@ -141,6 +148,17 @@ function mapBusinessRow(row: any): BusinessProfile {
     openingCashKobo: Number(row.opening_cash_kobo ?? 0),
     defaultTemplate: row.default_template || 'modern',
     closeDayReminderTime: row.close_day_reminder_time || '19:00',
+    tinRc: row.tin_rc || '',
+    bankAccounts: parseBankAccounts(row.bank_accounts_json),
+    modulesEnabled: parseModulesEnabled(row.modules_enabled_json),
+    plan: row.plan || 'early_access',
+    invoicePrefix: row.invoice_prefix || 'INV-',
+    nextInvoiceSequence: Number(row.next_invoice_sequence ?? 1),
+    quotePrefix: row.quote_prefix || 'QUO-',
+    nextQuoteSequence: Number(row.next_quote_sequence ?? 1),
+    defaultPaymentTermsDays: Number(row.default_payment_terms_days ?? 7),
+    defaultInvoiceNotes: row.default_invoice_notes || '',
+    v2PromoDismissed: Boolean(row.v2_promo_dismissed),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -368,7 +386,7 @@ function upsertCustomerSuggestion(
     .get(businessId, trimmed) as { id: string } | undefined;
   if (existingCust) {
     db.prepare(
-      'UPDATE customers SET phone = COALESCE(NULLIF(?, ""), phone), updated_at = ? WHERE id = ?'
+      "UPDATE customers SET phone = COALESCE(NULLIF(?, ''), phone), updated_at = ? WHERE id = ?"
     ).run(phone.trim(), timestamp, existingCust.id);
   } else {
     db.prepare(
@@ -1528,6 +1546,22 @@ export function createApiRouter() {
     const todayLagos = getLagosDateString();
 
     try {
+      // If this receipt belongs to a V2 payment, delegate to V2 reversal so debt & invoice reopen cleanly
+      const v2PaymentResult = executeVoidV2PaymentByReceipt({
+        businessId: business.id,
+        userId: req.user!.id,
+        receiptId,
+        reason: parsed.data.reason,
+      });
+      if (v2PaymentResult) {
+        if ('error' in v2PaymentResult) {
+          res.status(v2PaymentResult.status ?? 400).json({ error: v2PaymentResult.error });
+          return;
+        }
+        res.json({ receipt: mapReceiptRow(v2PaymentResult.receiptRow) });
+        return;
+      }
+
       const result = runTransaction(() => {
         const row = db
           .prepare('SELECT * FROM receipts WHERE id = ? AND business_id = ?')
@@ -3173,6 +3207,21 @@ export function createApiRouter() {
       .all(business.id)
       .map(mapExpenseRow);
     const dayClosures = getAllClosures(business.id);
+    const invoices = db
+      .prepare('SELECT * FROM invoices WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const quotes = db
+      .prepare('SELECT * FROM quotes WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const payments = db
+      .prepare('SELECT * FROM payments WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const debts = db
+      .prepare('SELECT * FROM debts WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const auditLog = db
+      .prepare('SELECT * FROM audit_log WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
 
     res.setHeader('Content-Disposition', `attachment; filename="tallymark-export-${getLagosDateString()}.json"`);
     res.json({
@@ -3185,6 +3234,11 @@ export function createApiRouter() {
       creditors,
       expenses,
       dayClosures,
+      invoices,
+      quotes,
+      payments,
+      debts,
+      auditLog,
     });
   });
 
@@ -3562,6 +3616,14 @@ export function createApiRouter() {
         return;
       }
 
+      const proofRows = db
+        .prepare(
+          `SELECT proof_path FROM payment_claims
+           WHERE business_id IN (SELECT id FROM businesses WHERE owner_id = ?)
+             AND proof_path IS NOT NULL`
+        )
+        .all(userId) as Array<{ proof_path: string }>;
+
       runTransaction(() => {
         db.prepare(
           'DELETE FROM day_closures WHERE business_id IN (SELECT id FROM businesses WHERE owner_id = ?)'
@@ -3569,6 +3631,9 @@ export function createApiRouter() {
         db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
         db.prepare('DELETE FROM users WHERE id = ?').run(userId);
       });
+      for (const row of proofRows) {
+        deletePrivateProofFile(row.proof_path);
+      }
       const userDir = path.join(EXPENSE_PROOFS_DIR, userId);
       if (fs.existsSync(userDir)) {
         fs.rmSync(userDir, { recursive: true, force: true });
@@ -3580,6 +3645,8 @@ export function createApiRouter() {
       res.status(500).json({ error: 'Unable to delete account' });
     }
   });
+
+  router.use('/v2', createV2Router({ getOwnedBusiness, mapReceiptRow }));
 
   return router;
 }

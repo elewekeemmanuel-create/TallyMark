@@ -1,5 +1,6 @@
 import type { CurrencyCode } from './money';
 import type { EntrySource, PaymentMethod, ReceiptStatus, ReceiptTemplate, VatMode } from './schemas';
+import type { BankAccount, ModulesEnabled } from './v2/types';
 
 export interface UserProfile {
   id: string;
@@ -27,6 +28,18 @@ export interface BusinessProfile {
   openingCashKobo: number;
   defaultTemplate: ReceiptTemplate;
   closeDayReminderTime: string;
+  // Additive V2 fields (optional for backwards compatibility)
+  tinRc?: string;
+  bankAccounts?: BankAccount[];
+  modulesEnabled?: ModulesEnabled;
+  plan?: string;
+  invoicePrefix?: string;
+  nextInvoiceSequence?: number;
+  quotePrefix?: string;
+  nextQuoteSequence?: number;
+  defaultPaymentTermsDays?: number;
+  defaultInvoiceNotes?: string;
+  v2PromoDismissed?: boolean;
   createdAt: string;
   updatedAt: string;
 }

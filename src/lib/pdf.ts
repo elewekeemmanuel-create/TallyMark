@@ -214,11 +214,11 @@ export async function generateReceiptPdfBytes(
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
 
-  const sans = await pdfDoc.embedFont(fonts.sansRegular);
-  const sansBold = await pdfDoc.embedFont(fonts.sansSemiBold);
-  const mono = await pdfDoc.embedFont(fonts.monoRegular);
-  const monoBold = await pdfDoc.embedFont(fonts.monoSemiBold);
-  const serif = await pdfDoc.embedFont(fonts.serifRegular);
+  const sans = await pdfDoc.embedFont(fonts.sansRegular, { subset: true });
+  const sansBold = await pdfDoc.embedFont(fonts.sansSemiBold, { subset: true });
+  const mono = await pdfDoc.embedFont(fonts.monoRegular, { subset: true });
+  const monoBold = await pdfDoc.embedFont(fonts.monoSemiBold, { subset: true });
+  const serif = await pdfDoc.embedFont(fonts.serifRegular, { subset: true });
 
   const publicUrl = `${window.location.origin}/r/${receipt.publicId}`;
   const qrDataUrl = await QRCode.toDataURL(publicUrl, {
