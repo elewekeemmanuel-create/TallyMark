@@ -71,7 +71,12 @@ async function resilientSupabaseFetch(
 
   if (canProxy && preferSupabaseProxy) {
     const [proxyUrl, proxyInit] = buildProxyRequest(rawUrl, input, init);
-    return fetch(proxyUrl, proxyInit);
+    const proxyRes = await fetch(proxyUrl, proxyInit);
+    const contentType = proxyRes.headers.get('content-type') || '';
+    if (!contentType.includes('text/html')) {
+      return proxyRes;
+    }
+    preferSupabaseProxy = false;
   }
 
   try {
@@ -81,9 +86,13 @@ async function resilientSupabaseFetch(
       throw err;
     }
     if (canProxy) {
-      preferSupabaseProxy = true;
       const [proxyUrl, proxyInit] = buildProxyRequest(rawUrl, input, init);
-      return fetch(proxyUrl, proxyInit);
+      const proxyRes = await fetch(proxyUrl, proxyInit);
+      const contentType = proxyRes.headers.get('content-type') || '';
+      if (!contentType.includes('text/html')) {
+        preferSupabaseProxy = true;
+        return proxyRes;
+      }
     }
     throw err;
   }
@@ -93,6 +102,7 @@ export const supabase: SupabaseClient | null =
   isSupabaseConfigured
     ? createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
+          flowType: 'pkce',
           detectSessionInUrl: true,
           persistSession: true,
           autoRefreshToken: true,

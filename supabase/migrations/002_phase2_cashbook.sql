@@ -117,31 +117,41 @@ alter table public.expenses enable row level security;
 alter table public.expense_revisions enable row level security;
 alter table public.day_closures enable row level security;
 
+drop policy if exists "Owner manages credit sales" on public.credit_sales;
 create policy "Owner manages credit sales" on public.credit_sales
   for all using (business_id in (select id from public.businesses where owner_id = auth.uid()))
   with check (business_id in (select id from public.businesses where owner_id = auth.uid()));
 
+drop policy if exists "Owner manages creditors" on public.creditors;
 create policy "Owner manages creditors" on public.creditors
   for all using (business_id in (select id from public.businesses where owner_id = auth.uid()))
   with check (business_id in (select id from public.businesses where owner_id = auth.uid()));
 
+drop policy if exists "Owner reads own expenses" on public.expenses;
 create policy "Owner reads own expenses" on public.expenses
   for select using (business_id in (select id from public.businesses where owner_id = auth.uid()));
+drop policy if exists "Owner inserts own expenses" on public.expenses;
 create policy "Owner inserts own expenses" on public.expenses
   for insert with check (business_id in (select id from public.businesses where owner_id = auth.uid()));
+drop policy if exists "Owner updates own expenses" on public.expenses;
 create policy "Owner updates own expenses" on public.expenses
   for update using (business_id in (select id from public.businesses where owner_id = auth.uid()))
   with check (business_id in (select id from public.businesses where owner_id = auth.uid()));
+drop policy if exists "Owner deletes own expenses" on public.expenses;
 create policy "Owner deletes own expenses" on public.expenses
   for delete using (business_id in (select id from public.businesses where owner_id = auth.uid()));
 
+drop policy if exists "Owner reads own expense revisions" on public.expense_revisions;
 create policy "Owner reads own expense revisions" on public.expense_revisions
   for select using (business_id in (select id from public.businesses where owner_id = auth.uid()));
+drop policy if exists "Owner inserts own expense revisions" on public.expense_revisions;
 create policy "Owner inserts own expense revisions" on public.expense_revisions
   for insert with check (business_id in (select id from public.businesses where owner_id = auth.uid()));
 
+drop policy if exists "Owner reads own day closures" on public.day_closures;
 create policy "Owner reads own day closures" on public.day_closures
   for select using (business_id in (select id from public.businesses where owner_id = auth.uid()));
+drop policy if exists "Owner inserts own day closures" on public.day_closures;
 create policy "Owner inserts own day closures" on public.day_closures
   for insert with check (business_id in (select id from public.businesses where owner_id = auth.uid()));
 
@@ -150,14 +160,17 @@ insert into storage.buckets (id, name, public)
 values ('expense-proofs', 'expense-proofs', false)
 on conflict (id) do nothing;
 
+drop policy if exists "Owner uploads own expense proofs" on storage.objects;
 create policy "Owner uploads own expense proofs" on storage.objects
   for insert to authenticated
   with check (bucket_id = 'expense-proofs' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "Owner reads own expense proofs" on storage.objects;
 create policy "Owner reads own expense proofs" on storage.objects
   for select to authenticated
   using (bucket_id = 'expense-proofs' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "Owner deletes own expense proofs" on storage.objects;
 create policy "Owner deletes own expense proofs" on storage.objects
   for delete to authenticated
   using (bucket_id = 'expense-proofs' and (storage.foldername(name))[1] = auth.uid()::text);

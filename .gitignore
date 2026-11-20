@@ -1,10 +1,32 @@
+# Dependencies
 node_modules/
+
+# Build & PWA outputs
 build/
 dist/
-coverage/
-.DS_Store
-*.log
-.env*
-!.env.example
-data/
+dev-dist/
 server.js
+coverage/
+
+# Environment & secrets (keep .env.example template tracked)
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+
+# Hosting CLI local state
+.netlify/
+.vercel/
+
+# Local SQLite database & uploaded files
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# OS & logs
+.DS_Store
+Thumbs.db
+*.log

@@ -1,4 +1,4 @@
-import React, { Component, Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import React, { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { api, setStoredSessionToken } from './lib/api';
 import { RouterProvider, useRouter } from './lib/router';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
@@ -47,6 +47,44 @@ const ReportsPage = lazy(() =>
 const SpeakDayPage = lazy(() =>
   import('./pages/SpeakDayPage').then((m) => ({ default: m.SpeakDayPage }))
 );
+
+function parseOAuthCallbackParams() {
+  if (typeof window === 'undefined') {
+    return {
+      isCallbackRoute: false,
+      code: null as string | null,
+      accessToken: null as string | null,
+      refreshToken: null as string | null,
+      oauthError: null as string | null,
+      hasOAuthParams: false,
+    };
+  }
+  const pathname = window.location.pathname || '/';
+  const searchParams = new URLSearchParams(window.location.search || '');
+  const hashRaw = (window.location.hash || '').replace(/^#/, '');
+  const hashParams = new URLSearchParams(hashRaw);
+
+  const code = searchParams.get('code');
+  const accessToken = hashParams.get('access_token');
+  const refreshToken = hashParams.get('refresh_token');
+  const oauthError =
+    searchParams.get('error_description') ||
+    hashParams.get('error_description') ||
+    searchParams.get('error') ||
+    hashParams.get('error');
+
+  const isCallbackRoute = pathname === '/auth/callback' || pathname === '/auth/callback/';
+  const hasOAuthParams = Boolean(code || accessToken || oauthError);
+
+  return {
+    isCallbackRoute,
+    code,
+    accessToken,
+    refreshToken,
+    oauthError,
+    hasOAuthParams,
+  };
+}
 
 function RouteLoadingFallback() {
   return (
@@ -99,7 +137,14 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode }, ErrorBou
 
 function TallymarkRoutes() {
   const { pathname, navigate } = useRouter();
+  const initialOAuth = useRef(parseOAuthCallbackParams());
+  const oauthHandlingRef = useRef(
+    initialOAuth.current.isCallbackRoute || initialOAuth.current.hasOAuthParams
+  );
   const [authLoading, setAuthLoading] = useState(true);
+  const [oauthMessage, setOauthMessage] = useState<string | null>(
+    oauthHandlingRef.current ? 'Completing Google sign-in…' : null
+  );
   const [user, setUser] = useState<UserProfile | null>(null);
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
 
@@ -108,10 +153,12 @@ function TallymarkRoutes() {
       const res = await api.getMe();
       setUser(res.user);
       setBusiness(res.business);
+      return res;
     } catch {
       setUser(null);
       setBusiness(null);
       setStoredSessionToken(null);
+      return null;
     } finally {
       setAuthLoading(false);
     }
@@ -119,25 +166,147 @@ function TallymarkRoutes() {
 
   useEffect(() => {
     let active = true;
+
+    const finishPopupAndClose = (ok: boolean, errorMessage?: string | null) => {
+      if (typeof window !== 'undefined' && window.opener) {
+        try {
+          window.opener.postMessage(
+            { type: 'TALLYMARK_OAUTH_COMPLETE', ok, error: errorMessage || null },
+            window.location.origin
+          );
+        } catch {
+          // ignore cross-origin postMessage errors
+        }
+        window.close();
+        return true;
+      }
+      return false;
+    };
+
     const init = async () => {
+      const cb = initialOAuth.current;
+      const isOAuthReturn = cb.isCallbackRoute || cb.hasOAuthParams;
+
       if (isSupabaseConfigured && supabase) {
         try {
-          await supabase.auth.getSession();
-        } catch {
-          // ignore session bootstrap error; refreshMe handles unauthenticated state
+          // Handle explicit OAuth error returned by Google / Supabase
+          if (cb.oauthError) {
+            const cleanErr = cb.oauthError.replace(/\+/g, ' ');
+            if (cb.isCallbackRoute && finishPopupAndClose(false, cleanErr)) {
+              return;
+            }
+            oauthHandlingRef.current = false;
+            setOauthMessage(null);
+            setAuthLoading(false);
+            if (active) {
+              navigate(`/login?auth_error=${encodeURIComponent(cleanErr)}`, { replace: true });
+            }
+            return;
+          }
+
+          // Await Supabase client initialization (which runs detectSessionInUrl for PKCE/implicit)
+          let { data: sessData } = await supabase.auth.getSession();
+
+          // Explicit fallback: exchange PKCE ?code= if detectSessionInUrl didn't already consume it
+          if (!sessData.session && cb.code) {
+            const { data: exData, error: exErr } = await supabase.auth.exchangeCodeForSession(cb.code);
+            if (exErr) {
+              const errMsg = exErr.message || 'Could not complete Google sign-in. Please try again.';
+              if (cb.isCallbackRoute && finishPopupAndClose(false, errMsg)) {
+                return;
+              }
+              oauthHandlingRef.current = false;
+              setOauthMessage(null);
+              setAuthLoading(false);
+              if (active) {
+                navigate(`/login?auth_error=${encodeURIComponent(errMsg)}`, { replace: true });
+              }
+              return;
+            }
+            sessData = { session: exData.session };
+          }
+
+          // Explicit fallback: set implicit hash tokens if present and not yet loaded
+          if (!sessData.session && cb.accessToken && cb.refreshToken) {
+            const { data: setSessData, error: setSessErr } = await supabase.auth.setSession({
+              access_token: cb.accessToken,
+              refresh_token: cb.refreshToken,
+            });
+            if (!setSessErr && setSessData.session) {
+              sessData = { session: setSessData.session };
+            }
+          }
+
+          if (isOAuthReturn) {
+            if (!sessData.session) {
+              const failMsg = 'Google sign-in session could not be restored. Please try again.';
+              if (cb.isCallbackRoute && finishPopupAndClose(false, failMsg)) {
+                return;
+              }
+              oauthHandlingRef.current = false;
+              setOauthMessage(null);
+              setAuthLoading(false);
+              if (active) {
+                navigate(`/login?auth_error=${encodeURIComponent(failMsg)}`, { replace: true });
+              }
+              return;
+            }
+
+            if (cb.isCallbackRoute && finishPopupAndClose(true, null)) {
+              return;
+            }
+
+            if (active) {
+              const me = await refreshMe();
+              oauthHandlingRef.current = false;
+              setOauthMessage(null);
+              if (me) {
+                navigate(me.business ? '/app' : '/onboarding', { replace: true });
+              } else {
+                navigate(
+                  `/login?auth_error=${encodeURIComponent('Signed in with Google, but could not load your profile. Please try again.')}`,
+                  { replace: true }
+                );
+              }
+            }
+            return;
+          }
+        } catch (err: any) {
+          if (isOAuthReturn) {
+            const msg = err?.message || 'Google sign-in failed. Please try again.';
+            if (cb.isCallbackRoute && finishPopupAndClose(false, msg)) {
+              return;
+            }
+            oauthHandlingRef.current = false;
+            setOauthMessage(null);
+            setAuthLoading(false);
+            if (active) {
+              navigate(`/login?auth_error=${encodeURIComponent(msg)}`, { replace: true });
+            }
+            return;
+          }
         }
       }
+
+      oauthHandlingRef.current = false;
+      setOauthMessage(null);
       if (active) {
         await refreshMe();
       }
     };
+
     init();
 
     if (isSupabaseConfigured && supabase) {
-      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session) {
+      const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+        if (!active) return;
+        // Never race with in-flight OAuth code/token exchange or premature INITIAL_SESSION(null)
+        if (oauthHandlingRef.current) return;
+        if (event === 'INITIAL_SESSION') return;
+
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
           refreshMe();
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setBusiness(null);
           setAuthLoading(false);
@@ -151,12 +320,26 @@ function TallymarkRoutes() {
     return () => {
       active = false;
     };
-  }, [refreshMe]);
+  }, [navigate, refreshMe]);
 
   // Public receipt route (/r/:id) works immediately even while auth loads or logged out
   const publicMatch = /^\/r\/([A-Za-z0-9_-]+)$/.exec(pathname);
   if (publicMatch) {
     return <PublicReceiptPage publicId={publicMatch[1]} />;
+  }
+
+  // Dedicated OAuth callback screen (or OAuth return on /) stays in loading state until exchange finishes
+  if (pathname === '/auth/callback' || pathname === '/auth/callback/' || oauthHandlingRef.current) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0D110F] flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <p className="font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">Tallymark</p>
+          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            {oauthMessage || 'Completing sign-in…'}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (pathname === '/privacy') return <PrivacyPage />;

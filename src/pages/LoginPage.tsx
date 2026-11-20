@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { api, setStoredSessionToken } from '../lib/api';
 import { Link, useRouter } from '../lib/router';
@@ -8,6 +8,29 @@ import { TallymarkWordmark } from '../components/TallymarkLogo';
 
 interface LoginPageProps {
   onAuthenticated: (user: UserProfile, business: BusinessProfile | null) => void;
+}
+
+function GoogleIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h6.44a5.51 5.51 0 0 1-2.39 3.62v3h3.87c2.26-2.08 3.57-5.15 3.57-8.65z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.07 7.93-2.91l-3.87-3c-1.07.72-2.44 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.1A12 12 0 0 0 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.29v-3.1H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.1z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.76c1.76 0 3.34.61 4.59 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.1c.95-2.84 3.6-4.95 6.72-4.95z"
+      />
+    </svg>
+  );
 }
 
 function formatSupabaseAuthError(message: string | undefined, mode: 'signin' | 'signup'): string {
@@ -33,6 +56,12 @@ function formatSupabaseAuthError(message: string | undefined, mode: 'signin' | '
   if (lower.includes('valid email') || lower.includes('invalid email')) {
     return 'Enter a valid email address.';
   }
+  if (lower.includes('access_denied') || lower.includes('cancelled')) {
+    return 'Google sign-in was cancelled. You can try again or sign in with email.';
+  }
+  if (lower.includes('provider is not enabled')) {
+    return 'Google sign-in is not enabled in your Supabase Authentication providers yet.';
+  }
   if (
     lower.includes('failed to fetch') ||
     lower.includes('load failed') ||
@@ -53,20 +82,168 @@ function formatSupabaseAuthError(message: string | undefined, mode: 'signin' | '
 }
 
 export function LoginPage({ onAuthenticated }: LoginPageProps) {
-  const { navigate } = useRouter();
+  const { navigate, search } = useRouter();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleAvailable, setGoogleAvailable] = useState(isSupabaseConfigured);
   const [error, setError] = useState<string | null>(null);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(search || '');
+    const authErr = params.get('auth_error') || params.get('error_description') || params.get('error');
+    if (authErr) {
+      setError(formatSupabaseAuthError(authErr, 'signin'));
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [search]);
+
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      setGoogleAvailable(true);
+      return;
+    }
+    api
+      .getAuthConfig()
+      .then((cfg) => setGoogleAvailable(Boolean(cfg.googleOAuthConfigured)))
+      .catch(() => setGoogleAvailable(false));
+  }, []);
+
+  useEffect(() => {
+    const onMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'TALLYMARK_OAUTH_COMPLETE') {
+        if (!event.data.ok) {
+          setGoogleBusy(false);
+          setError(
+            formatSupabaseAuthError(
+              event.data.error || 'Google sign-in did not complete.',
+              mode
+            )
+          );
+          return;
+        }
+        try {
+          const me = await api.getMe();
+          onAuthenticated(me.user, me.business);
+          navigate(me.business ? '/app' : '/onboarding', { replace: true });
+        } catch (err: any) {
+          setError(formatSupabaseAuthError(err?.message, mode));
+        } finally {
+          setGoogleBusy(false);
+        }
+      } else if (event.data?.type === 'TALLYMARK_OAUTH_SUCCESS') {
+        try {
+          if (event.data.sessionToken) {
+            setStoredSessionToken(event.data.sessionToken);
+          }
+          const me = await api.getMe();
+          onAuthenticated(me.user, me.business);
+          navigate(me.business ? '/app' : '/onboarding', { replace: true });
+        } catch (err: any) {
+          setError(formatSupabaseAuthError(err?.message, mode));
+        } finally {
+          setGoogleBusy(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [mode, navigate, onAuthenticated]);
 
   const switchMode = (nextMode: 'signin' | 'signup') => {
     setMode(nextMode);
     setError(null);
     setConfirmationEmail(null);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setConfirmationEmail(null);
+    setGoogleBusy(true);
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const isEmbeddedIframe = window.self !== window.top;
+
+      if (isSupabaseConfigured && supabase) {
+        const supa = supabase;
+        if (isEmbeddedIframe) {
+          const { data, error: oauthErr } = await supa.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo,
+              skipBrowserRedirect: true,
+              queryParams: { prompt: 'select_account' },
+            },
+          });
+          if (oauthErr || !data?.url) {
+            setError(formatSupabaseAuthError(oauthErr?.message || 'Unable to start Google sign-in.', mode));
+            setGoogleBusy(false);
+            return;
+          }
+          const popup = window.open(data.url, 'tallymark_google_auth', 'width=520,height=680');
+          if (!popup) {
+            setError(
+              'Pop-up was blocked by your browser. Allow pop-ups or open Tallymark directly in a full browser tab to sign in with Google.'
+            );
+            setGoogleBusy(false);
+            return;
+          }
+          const poll = window.setInterval(async () => {
+            if (!popup.closed) return;
+            window.clearInterval(poll);
+            try {
+              const { data: sess } = await supa.auth.getSession();
+              if (sess.session) {
+                const me = await api.getMe();
+                onAuthenticated(me.user, me.business);
+                navigate(me.business ? '/app' : '/onboarding', { replace: true });
+                return;
+              }
+            } catch {
+              // ignore and reset busy state below
+            }
+            setGoogleBusy(false);
+          }, 500);
+          return;
+        }
+
+        const { error: oauthErr } = await supa.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo,
+            queryParams: { prompt: 'select_account' },
+          },
+        });
+        if (oauthErr) {
+          setError(formatSupabaseAuthError(oauthErr.message, mode));
+          setGoogleBusy(false);
+        }
+        return;
+      }
+
+      // Standalone Express Google OAuth fallback
+      const { url } = await api.getGoogleAuthUrl();
+      if (isEmbeddedIframe) {
+        const popup = window.open(url, 'tallymark_google_auth', 'width=520,height=680');
+        if (!popup) {
+          setError('Pop-up was blocked. Allow pop-ups to continue with Google.');
+          setGoogleBusy(false);
+        }
+      } else {
+        window.location.assign(url);
+      }
+    } catch (err: any) {
+      setError(formatSupabaseAuthError(err?.message, mode));
+      setGoogleBusy(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +288,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           }
           const me = await api.getMe();
           onAuthenticated(me.user, me.business);
-          navigate('/app', { replace: true });
+          navigate(me.business ? '/app' : '/onboarding', { replace: true });
           return;
         }
 
@@ -120,7 +297,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           password,
           options: {
             data: { full_name: trimmedName },
-            emailRedirectTo: `${window.location.origin}/app`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
 
@@ -139,7 +316,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
         if (data.session) {
           const me = await api.getMe();
           onAuthenticated(me.user, me.business);
-          navigate('/app', { replace: true });
+          navigate(me.business ? '/app' : '/onboarding', { replace: true });
           return;
         }
 
@@ -154,12 +331,12 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
         const res = await api.signInWithPassword(trimmedEmail, password);
         setStoredSessionToken(res.sessionToken);
         onAuthenticated(res.user, res.business);
-        navigate('/app', { replace: true });
+        navigate(res.business ? '/app' : '/onboarding', { replace: true });
       } else {
         const res = await api.signUpWithPassword(trimmedName, trimmedEmail, password);
         setStoredSessionToken(res.sessionToken);
         onAuthenticated(res.user, res.business);
-        navigate('/app', { replace: true });
+        navigate(res.business ? '/app' : '/onboarding', { replace: true });
       }
     } catch (err: any) {
       setError(formatSupabaseAuthError(err?.message, mode));
@@ -184,9 +361,40 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           </h1>
           <p className="mt-1.5 text-sm text-[#5C635D] dark:text-[#9BA39D]">
             {mode === 'signin'
-              ? 'Sign in with your email and password to access your receipts and cash book.'
-              : 'Set up your private account to issue receipts and keep your daily cash book.'}
+              ? 'Sign in with Google or your email and password to access your receipts and cash book.'
+              : 'Get started in one click with Google or create an account with your email.'}
           </p>
+
+          {googleAvailable && (
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={busy || googleBusy}
+                className="w-full min-h-[48px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA] text-sm font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] transition-colors inline-flex items-center justify-center gap-2.5 disabled:opacity-60"
+              >
+                {googleBusy ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting to Google…</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="w-4 h-4" />
+                    <span>Continue with Google</span>
+                  </>
+                )}
+              </button>
+
+              <div className="mt-5 flex items-center gap-3">
+                <div className="h-px flex-1 bg-[#ECE6D8] dark:bg-[#26302B]" />
+                <span className="text-[11px] uppercase tracking-wider text-[#5C635D] dark:text-[#9BA39D]">
+                  or with email
+                </span>
+                <div className="h-px flex-1 bg-[#ECE6D8] dark:bg-[#26302B]" />
+              </div>
+            </div>
+          )}
 
           <div
             role="tablist"

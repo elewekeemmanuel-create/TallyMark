@@ -145,15 +145,20 @@ alter table public.receipts enable row level security;
 alter table public.ledger_entries enable row level security;
 alter table public.public_receipts enable row level security;
 
+drop policy if exists "Owner reads own business" on public.businesses;
 create policy "Owner reads own business" on public.businesses
   for select using (owner_id = auth.uid());
+drop policy if exists "Owner inserts own business" on public.businesses;
 create policy "Owner inserts own business" on public.businesses
   for insert with check (owner_id = auth.uid());
+drop policy if exists "Owner updates own business" on public.businesses;
 create policy "Owner updates own business" on public.businesses
   for update using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+drop policy if exists "Owner deletes own business" on public.businesses;
 create policy "Owner deletes own business" on public.businesses
   for delete using (owner_id = auth.uid());
 
+drop policy if exists "Owner manages customers" on public.customers;
 create policy "Owner manages customers" on public.customers
   for all using (
     business_id in (select id from public.businesses where owner_id = auth.uid())
@@ -161,6 +166,7 @@ create policy "Owner manages customers" on public.customers
     business_id in (select id from public.businesses where owner_id = auth.uid())
   );
 
+drop policy if exists "Owner manages catalog items" on public.catalog_items;
 create policy "Owner manages catalog items" on public.catalog_items
   for all using (
     business_id in (select id from public.businesses where owner_id = auth.uid())
@@ -169,17 +175,20 @@ create policy "Owner manages catalog items" on public.catalog_items
   );
 
 -- Receipts can only be read by owner and mutated through SECURITY DEFINER RPC functions
+drop policy if exists "Owner reads own receipts" on public.receipts;
 create policy "Owner reads own receipts" on public.receipts
   for select using (
     business_id in (select id from public.businesses where owner_id = auth.uid())
   );
 
+drop policy if exists "Owner reads own ledger" on public.ledger_entries;
 create policy "Owner reads own ledger" on public.ledger_entries
   for select using (
     business_id in (select id from public.businesses where owner_id = auth.uid())
   );
 
 -- Direct selects on public_receipts are blocked to prevent enumeration; use get_public_receipt(id)
+drop policy if exists "No direct select on public_receipts" on public.public_receipts;
 create policy "No direct select on public_receipts" on public.public_receipts
   for select using (false);
 

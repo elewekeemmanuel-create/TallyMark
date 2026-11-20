@@ -559,6 +559,23 @@ create policy "Owner deletes own business"
   to authenticated
   using (owner_id = auth.uid());
 
+create or replace function public.is_day_closed(p_business_id uuid, p_date date)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.day_closures
+    where business_id = p_business_id
+      and close_date = p_date
+  );
+$$;
+
+grant execute on function public.is_day_closed(uuid, date) to authenticated;
+
 create or replace function public.enforce_closed_day_on_ledger()
 returns trigger
 language plpgsql
@@ -582,7 +599,8 @@ begin
 
   if tg_op = 'UPDATE' then
     if public.is_day_closed(old.business_id, old.entry_date) then
-      if (new.receipt_id is distinct from old.receipt_id)
+      if old.receipt_id is null
+         and new.receipt_id is not null
          and new.amount_kobo = old.amount_kobo
          and new.cash_received_kobo = old.cash_received_kobo
          and new.entry_date = old.entry_date
@@ -596,8 +614,11 @@ begin
   end if;
 
   if tg_op = 'INSERT' then
-    if public.is_day_closed(new.business_id, new.entry_date) and coalesce(new.is_correction, false) = false then
-      new.is_correction := true;
+    if public.is_day_closed(new.business_id, new.entry_date) then
+      if coalesce(new.is_correction, false) = true and new.entry_type = 'ADJUSTMENT' then
+        return new;
+      end if;
+      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Day % is closed. Post a visible correction entry instead.', new.entry_date;
     end if;
     return new;
   end if;
@@ -610,28 +631,39 @@ create or replace function public.enforce_closed_day_on_expenses()
 returns trigger
 language plpgsql
 as $$
-declare
-  v_was_closed boolean;
 begin
   if tg_op = 'DELETE' then
     -- Allow ON DELETE CASCADE when the parent business itself is being deleted
     if not exists (select 1 from public.businesses where id = old.business_id) then
       return old;
     end if;
-    if public.is_day_closed(old.business_id, old.expense_date) then
-      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Day % is closed. Cannot delete an expense from a closed day; record an adjustment instead.', old.expense_date;
+    if public.is_day_closed(old.business_id, old.entry_date) then
+      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Day % is closed. Cannot delete an expense from a closed day; record an adjustment instead.', old.entry_date;
     end if;
     return old;
   end if;
 
+  if tg_op = 'INSERT' then
+    if public.is_day_closed(new.business_id, new.entry_date) then
+      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Day % is closed. Post a visible correction entry instead.', new.entry_date;
+    end if;
+    return new;
+  end if;
+
   if tg_op = 'UPDATE' then
-    v_was_closed := public.is_day_closed(old.business_id, old.expense_date);
-    if v_was_closed and new.expense_date is distinct from old.expense_date then
-      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Cannot move an expense out of a closed day (%).', old.expense_date;
+    if public.is_day_closed(old.business_id, old.entry_date) then
+      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Day % is closed. Expenses on a closed day cannot be edited; post a correction entry instead.', old.entry_date;
+    end if;
+    if new.entry_date is distinct from old.entry_date and public.is_day_closed(new.business_id, new.entry_date) then
+      raise exception 'CLOSED_DAY_MUTATION_BLOCKED: Target day % is closed.', new.entry_date;
     end if;
   end if;
 
   return new;
 end;
 $$;
+
+-- Force PostgREST to reload schema cache immediately after migration
+notify pgrst, 'reload schema';
+
 
