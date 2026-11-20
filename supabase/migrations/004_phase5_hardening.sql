@@ -171,8 +171,7 @@ begin
   v_status := case when v_balance = 0 then 'PAID' else 'PART_PAID' end;
   v_seq := v_biz.next_sequence;
   v_receipt_number := v_biz.receipt_prefix || lpad(v_seq::text, 4, '0');
-  v_public_id := replace(replace(encode(gen_random_bytes(16), 'base64'), '+', '-'), '/', '_');
-  v_public_id := rtrim(v_public_id, '=');
+  v_public_id := replace(gen_random_uuid()::text, '-', '');
   v_template := coalesce(p_template, v_biz.default_template);
 
   update public.businesses set next_sequence = next_sequence + 1, updated_at = now() where id = v_biz.id;
@@ -287,7 +286,7 @@ begin
 
   v_seq := v_biz.next_sequence;
   v_receipt_number := v_biz.receipt_prefix || lpad(v_seq::text, 4, '0');
-  v_public_id := rtrim(replace(replace(encode(gen_random_bytes(16), 'base64'), '+', '-'), '/', '_'), '=');
+  v_public_id := replace(gen_random_uuid()::text, '-', '');
   v_template := coalesce(p_template, v_parent.template, v_biz.default_template);
   v_new_paid := v_parent.amount_paid_kobo + p_amount_kobo;
   v_new_balance := greatest(0, v_parent.total_kobo - v_new_paid);
@@ -483,7 +482,7 @@ begin
 
   v_seq := v_biz.next_sequence;
   v_receipt_number := v_biz.receipt_prefix || lpad(v_seq::text, 4, '0');
-  v_public_id := rtrim(replace(replace(encode(gen_random_bytes(16), 'base64'), '+', '-'), '/', '_'), '=');
+  v_public_id := replace(gen_random_uuid()::text, '-', '');
   v_template := coalesce(p_template, v_biz.default_template);
   v_new_paid := v_cs.amount_paid_kobo + p_amount_kobo;
   v_new_balance := greatest(0, v_cs.total_kobo - v_new_paid);
