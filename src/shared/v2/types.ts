@@ -341,3 +341,149 @@ export interface PublicQuoteRecord {
   voidedAt: string | null;
   snapshot: QuoteSnapshot;
 }
+
+// ============================================================================
+// SLICE 4: RECEIVABLES, REMINDERS, CUSTOMERS DIRECTORY, STATEMENTS & REPORTS
+// ============================================================================
+
+export type ReceivableSourceFilter = 'ALL' | 'INVOICE' | 'CREDIT_SALE' | 'RECEIPT';
+export type AgeingBucketFilter = 'ALL' | 'not_yet_due' | '1_7' | '8_30' | '30_plus';
+
+export interface ReceivableItem {
+  debtId: string;
+  sourceType: 'INVOICE' | 'CREDIT_SALE' | 'RECEIPT';
+  sourceId: string;
+  referenceNumber: string;
+  publicId: string | null;
+  publicPath: string | null;
+  customerId: string | null;
+  customerName: string;
+  customerPhone: string;
+  issueDate: string;
+  dueDate: string | null;
+  effectiveDueDate: string;
+  daysOverdue: number;
+  ageingBucket: 'not_yet_due' | '1_7' | '8_30' | '30_plus';
+  totalKobo: number;
+  amountPaidKobo: number;
+  writtenOffKobo: number;
+  balanceDueKobo: number;
+  status: 'OPEN' | 'PART_PAID';
+  lastReminderAt: string | null;
+  lastReminderTone: 'gentle' | 'firm' | null;
+  reminderCount: number;
+  remindedWithin3Days: boolean;
+}
+
+export interface AgeingBucketTotals {
+  notYetDueKobo: number;
+  notYetDueCount: number;
+  days1To7Kobo: number;
+  days1To7Count: number;
+  days8To30Kobo: number;
+  days8To30Count: number;
+  days30PlusKobo: number;
+  days30PlusCount: number;
+  totalOutstandingKobo: number;
+  totalOpenCount: number;
+}
+
+export interface PaymentReminderRecord {
+  id: string;
+  businessId: string;
+  debtId: string;
+  customerId: string | null;
+  tone: 'gentle' | 'firm';
+  channel: 'whatsapp';
+  sentAt: string;
+  sentBy: string;
+}
+
+export interface CustomerDirectoryItem {
+  id: string;
+  businessId: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  notes: string;
+  invoiceCount: number;
+  quoteCount: number;
+  receiptCount: number;
+  creditSaleCount: number;
+  openDebtCount: number;
+  totalBilledKobo: number;
+  totalPaidKobo: number;
+  balanceOwedKobo: number;
+  lastActivityAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerStatementLine {
+  id: string;
+  date: string;
+  kind: 'INVOICE' | 'CREDIT_SALE' | 'RECEIPT_BALANCE' | 'PAYMENT' | 'WRITE_OFF';
+  reference: string;
+  description: string;
+  debitKobo: number;
+  creditKobo: number;
+  runningBalanceKobo: number;
+}
+
+export interface CustomerStatementRecord {
+  business: {
+    name: string;
+    logoDataUrl: string | null;
+    address: string;
+    phone: string;
+    email: string;
+    tinRc: string;
+    brandColor: string;
+    currency: CurrencyCode;
+  };
+  customer: {
+    id: string;
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+  };
+  generatedDateLagos: string;
+  fromDate: string;
+  toDate: string;
+  openingBalanceKobo: number;
+  periodDebitsKobo: number;
+  periodPaymentsKobo: number;
+  periodWriteOffsKobo: number;
+  closingBalanceKobo: number;
+  lines: CustomerStatementLine[];
+}
+
+export interface V2ReportsSummary {
+  dateFrom: string;
+  dateTo: string;
+  // Sold vs Received (strictly separated, reconciled with ledger)
+  soldTotalKobo: number;
+  invoicedSalesKobo: number;
+  directSalesKobo: number; // quick sales + receipt sales + credit sales
+  receivedTotalKobo: number; // actual money_in in ledger_entries (reconciles 1:1 with Cash Book)
+  expensesTotalKobo: number;
+  netCashFlowKobo: number;
+  // Invoice Ageing (as of today Africa/Lagos)
+  invoiceAgeing: AgeingBucketTotals;
+  // Quote-to-Invoice Conversion (within dateFrom..dateTo by issue_date)
+  quoteConversion: {
+    quotesSent: number;
+    quotesAccepted: number;
+    quotesDeclined: number;
+    quotesExpired: number;
+    quotesConverted: number;
+    conversionRatePct: number;
+    quotedTotalKobo: number;
+    convertedTotalKobo: number;
+  };
+}
+
+export type V2CsvExportType = 'invoices' | 'quotes' | 'payments';
+

@@ -256,8 +256,320 @@ export function calculateV2DocumentTotals(params: {
 export function sanitizeCsvCell(val: string | number | null | undefined): string {
   if (val === null || val === undefined) return '';
   const s = String(val);
-  if (/^[=+\-@\t\r]/.test(s)) {
+  if (/^[=+\-@\t\r]/.test(s) || /^[ \t]+[=+\-@]/.test(s)) {
     return `'${s}`;
   }
   return s;
 }
+
+// ============================================================================
+// SLICE 4: RECEIVABLES AGEING (AFRICA/LAGOS), REMINDERS & CUSTOMER STATEMENTS
+// ============================================================================
+
+export type AgeingBucket = 'not_yet_due' | '1_7' | '8_30' | '30_plus';
+
+function parseYmdUtcDay(ymd: string): number {
+  const [y, m, d] = ymd.split('-').map((n) => Number.parseInt(n, 10));
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return 0;
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+/**
+ * Computes exact whole-day overdue count and ageing bucket in Africa/Lagos (WAT, UTC+1).
+ * A document due on `2026-05-10` is `not_yet_due` up to `2026-05-10 23:59:59 WAT`
+ * and becomes 1 day overdue (`1_7`) at `2026-05-11 00:00:00 WAT`.
+ * If `dueDate` is null (e.g. legacy part-paid receipt or quick credit without due date),
+ * falls back to `fallbackIssueDate`.
+ */
+export function computeAgeingBucket(
+  dueDate: string | null | undefined,
+  fallbackIssueDate: string,
+  referenceNow: Date | string = new Date()
+): { daysOverdue: number; bucket: AgeingBucket; effectiveDueDate: string } {
+  const effectiveDueDate =
+    dueDate && /^\d{4}-\d{2}-\d{2}$/.test(dueDate) ? dueDate : fallbackIssueDate;
+  const todayLagos =
+    typeof referenceNow === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(referenceNow)
+      ? referenceNow
+      : getLagosDateString(referenceNow instanceof Date ? referenceNow : new Date(referenceNow));
+
+  const diff = parseYmdUtcDay(todayLagos) - parseYmdUtcDay(effectiveDueDate);
+  if (diff <= 0) {
+    return { daysOverdue: 0, bucket: 'not_yet_due', effectiveDueDate };
+  }
+  if (diff <= 7) {
+    return { daysOverdue: diff, bucket: '1_7', effectiveDueDate };
+  }
+  if (diff <= 30) {
+    return { daysOverdue: diff, bucket: '8_30', effectiveDueDate };
+  }
+  return { daysOverdue: diff, bucket: '30_plus', effectiveDueDate };
+}
+
+export const REMINDER_WARNING_WINDOW_MS = 3 * 24 * 60 * 60 * 1000; // 3 days (72 hours)
+
+/**
+ * Returns true when a reminder was already logged within the last 3 days.
+ */
+export function isRemindedWithin3Days(
+  lastSentAtIso: string | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (!lastSentAtIso) return false;
+  const sentMs = Date.parse(lastSentAtIso);
+  if (!Number.isFinite(sentMs)) return false;
+  const elapsed = now.getTime() - sentMs;
+  return elapsed >= 0 && elapsed < REMINDER_WARNING_WINDOW_MS;
+}
+
+/**
+ * Normalizes Nigerian/international phone numbers into wa.me digits-only format.
+ */
+export function normalizeWhatsAppPhone(rawPhone: string | null | undefined): string {
+  const digits = (rawPhone || '').replace(/\D+/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('0') && digits.length === 11) {
+    return `234${digits.slice(1)}`;
+  }
+  if (digits.startsWith('234') && digits.length >= 13) {
+    return digits;
+  }
+  if (digits.length >= 10) {
+    return digits;
+  }
+  return '';
+}
+
+export function buildReminderMessage(params: {
+  tone: 'gentle' | 'firm';
+  businessName: string;
+  customerName: string;
+  amountFormatted: string;
+  referenceNumber: string;
+  dueDate?: string | null;
+  publicUrl?: string | null;
+}): string {
+  const customer = (params.customerName || 'Customer').trim();
+  const biz = (params.businessName || 'our shop').trim();
+  const refPart = params.referenceNumber ? ` (${params.referenceNumber})` : '';
+  const duePart = params.dueDate ? ` due ${params.dueDate}` : '';
+  const linkPart = params.publicUrl ? `\nView details & payment info: ${params.publicUrl}` : '';
+
+  if (params.tone === 'firm') {
+    return (
+      `Hello ${customer}, this is a follow-up from ${biz}. ` +
+      `Your balance of ${params.amountFormatted}${refPart}${duePart} is now overdue. ` +
+      `Kindly make payment today and share your transfer reference so we can issue your receipt.${linkPart}`
+    );
+  }
+
+  return (
+    `Hello ${customer}, a kind reminder from ${biz} about your balance of ${params.amountFormatted}${refPart}${duePart}. ` +
+    `Please let us know once you have paid so we can send your receipt. Thank you.${linkPart}`
+  );
+}
+
+export function buildWhatsAppUrl(phone: string | null | undefined, message: string): string {
+  const digits = normalizeWhatsAppPhone(phone);
+  const encoded = encodeURIComponent(message);
+  return digits ? `https://wa.me/${digits}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+}
+
+export interface StatementInvoiceInput {
+  id: string;
+  referenceNumber: string;
+  issueDate: string;
+  totalKobo: number;
+  writtenOffKobo: number;
+  writtenOffDate: string | null;
+  writeOffReason?: string | null;
+  status: string;
+  sourceType: 'INVOICE' | 'CREDIT_SALE' | 'RECEIPT';
+  createdAt?: string;
+}
+
+export interface StatementPaymentInput {
+  id: string;
+  referenceNumber: string;
+  receiptNumber?: string | null;
+  paymentDate: string;
+  amountKobo: number;
+  paymentMethod: string;
+  isVoided?: boolean;
+  createdAt?: string;
+}
+
+export interface StatementLineComputed {
+  id: string;
+  date: string;
+  kind: 'INVOICE' | 'CREDIT_SALE' | 'RECEIPT_BALANCE' | 'PAYMENT' | 'WRITE_OFF';
+  reference: string;
+  description: string;
+  debitKobo: number;
+  creditKobo: number;
+  runningBalanceKobo: number;
+}
+
+export interface ComputedStatement {
+  fromDate: string;
+  toDate: string;
+  openingBalanceKobo: number;
+  periodDebitsKobo: number;
+  periodPaymentsKobo: number;
+  periodWriteOffsKobo: number;
+  closingBalanceKobo: number;
+  lines: StatementLineComputed[];
+}
+
+/**
+ * Pure deterministic Customer Statement calculator.
+ * - Opening balance = sum of debits - payments - write-offs strictly before `fromDate`.
+ * - Period lines include invoices/credits (debit), payments (credit), and write-offs (separate credit line)
+ *   sorted chronologically by date, then debits before credits/write-offs, then createdAt/id.
+ * - Running balance reconciles exactly: closing = opening + periodDebits - periodPayments - periodWriteOffs.
+ */
+export function computeCustomerStatement(params: {
+  fromDate: string;
+  toDate: string;
+  documents: StatementInvoiceInput[];
+  payments: StatementPaymentInput[];
+}): ComputedStatement {
+  const { fromDate, toDate, documents, payments } = params;
+
+  interface RawEvent {
+    id: string;
+    date: string;
+    sortRank: number;
+    createdAt: string;
+    kind: StatementLineComputed['kind'];
+    reference: string;
+    description: string;
+    debitKobo: number;
+    creditKobo: number;
+  }
+
+  const events: RawEvent[] = [];
+
+  for (const doc of documents) {
+    if (doc.status === 'DRAFT' || doc.status === 'VOID') continue;
+    if (doc.totalKobo > 0) {
+      const kind: StatementLineComputed['kind'] =
+        doc.sourceType === 'INVOICE'
+          ? 'INVOICE'
+          : doc.sourceType === 'CREDIT_SALE'
+          ? 'CREDIT_SALE'
+          : 'RECEIPT_BALANCE';
+      const label =
+        doc.sourceType === 'INVOICE'
+          ? `Invoice ${doc.referenceNumber}`
+          : doc.sourceType === 'CREDIT_SALE'
+          ? `Credit sale ${doc.referenceNumber}`
+          : `Part-paid receipt ${doc.referenceNumber}`;
+      events.push({
+        id: `doc:${doc.id}`,
+        date: doc.issueDate,
+        sortRank: 1,
+        createdAt: doc.createdAt || `${doc.issueDate}T00:00:00.000Z`,
+        kind,
+        reference: doc.referenceNumber,
+        description: label,
+        debitKobo: Math.round(doc.totalKobo),
+        creditKobo: 0,
+      });
+    }
+
+    if (doc.writtenOffKobo > 0) {
+      const woDate =
+        doc.writtenOffDate && /^\d{4}-\d{2}-\d{2}$/.test(doc.writtenOffDate)
+          ? doc.writtenOffDate
+          : doc.issueDate;
+      const reasonSuffix = doc.writeOffReason ? ` — ${doc.writeOffReason}` : '';
+      events.push({
+        id: `wo:${doc.id}`,
+        date: woDate,
+        sortRank: 3,
+        createdAt: `${woDate}T23:59:59.000Z`,
+        kind: 'WRITE_OFF',
+        reference: doc.referenceNumber,
+        description: `Balance write-off (${doc.referenceNumber})${reasonSuffix}`,
+        debitKobo: 0,
+        creditKobo: Math.round(doc.writtenOffKobo),
+      });
+    }
+  }
+
+  for (const pay of payments) {
+    if (pay.isVoided) continue;
+    if (pay.amountKobo <= 0) continue;
+    const refLabel = pay.receiptNumber || pay.referenceNumber || 'Payment';
+    events.push({
+      id: `pay:${pay.id}`,
+      date: pay.paymentDate,
+      sortRank: 2,
+      createdAt: pay.createdAt || `${pay.paymentDate}T12:00:00.000Z`,
+      kind: 'PAYMENT',
+      reference: refLabel,
+      description: `Payment (${pay.paymentMethod})${pay.referenceNumber ? ` · ${pay.referenceNumber}` : ''}`,
+      debitKobo: 0,
+      creditKobo: Math.round(pay.amountKobo),
+    });
+  }
+
+  events.sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      a.sortRank - b.sortRank ||
+      a.createdAt.localeCompare(b.createdAt) ||
+      a.id.localeCompare(b.id)
+  );
+
+  let openingBalanceKobo = 0;
+  let periodDebitsKobo = 0;
+  let periodPaymentsKobo = 0;
+  let periodWriteOffsKobo = 0;
+  const periodEvents: RawEvent[] = [];
+
+  for (const ev of events) {
+    if (ev.date < fromDate) {
+      openingBalanceKobo += ev.debitKobo - ev.creditKobo;
+    } else if (ev.date <= toDate) {
+      periodEvents.push(ev);
+    }
+  }
+
+  let running = openingBalanceKobo;
+  const lines: StatementLineComputed[] = periodEvents.map((ev) => {
+    running += ev.debitKobo - ev.creditKobo;
+    periodDebitsKobo += ev.debitKobo;
+    if (ev.kind === 'WRITE_OFF') {
+      periodWriteOffsKobo += ev.creditKobo;
+    } else if (ev.kind === 'PAYMENT') {
+      periodPaymentsKobo += ev.creditKobo;
+    }
+    return {
+      id: ev.id,
+      date: ev.date,
+      kind: ev.kind,
+      reference: ev.reference,
+      description: ev.description,
+      debitKobo: ev.debitKobo,
+      creditKobo: ev.creditKobo,
+      runningBalanceKobo: running,
+    };
+  });
+
+  const closingBalanceKobo =
+    openingBalanceKobo + periodDebitsKobo - periodPaymentsKobo - periodWriteOffsKobo;
+
+  return {
+    fromDate,
+    toDate,
+    openingBalanceKobo,
+    periodDebitsKobo,
+    periodPaymentsKobo,
+    periodWriteOffsKobo,
+    closingBalanceKobo,
+    lines,
+  };
+}
+

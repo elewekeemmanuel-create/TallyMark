@@ -36,6 +36,7 @@ import {
   verifyBotCheck,
 } from './botCheck.ts';
 import { buildNonPiiQuotePushPayload, sendBusinessWebPush } from './push.ts';
+import { recordAnonymousAnalytics } from './analytics.ts';
 
 const MAX_QUOTE_ACTIONS_PER_IP_HOUR = 10;
 
@@ -350,6 +351,7 @@ export function attachV2QuotesRoutes(router: Router, deps: QuotesRoutesDeps) {
       total_kobo: Number(qRow.total_kobo),
       valid_until: qRow.valid_until,
     });
+    recordAnonymousAnalytics('quote_sent', '/app/quotes');
 
     const updated = db.prepare('SELECT * FROM quotes WHERE id = ?').get(quoteId);
     return { quote: mapQuoteRow(updated) };
@@ -500,6 +502,10 @@ export function attachV2QuotesRoutes(router: Router, deps: QuotesRoutesDeps) {
           result.businessId,
           buildNonPiiQuotePushPayload(result.quoteNumber)
         ).catch((err) => logError('v2_quote_push_dispatch', err));
+
+        if (decision === 'ACCEPTED') {
+          recordAnonymousAnalytics('quote_accepted', '/q');
+        }
 
         res.json({ quote: result.publicQuote });
       } catch (err) {
@@ -1258,6 +1264,7 @@ export function attachV2QuotesRoutes(router: Router, deps: QuotesRoutesDeps) {
         res.status(result.status ?? 400).json({ error: result.error, code: (result as any).code });
         return;
       }
+      recordAnonymousAnalytics('quote_converted', '/app/quotes');
       res.status(201).json(result);
     } catch (err: any) {
       if (String(err?.message || '').includes('ALREADY_CONVERTED') || String(err?.message || '').includes('UNIQUE')) {

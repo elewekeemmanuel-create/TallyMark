@@ -146,6 +146,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
         { to: '/app/quick-sale', label: 'Quick Sale', icon: Zap },
         { to: '/app/credit-sale', label: 'Credit Sale', icon: CreditCard },
         { to: '/app/debtors', label: 'Who owes me', icon: Users },
+        { to: '/app/customers', label: 'Customers', icon: Users },
         { to: '/app/expenses', label: 'Expenses', icon: Wallet },
         { to: '/app/reports', label: 'Reports', icon: BarChart3 },
         { to: '/app/settings', label: 'Settings', icon: Settings },
@@ -187,6 +188,12 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
           subtitle: 'Track unpaid balances and supplier bills',
           icon: Users,
         },
+        {
+          to: '/app/customers',
+          label: 'Customers',
+          subtitle: 'Customer directory, balances & statements of account',
+          icon: Users,
+        },
         ...MORE_LINKS.slice(1),
       ]
     : MORE_LINKS;
@@ -200,6 +207,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
   const isMoreActive =
     isActive('/app/claims') ||
     isActive('/app/debtors') ||
+    isActive('/app/customers') ||
     isActive('/app/expenses') ||
     isActive('/app/reports') ||
     isActive('/app/settings');

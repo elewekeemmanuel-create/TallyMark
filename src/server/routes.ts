@@ -3189,6 +3189,12 @@ export function createApiRouter() {
       return;
     }
 
+    const customers = db
+      .prepare('SELECT * FROM customers WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const catalogItems = db
+      .prepare('SELECT * FROM catalog_items WHERE business_id = ? ORDER BY use_count DESC')
+      .all(business.id);
     const receipts = db
       .prepare('SELECT * FROM receipts WHERE business_id = ? ORDER BY sequence_number ASC')
       .all(business.id)
@@ -3210,8 +3216,14 @@ export function createApiRouter() {
     const invoices = db
       .prepare('SELECT * FROM invoices WHERE business_id = ? ORDER BY created_at ASC')
       .all(business.id);
+    const invoiceLines = db
+      .prepare('SELECT * FROM invoice_lines WHERE business_id = ? ORDER BY invoice_id ASC, position ASC')
+      .all(business.id);
     const quotes = db
       .prepare('SELECT * FROM quotes WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const quoteLines = db
+      .prepare('SELECT * FROM quote_lines WHERE business_id = ? ORDER BY quote_id ASC, position ASC')
       .all(business.id);
     const payments = db
       .prepare('SELECT * FROM payments WHERE business_id = ? ORDER BY created_at ASC')
@@ -3219,8 +3231,28 @@ export function createApiRouter() {
     const debts = db
       .prepare('SELECT * FROM debts WHERE business_id = ? ORDER BY created_at ASC')
       .all(business.id);
+    const paymentClaims = db
+      .prepare(
+        `SELECT id, business_id, invoice_id, claim_ref, payer_name, amount_kobo, reference,
+                proof_path, proof_mime, proof_size_bytes, proof_deleted_at,
+                status, decision_reason, decided_at, decided_by, payment_id, created_at
+         FROM payment_claims WHERE business_id = ? ORDER BY created_at ASC`
+      )
+      .all(business.id);
+    const paymentReminders = db
+      .prepare('SELECT * FROM payment_reminders WHERE business_id = ? ORDER BY sent_at ASC')
+      .all(business.id);
     const auditLog = db
       .prepare('SELECT * FROM audit_log WHERE business_id = ? ORDER BY created_at ASC')
+      .all(business.id);
+    const usageCounters = db
+      .prepare('SELECT * FROM usage_counters WHERE business_id = ? ORDER BY month_key ASC')
+      .all(business.id);
+    const pushSubscriptions = db
+      .prepare(
+        `SELECT id, business_id, user_id, endpoint, user_agent, created_at, last_used_at
+         FROM push_subscriptions WHERE business_id = ? ORDER BY created_at ASC`
+      )
       .all(business.id);
 
     res.setHeader('Content-Disposition', `attachment; filename="tallymark-export-${getLagosDateString()}.json"`);
@@ -3228,6 +3260,8 @@ export function createApiRouter() {
       exportedAt: new Date().toISOString(),
       user,
       business,
+      customers,
+      catalogItems,
       receipts,
       ledgerEntries,
       creditSales,
@@ -3235,10 +3269,16 @@ export function createApiRouter() {
       expenses,
       dayClosures,
       invoices,
+      invoiceLines,
       quotes,
+      quoteLines,
       payments,
       debts,
+      paymentClaims,
+      paymentReminders,
       auditLog,
+      usageCounters,
+      pushSubscriptions,
     });
   });
 
@@ -3562,38 +3602,83 @@ export function createApiRouter() {
         let deletedAuthUser = false;
 
         if (supaUrl && serviceKey) {
-          // Best-effort purge of owner's private expense-proofs folder
+          const purgeSupaBucketPrefix = async (bucket: string, prefixDir: string) => {
+            try {
+              const listRes = await fetch(`${supaUrl}/storage/v1/object/list/${bucket}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  apikey: serviceKey,
+                  Authorization: `Bearer ${serviceKey}`,
+                },
+                body: JSON.stringify({ prefix: `${prefixDir}/`, limit: 1000 }),
+                signal: AbortSignal.timeout(8000),
+              });
+              if (listRes.ok) {
+                const objects = (await listRes.json()) as Array<{ name?: string }>;
+                const prefixes = (objects || [])
+                  .map((obj) => (obj.name ? `${prefixDir}/${obj.name}` : ''))
+                  .filter(Boolean);
+                if (prefixes.length > 0) {
+                  await fetch(`${supaUrl}/storage/v1/object/${bucket}`, {
+                    method: 'DELETE',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      apikey: serviceKey,
+                      Authorization: `Bearer ${serviceKey}`,
+                    },
+                    body: JSON.stringify({ prefixes }),
+                    signal: AbortSignal.timeout(8000),
+                  });
+                }
+              }
+            } catch {
+              // Do not block auth deletion if storage folder is empty
+            }
+          };
+
+          // Lookup owner's business ID so we purge all private claim-proofs under businessId/
+          let supaBusinessId: string | null = null;
           try {
-            const listRes = await fetch(`${supaUrl}/storage/v1/object/list/expense-proofs`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                apikey: serviceKey,
-                Authorization: `Bearer ${serviceKey}`,
-              },
-              body: JSON.stringify({ prefix: `${userId}/`, limit: 1000 }),
-              signal: AbortSignal.timeout(8000),
-            });
-            if (listRes.ok) {
-              const objects = (await listRes.json()) as Array<{ name?: string }>;
-              const prefixes = (objects || [])
-                .map((obj) => (obj.name ? `${userId}/${obj.name}` : ''))
-                .filter(Boolean);
-              if (prefixes.length > 0) {
-                await fetch(`${supaUrl}/storage/v1/object/expense-proofs`, {
+            const bizRes = await fetch(
+              `${supaUrl}/rest/v1/businesses?select=id&owner_id=eq.${encodeURIComponent(userId)}`,
+              {
+                headers: {
+                  apikey: serviceKey,
+                  Authorization: `Bearer ${serviceKey}`,
+                },
+                signal: AbortSignal.timeout(8000),
+              }
+            );
+            if (bizRes.ok) {
+              const rows = (await bizRes.json()) as Array<{ id?: string }>;
+              supaBusinessId = rows?.[0]?.id || null;
+            }
+          } catch {
+            supaBusinessId = null;
+          }
+
+          // Best-effort purge of owner's private expense-proofs & claim-proofs folders
+          await purgeSupaBucketPrefix('expense-proofs', userId);
+          await purgeSupaBucketPrefix('claim-proofs', userId);
+          if (supaBusinessId) {
+            await purgeSupaBucketPrefix('claim-proofs', supaBusinessId);
+            // Delete day_closures first so closed-day triggers never interfere with cascade delete
+            try {
+              await fetch(
+                `${supaUrl}/rest/v1/day_closures?business_id=eq.${encodeURIComponent(supaBusinessId)}`,
+                {
                   method: 'DELETE',
                   headers: {
-                    'Content-Type': 'application/json',
                     apikey: serviceKey,
                     Authorization: `Bearer ${serviceKey}`,
                   },
-                  body: JSON.stringify({ prefixes }),
                   signal: AbortSignal.timeout(8000),
-                });
-              }
+                }
+              );
+            } catch {
+              // continue to auth user delete
             }
-          } catch {
-            // Do not block auth deletion if storage folder is empty
           }
 
           const delRes = await fetch(`${supaUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
@@ -3625,9 +3710,36 @@ export function createApiRouter() {
         .all(userId) as Array<{ proof_path: string }>;
 
       runTransaction(() => {
-        db.prepare(
-          'DELETE FROM day_closures WHERE business_id IN (SELECT id FROM businesses WHERE owner_id = ?)'
-        ).run(userId);
+        const bizIds = db
+          .prepare('SELECT id FROM businesses WHERE owner_id = ?')
+          .all(userId) as Array<{ id: string }>;
+
+        for (const { id: bizId } of bizIds) {
+          // Clear day closures first so SQLite closed-day delete triggers allow full account purge
+          db.prepare('DELETE FROM day_closures WHERE business_id = ?').run(bizId);
+          // Break self-referential / cross-table links cleanly before cascading deletes
+          db.prepare('UPDATE quotes SET converted_invoice_id = NULL, revised_from_id = NULL WHERE business_id = ?').run(bizId);
+          db.prepare('UPDATE invoices SET reissued_from_id = NULL, source_quote_id = NULL WHERE business_id = ?').run(bizId);
+          db.prepare('UPDATE receipts SET parent_receipt_id = NULL WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM payment_claims WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM payment_reminders WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM payments WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM debts WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM quote_lines WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM quotes WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM invoice_lines WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM invoices WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM push_subscriptions WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM audit_log WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM usage_counters WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM ledger_entries WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM credit_sales WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM creditors WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM expenses WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM receipts WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM customers WHERE business_id = ?').run(bizId);
+          db.prepare('DELETE FROM catalog_items WHERE business_id = ?').run(bizId);
+        }
         db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
         db.prepare('DELETE FROM users WHERE id = ?').run(userId);
       });

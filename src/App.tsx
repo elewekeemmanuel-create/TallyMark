@@ -66,6 +66,12 @@ const QuoteEditorPage = lazy(() =>
 const QuoteDetailPage = lazy(() =>
   import('./v2/pages/QuoteDetailPage').then((m) => ({ default: m.QuoteDetailPage }))
 );
+const CustomersPage = lazy(() =>
+  import('./v2/pages/CustomersPage').then((m) => ({ default: m.CustomersPage }))
+);
+const CustomerDetailPage = lazy(() =>
+  import('./v2/pages/CustomerDetailPage').then((m) => ({ default: m.CustomerDetailPage }))
+);
 
 function parseOAuthCallbackParams() {
   if (typeof window === 'undefined') {
@@ -538,6 +544,18 @@ function TallymarkRoutes() {
       return renderInShell(
         'Quote Details',
         <QuoteDetailPage business={business} quoteId={quoteDetailMatch[1]} />
+      );
+    }
+
+    if (pathname === '/app/customers') {
+      return renderInShell('Customers', <CustomersPage business={business} />);
+    }
+
+    const customerDetailMatch = /^\/app\/customers\/([A-Za-z0-9_-]+)$/.exec(pathname);
+    if (customerDetailMatch) {
+      return renderInShell(
+        'Customer Account',
+        <CustomerDetailPage business={business} customerId={customerDetailMatch[1]} />
       );
     }
   }

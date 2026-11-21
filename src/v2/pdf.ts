@@ -3,6 +3,7 @@ import { formatKobo, formatLagosDateOnly, koboToWords } from '../shared/money';
 import type { BusinessProfile } from '../shared/types';
 import { formatQtyThousandths, formatTermsLabel } from '../shared/v2/money';
 import type {
+  CustomerStatementRecord,
   InvoiceRecord,
   PaymentRecord,
   PublicInvoiceRecord,
@@ -1010,3 +1011,487 @@ export async function downloadQuotePdf(quote: PublicQuoteRecord) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+// ============================================================================
+// SLICE 4: TRUE-VECTOR CUSTOMER STATEMENT OF ACCOUNT PDF (< 150 KB, SELECTABLE ₦)
+// ============================================================================
+
+export function buildStatementPdfFilename(statement: CustomerStatementRecord): string {
+  const cust = (statement.customer.name || 'customer')
+    .replace(/[^A-Za-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 28);
+  return `Statement_${cust || 'Customer'}_${statement.fromDate}_to_${statement.toDate}.pdf`;
+}
+
+export async function generateCustomerStatementPdfBytes(
+  statement: CustomerStatementRecord,
+  options?: { fontBytesOverride?: LoadedFontBytes }
+): Promise<Uint8Array> {
+  const [{ PDFDocument, fontkit }, fonts] = await Promise.all([
+    loadPdfDeps(),
+    options?.fontBytesOverride ? Promise.resolve(options.fontBytesOverride) : getFontBytes(),
+  ]);
+
+  const pdfDoc = await PDFDocument.create();
+  pdfDoc.registerFontkit(fontkit);
+  pdfDoc.setTitle(`Statement of Account - ${safeText(statement.customer.name)}`);
+  pdfDoc.setAuthor(safeText(statement.business.name));
+  pdfDoc.setCreator('Tallymark');
+
+  const sans = await pdfDoc.embedFont(fonts.sansRegular, { subset: true });
+  const sansBold = await pdfDoc.embedFont(fonts.sansSemiBold, { subset: true });
+  const mono = await pdfDoc.embedFont(fonts.monoRegular, { subset: true });
+  const monoBold = await pdfDoc.embedFont(fonts.monoSemiBold, { subset: true });
+  const serif = await pdfDoc.embedFont(fonts.serifRegular, { subset: true });
+
+  const pageWidth = 595.28; // A4
+  const pageHeight = 841.89;
+  const margin = 42;
+  const innerWidth = pageWidth - margin * 2;
+
+  const ink = colorRgb(0.07, 0.08, 0.075);
+  const muted = colorRgb(0.36, 0.39, 0.37);
+  const hairline = colorRgb(0.86, 0.83, 0.76);
+  const softFill = colorRgb(0.975, 0.965, 0.945);
+  const brand = hexToRgb(statement.business.brandColor || '#064E3B');
+  const cur = statement.business.currency || 'NGN';
+
+  const pages: PDFPage[] = [];
+  let page = pdfDoc.addPage([pageWidth, pageHeight]);
+  pages.push(page);
+  let y = pageHeight - margin;
+
+  // Top brand accent bar
+  page.drawRectangle({
+    x: margin,
+    y: pageHeight - 16,
+    width: innerWidth,
+    height: 4,
+    color: brand,
+  });
+
+  // Header left: Business info
+  const bizName = safeText(statement.business.name) || 'Business';
+  const bizTitleFont = pickFontForText(bizName, serif, sansBold);
+  page.drawText(bizName, { x: margin, y, size: 20, font: bizTitleFont, color: ink });
+  y -= 16;
+
+  const bizDetails: string[] = [];
+  if (statement.business.tinRc) bizDetails.push(`TIN / RC: ${safeText(statement.business.tinRc)}`);
+  if (statement.business.address) bizDetails.push(safeText(statement.business.address));
+  const contactLine = [statement.business.phone, statement.business.email]
+    .filter(Boolean)
+    .map(safeText)
+    .join('  ·  ');
+  if (contactLine) bizDetails.push(contactLine);
+
+  for (const line of bizDetails.slice(0, 3)) {
+    page.drawText(line.slice(0, 72), { x: margin, y, size: 8.5, font: sans, color: muted });
+    y -= 11.5;
+  }
+
+  // Header right: Statement title & period
+  const rightTopY = pageHeight - margin;
+  const titleStr = 'STATEMENT OF ACCOUNT';
+  const titleW = monoBold.widthOfTextAtSize(titleStr, 11);
+  page.drawText(titleStr, {
+    x: pageWidth - margin - titleW,
+    y: rightTopY + 4,
+    size: 11,
+    font: monoBold,
+    color: brand,
+  });
+
+  const periodStr = `${formatLagosDateOnly(statement.fromDate)} - ${formatLagosDateOnly(statement.toDate)}`;
+  const periodW = sansBold.widthOfTextAtSize(periodStr, 9);
+  page.drawText(periodStr, {
+    x: pageWidth - margin - periodW,
+    y: rightTopY - 12,
+    size: 9,
+    font: sansBold,
+    color: ink,
+  });
+
+  const genStr = `Prepared: ${formatLagosDateOnly(statement.generatedDateLagos)}`;
+  const genW = sans.widthOfTextAtSize(genStr, 8);
+  page.drawText(genStr, {
+    x: pageWidth - margin - genW,
+    y: rightTopY - 25,
+    size: 8,
+    font: sans,
+    color: muted,
+  });
+
+  y = Math.min(y, rightTopY - 40) - 8;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: pageWidth - margin, y },
+    thickness: 0.75,
+    color: hairline,
+  });
+  y -= 18;
+
+  // Customer block (left) & Closing Balance box (right)
+  const blockTopY = y;
+  page.drawText('CUSTOMER', { x: margin, y, size: 7.5, font: monoBold, color: muted });
+  y -= 13;
+  page.drawText(safeText(statement.customer.name) || 'Customer', {
+    x: margin,
+    y,
+    size: 11,
+    font: sansBold,
+    color: ink,
+  });
+  y -= 13;
+  if (statement.customer.phone) {
+    page.drawText(safeText(statement.customer.phone), { x: margin, y, size: 8.5, font: sans, color: muted });
+    y -= 11.5;
+  }
+  if (statement.customer.email) {
+    page.drawText(safeText(statement.customer.email), { x: margin, y, size: 8.5, font: sans, color: muted });
+    y -= 11.5;
+  }
+  if (statement.customer.address) {
+    for (const aLine of wrapLines(statement.customer.address, sans, 8.5, 260).slice(0, 2)) {
+      page.drawText(aLine, { x: margin, y, size: 8.5, font: sans, color: muted });
+      y -= 11.5;
+    }
+  }
+
+  // Closing summary box on right
+  const boxW = 215;
+  const boxH = 66;
+  const boxX = pageWidth - margin - boxW;
+  const boxY = blockTopY - boxH + 10;
+  page.drawRectangle({
+    x: boxX,
+    y: boxY,
+    width: boxW,
+    height: boxH,
+    color: softFill,
+    borderColor: hairline,
+    borderWidth: 0.75,
+  });
+
+  const drawSummaryLine = (label: string, val: string, rowY: number, bold = false) => {
+    const f = bold ? sansBold : sans;
+    const vf = bold ? monoBold : mono;
+    const sz = bold ? 9.5 : 8;
+    page.drawText(label, { x: boxX + 10, y: rowY, size: sz, font: f, color: bold ? ink : muted });
+    const vw = vf.widthOfTextAtSize(val, sz);
+    page.drawText(val, {
+      x: boxX + boxW - 10 - vw,
+      y: rowY,
+      size: sz,
+      font: vf,
+      color: bold ? brand : ink,
+    });
+  };
+
+  drawSummaryLine('Opening balance', formatKobo(statement.openingBalanceKobo, cur), boxY + 51);
+  drawSummaryLine('Billed in period', formatKobo(statement.periodDebitsKobo, cur), boxY + 38);
+  const creditsCombined = statement.periodPaymentsKobo + statement.periodWriteOffsKobo;
+  drawSummaryLine('Paid / written off', formatKobo(creditsCombined, cur), boxY + 25);
+  drawSummaryLine('Closing balance', formatKobo(statement.closingBalanceKobo, cur), boxY + 9, true);
+
+  y = Math.min(y, boxY - 10) - 10;
+
+  // Table columns
+  const colDate = margin;
+  const colDesc = margin + 68;
+  const colDebitR = margin + 358;
+  const colCreditR = margin + 432;
+  const colBalR = pageWidth - margin;
+
+  const drawTableHeader = (targetPage: PDFPage, headerY: number): number => {
+    targetPage.drawRectangle({
+      x: margin,
+      y: headerY - 6,
+      width: innerWidth,
+      height: 20,
+      color: softFill,
+    });
+    targetPage.drawText('DATE', { x: colDate + 4, y: headerY, size: 7.5, font: monoBold, color: muted });
+    targetPage.drawText('DESCRIPTION', { x: colDesc, y: headerY, size: 7.5, font: monoBold, color: muted });
+
+    const debH = 'DEBIT';
+    targetPage.drawText(debH, {
+      x: colDebitR - monoBold.widthOfTextAtSize(debH, 7.5),
+      y: headerY,
+      size: 7.5,
+      font: monoBold,
+      color: muted,
+    });
+    const crH = 'CREDIT';
+    targetPage.drawText(crH, {
+      x: colCreditR - monoBold.widthOfTextAtSize(crH, 7.5),
+      y: headerY,
+      size: 7.5,
+      font: monoBold,
+      color: muted,
+    });
+    const balH = 'BALANCE';
+    targetPage.drawText(balH, {
+      x: colBalR - monoBold.widthOfTextAtSize(balH, 7.5) - 4,
+      y: headerY,
+      size: 7.5,
+      font: monoBold,
+      color: muted,
+    });
+    return headerY - 22;
+  };
+
+  y = drawTableHeader(page, y);
+
+  const ensureSpace = (neededHeight: number) => {
+    if (y - neededHeight < 68) {
+      page = pdfDoc.addPage([pageWidth, pageHeight]);
+      pages.push(page);
+      page.drawRectangle({
+        x: margin,
+        y: pageHeight - 16,
+        width: innerWidth,
+        height: 3,
+        color: brand,
+      });
+      page.drawText(
+        `${safeText(statement.customer.name)} · Statement (${statement.fromDate} to ${statement.toDate})`,
+        { x: margin, y: pageHeight - 36, size: 8, font: sans, color: muted }
+      );
+      y = drawTableHeader(page, pageHeight - 58);
+    }
+  };
+
+  // Opening balance brought forward row
+  ensureSpace(22);
+  page.drawText(statement.fromDate, { x: colDate + 4, y, size: 8, font: mono, color: muted });
+  page.drawText('Opening balance brought forward', {
+    x: colDesc,
+    y,
+    size: 8.5,
+    font: sansBold,
+    color: ink,
+  });
+  const openStr = formatKobo(statement.openingBalanceKobo, cur);
+  page.drawText(openStr, {
+    x: colBalR - monoBold.widthOfTextAtSize(openStr, 8.5) - 4,
+    y,
+    size: 8.5,
+    font: monoBold,
+    color: ink,
+  });
+  y -= 8;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: pageWidth - margin, y },
+    thickness: 0.4,
+    color: hairline,
+  });
+  y -= 14;
+
+  if (statement.lines.length === 0) {
+    ensureSpace(24);
+    page.drawText('No invoices, payments, or write-offs recorded in this date range.', {
+      x: colDesc,
+      y,
+      size: 8.5,
+      font: sans,
+      color: muted,
+    });
+    y -= 20;
+  }
+
+  for (const row of statement.lines) {
+    const descLines = wrapLines(row.description, sans, 8.5, 215);
+    const rowHeight = Math.max(18, descLines.length * 11 + 8);
+    ensureSpace(rowHeight + 6);
+
+    page.drawText(row.date, { x: colDate + 4, y, size: 8, font: mono, color: muted });
+    descLines.forEach((dl, idx) => {
+      page.drawText(dl, {
+        x: colDesc,
+        y: y - idx * 11,
+        size: 8.5,
+        font: row.kind === 'WRITE_OFF' ? sansBold : sans,
+        color: row.kind === 'WRITE_OFF' ? muted : ink,
+      });
+    });
+
+    if (row.debitKobo > 0) {
+      const dStr = formatKobo(row.debitKobo, cur);
+      page.drawText(dStr, {
+        x: colDebitR - mono.widthOfTextAtSize(dStr, 8),
+        y,
+        size: 8,
+        font: mono,
+        color: ink,
+      });
+    }
+    if (row.creditKobo > 0) {
+      const cStr = formatKobo(row.creditKobo, cur);
+      page.drawText(cStr, {
+        x: colCreditR - mono.widthOfTextAtSize(cStr, 8),
+        y,
+        size: 8,
+        font: mono,
+        color: brand,
+      });
+    }
+    const balStr = formatKobo(row.runningBalanceKobo, cur);
+    page.drawText(balStr, {
+      x: colBalR - monoBold.widthOfTextAtSize(balStr, 8) - 4,
+      y,
+      size: 8,
+      font: monoBold,
+      color: ink,
+    });
+
+    y -= rowHeight - 4;
+    page.drawLine({
+      start: { x: margin, y },
+      end: { x: pageWidth - margin, y },
+      thickness: 0.35,
+      color: hairline,
+    });
+    y -= 12;
+  }
+
+  // Closing totals footer strip
+  ensureSpace(64);
+  y -= 4;
+  page.drawRectangle({
+    x: margin,
+    y: y - 42,
+    width: innerWidth,
+    height: 48,
+    color: softFill,
+    borderColor: hairline,
+    borderWidth: 0.75,
+  });
+
+  page.drawText('PERIOD TOTALS', {
+    x: margin + 10,
+    y: y - 10,
+    size: 7.5,
+    font: monoBold,
+    color: muted,
+  });
+  const totDeb = formatKobo(statement.periodDebitsKobo, cur);
+  page.drawText(`Billed: ${totDeb}`, {
+    x: margin + 10,
+    y: y - 24,
+    size: 8.5,
+    font: mono,
+    color: ink,
+  });
+  const totPay = formatKobo(statement.periodPaymentsKobo, cur);
+  page.drawText(`Payments: ${totPay}`, {
+    x: margin + 165,
+    y: y - 24,
+    size: 8.5,
+    font: mono,
+    color: brand,
+  });
+  if (statement.periodWriteOffsKobo > 0) {
+    const totWo = formatKobo(statement.periodWriteOffsKobo, cur);
+    page.drawText(`Write-offs: ${totWo}`, {
+      x: margin + 10,
+      y: y - 36,
+      size: 8,
+      font: mono,
+      color: muted,
+    });
+  }
+
+  const closeLabel = 'CLOSING BALANCE DUE';
+  const closeLabelW = monoBold.widthOfTextAtSize(closeLabel, 7.5);
+  page.drawText(closeLabel, {
+    x: pageWidth - margin - 10 - closeLabelW,
+    y: y - 11,
+    size: 7.5,
+    font: monoBold,
+    color: muted,
+  });
+  const closeVal = formatKobo(statement.closingBalanceKobo, cur);
+  const closeValW = monoBold.widthOfTextAtSize(closeVal, 12);
+  page.drawText(closeVal, {
+    x: pageWidth - margin - 10 - closeValW,
+    y: y - 30,
+    size: 12,
+    font: monoBold,
+    color: brand,
+  });
+
+  // Page numbering footer on every page
+  pages.forEach((p, idx) => {
+    const footY = 26;
+    p.drawText(safeText(statement.business.name), {
+      x: margin,
+      y: footY,
+      size: 7.5,
+      font: sans,
+      color: muted,
+    });
+    const pgStr = `Page ${idx + 1} of ${pages.length}`;
+    const pgW = mono.widthOfTextAtSize(pgStr, 7.5);
+    p.drawText(pgStr, {
+      x: pageWidth - margin - pgW,
+      y: footY,
+      size: 7.5,
+      font: mono,
+      color: muted,
+    });
+  });
+
+  return pdfDoc.save();
+}
+
+export async function downloadCustomerStatementPdf(statement: CustomerStatementRecord) {
+  const bytes = await generateCustomerStatementPdfBytes(statement);
+  const filename = buildStatementPdfFilename(statement);
+  const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  return { filename, byteLength: bytes.byteLength };
+}
+
+export async function shareCustomerStatementPdf(
+  statement: CustomerStatementRecord
+): Promise<'shared' | 'downloaded'> {
+  const bytes = await generateCustomerStatementPdfBytes(statement);
+  const filename = buildStatementPdfFilename(statement);
+  const file = new File([bytes as BlobPart], filename, { type: 'application/pdf' });
+
+  if (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.share === 'function' &&
+    typeof navigator.canShare === 'function' &&
+    navigator.canShare({ files: [file] })
+  ) {
+    await navigator.share({
+      title: `Statement of Account - ${statement.customer.name}`,
+      text: `Statement of account from ${statement.business.name} (${statement.fromDate} to ${statement.toDate}). Closing balance: ${formatKobo(statement.closingBalanceKobo, statement.business.currency)}.`,
+      files: [file],
+    });
+    return 'shared';
+  }
+
+  const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  return 'downloaded';
+}
+

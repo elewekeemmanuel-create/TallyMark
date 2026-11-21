@@ -202,3 +202,24 @@ export const PublicQuoteDecisionSchema = z.object({
   turnstileToken: z.string().trim().max(2048).optional(),
   website: z.string().max(200).optional().default(''),
 });
+
+export const LogReminderSchema = z.object({
+  debtId: z.string().trim().min(1, 'Debt reference is required').max(64),
+  tone: z.enum(['gentle', 'firm']).default('gentle'),
+  channel: z.enum(['whatsapp']).default('whatsapp'),
+});
+
+export const UpdateCustomerSchema = z.object({
+  name: z.string().trim().min(1, 'Customer name is required').max(120),
+  phone: z.string().trim().max(40).optional().default(''),
+  email: z
+    .string()
+    .trim()
+    .max(120)
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Enter a valid email address')
+    .optional()
+    .default(''),
+  address: z.string().trim().max(240).optional().default(''),
+  notes: z.string().trim().max(400).optional().default(''),
+});
+

@@ -290,7 +290,7 @@ export function groupDebtsByCustomer(params: {
 export function buildCsv(headers: string[], rows: Array<Array<string | number | null | undefined>>): string {
   const escapeCell = (val: string | number | null | undefined) => {
     let s = val === null || val === undefined ? '' : String(val);
-    if (/^[=+\-@\t\r]/.test(s)) {
+    if (/^[=+\-@\t\r]/.test(s) || /^[ \t]+[=+\-@]/.test(s)) {
       s = `'${s}`;
     }
     if (/[",\n\r]/.test(s)) {

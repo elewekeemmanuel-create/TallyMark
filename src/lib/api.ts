@@ -1737,21 +1737,42 @@ export const api = {
         }
       };
 
-      const [invoices, invoiceLines, quotes, debts, payments, auditLog, usageCounters] =
-        await Promise.all([
-          safeQuery('invoices'),
-          safeQuery('invoice_lines'),
-          safeQuery('quotes'),
-          safeQuery('debts'),
-          safeQuery('payments'),
-          safeQuery('audit_log'),
-          safeQuery('usage_counters'),
-        ]);
+      const [
+        customers,
+        catalogItems,
+        invoices,
+        invoiceLines,
+        quotes,
+        quoteLines,
+        debts,
+        payments,
+        paymentClaims,
+        paymentReminders,
+        auditLog,
+        usageCounters,
+        pushSubscriptions,
+      ] = await Promise.all([
+        safeQuery('customers'),
+        safeQuery('catalog_items'),
+        safeQuery('invoices'),
+        safeQuery('invoice_lines'),
+        safeQuery('quotes'),
+        safeQuery('quote_lines'),
+        safeQuery('debts'),
+        safeQuery('payments'),
+        safeQuery('payment_claims'),
+        safeQuery('payment_reminders'),
+        safeQuery('audit_log'),
+        safeQuery('usage_counters'),
+        safeQuery('push_subscriptions'),
+      ]);
 
       return {
         exportedAt: new Date().toISOString(),
         user,
         business,
+        customers,
+        catalogItems,
         receipts: (rctRes.data || []).map(mapSupaReceipt),
         ledgerEntries: (ledRes.data || []).map(mapSupaLedger),
         creditSales: (csRes.data || []).map(mapSupaCreditSale),
@@ -1761,10 +1782,14 @@ export const api = {
         invoices,
         invoiceLines,
         quotes,
+        quoteLines,
         debts,
         payments,
+        paymentClaims: paymentClaims.map(({ upload_token_hash: _t, ip_hash: _ip, ...rest }: any) => rest),
+        paymentReminders,
         auditLog,
         usageCounters,
+        pushSubscriptions: pushSubscriptions.map(({ p256dh: _p, auth_secret: _a, ...rest }: any) => rest),
       };
     }
     return request<Record<string, unknown>>('/api/account/export');
@@ -1954,16 +1979,38 @@ export const api = {
       }
 
       if (!deletedAuthUser) {
+        let bizId: string | null = null;
+        try {
+          const { data: bizRow } = await supabase
+            .from('businesses')
+            .select('id')
+            .eq('owner_id', userId)
+            .maybeSingle();
+          bizId = bizRow?.id || null;
+        } catch {
+          bizId = null;
+        }
+
+        const prefixesToPurge = Array.from(new Set([userId, ...(bizId ? [bizId] : [])]));
         for (const bucket of ['expense-proofs', 'claim-proofs']) {
-          try {
-            const { data: files } = await supabase.storage.from(bucket).list(userId);
-            if (files && files.length > 0) {
-              await supabase.storage
-                .from(bucket)
-                .remove(files.map((f) => `${userId}/${f.name}`));
+          for (const prefix of prefixesToPurge) {
+            try {
+              const { data: files } = await supabase.storage.from(bucket).list(prefix);
+              if (files && files.length > 0) {
+                await supabase.storage
+                  .from(bucket)
+                  .remove(files.map((f) => `${prefix}/${f.name}`));
+              }
+            } catch {
+              // ignore storage cleanup errors
             }
+          }
+        }
+        if (bizId) {
+          try {
+            await supabase.from('day_closures').delete().eq('business_id', bizId);
           } catch {
-            // ignore storage cleanup errors
+            // continue
           }
         }
         const { error: delBizErr } = await supabase
@@ -1993,7 +2040,17 @@ export const api = {
       | 'cta_get_started_clicked'
       | 'cta_open_app_clicked'
       | 'summary_period_changed'
-      | 'faq_toggled',
+      | 'faq_toggled'
+      | 'module_enabled'
+      | 'invoice_created'
+      | 'invoice_sent'
+      | 'payment_recorded'
+      | 'claim_submitted'
+      | 'claim_confirmed'
+      | 'quote_sent'
+      | 'quote_accepted'
+      | 'quote_converted'
+      | 'reminder_sent',
     path: string = '/'
   ) {
     if (typeof window === 'undefined') return;

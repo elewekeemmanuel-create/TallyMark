@@ -1,14 +1,22 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { BarChart3, Download, FileSpreadsheet } from 'lucide-react';
 import { api } from '../lib/api';
 import { downloadReportSummaryPdf } from '../lib/pdf';
 import { shiftLagosDate } from '../shared/cashbook';
 import { formatKobo, getLagosDateString } from '../shared/money';
 import type { BusinessProfile, ReportsSummary } from '../shared/types';
+import { isInvoicesQuotesModuleEnabled } from '../shared/v2/entitlements';
+
+const V2ReportsSection = lazy(() =>
+  import('../v2/components/V2ReportsSection').then((m) => ({
+    default: m.V2ReportsSection,
+  }))
+);
 
 type PeriodPreset = 'today' | 'week' | 'month' | 'custom';
 
 export function ReportsPage({ business }: { business: BusinessProfile }) {
+  const v2Enabled = isInvoicesQuotesModuleEnabled(business);
   const today = getLagosDateString();
   const [preset, setPreset] = useState<PeriodPreset>('month');
   const [dateFrom, setDateFrom] = useState(`${today.slice(0, 7)}-01`);
@@ -153,6 +161,18 @@ export function ReportsPage({ business }: { business: BusinessProfile }) {
         <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300">
           {error}
         </div>
+      )}
+
+      {v2Enabled && (
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+              Loading invoices and quotes breakdown…
+            </div>
+          }
+        >
+          <V2ReportsSection business={business} dateFrom={dateFrom} dateTo={dateTo} />
+        </Suspense>
       )}
 
       {/* KPI Cards */}

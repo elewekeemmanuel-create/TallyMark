@@ -42,6 +42,7 @@ import {
   sendBusinessWebPush,
 } from './push.ts';
 import { runProofRetentionJob } from './retention.ts';
+import { recordAnonymousAnalytics } from './analytics.ts';
 
 const UPLOAD_TOKEN_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_PENDING_CLAIMS_PER_INVOICE = 3;
@@ -388,6 +389,8 @@ export function attachV2ClaimsAndPushRoutes(router: Router, deps: ClaimsRouteDep
         created.businessId,
         buildNonPiiClaimPushPayload(created.invoiceNumber)
       ).catch((err) => logError('v2_claim_push_dispatch', err));
+
+      recordAnonymousAnalytics('claim_submitted', '/i');
 
       res.status(201).json({
         claimId: created.claimId,
@@ -775,6 +778,7 @@ export function attachV2ClaimsAndPushRoutes(router: Router, deps: ClaimsRouteDep
         return;
       }
 
+      recordAnonymousAnalytics('claim_confirmed', '/app/claims');
       res.json(result);
     } catch (err) {
       logError('v2_confirm_claim', err, { userId: req.user!.id, claimId });

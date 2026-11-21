@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -28,6 +28,14 @@ import type {
   DebtorCustomerGroup,
   ReceiptRecord,
 } from '../shared/types';
+import { isInvoicesQuotesModuleEnabled } from '../shared/v2/entitlements';
+import type { ReceivableItem } from '../shared/v2/types';
+
+const V2ReceivablesSection = lazy(() =>
+  import('../v2/components/V2ReceivablesSection').then((m) => ({
+    default: m.V2ReceivablesSection,
+  }))
+);
 
 function buildDebtorReminderUrl(
   business: BusinessProfile,
@@ -264,10 +272,12 @@ function RecordDebtPaymentModal({
 }
 
 export function DebtorsPage({ business }: { business: BusinessProfile }) {
+  const v2Enabled = isInvoicesQuotesModuleEnabled(business);
   const [tab, setTab] = useState<'debtors' | 'creditors'>('debtors');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [v2RefreshKey, setV2RefreshKey] = useState(0);
 
   // Debtors state
   const [debtors, setDebtors] = useState<DebtorCustomerGroup[]>([]);
@@ -461,6 +471,77 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
       )}
 
       {tab === 'debtors' ? (
+        v2Enabled ? (
+          <div className="space-y-5">
+            <Suspense
+              fallback={
+                <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                  Loading unpaid balances…
+                </div>
+              }
+            >
+              <V2ReceivablesSection
+                key={v2RefreshKey}
+                business={business}
+                onRecordPayment={(item: ReceivableItem) => {
+                  const debtKind: 'CREDIT_SALE' | 'RECEIPT' =
+                    item.sourceType === 'RECEIPT' ? 'RECEIPT' : 'CREDIT_SALE';
+                  const debt: DebtItemSummary = {
+                    debtKind,
+                    debtId: item.sourceId,
+                    referenceLabel: item.referenceNumber,
+                    description: item.referenceNumber,
+                    issuedDateLagos: item.issueDate,
+                    dueDate: item.dueDate || '',
+                    totalKobo: item.totalKobo,
+                    amountPaidKobo: item.amountPaidKobo,
+                    balanceDueKobo: item.balanceDueKobo,
+                  };
+                  const group: DebtorCustomerGroup = {
+                    customerKey: item.customerId || item.customerName.toLowerCase(),
+                    customerName: item.customerName,
+                    customerPhone: item.customerPhone,
+                    totalOwedKobo: item.balanceDueKobo,
+                    oldestDebtDate: item.issueDate,
+                    oldestDebtAgeDays: Math.max(0, item.daysOverdue),
+                    debts: [debt],
+                  };
+                  setPayModal({ group, debt });
+                }}
+              />
+            </Suspense>
+
+            {recentPayments.length > 0 && (
+              <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-[#ECE6D8] dark:border-[#242D28]">
+                  <h2 className="text-sm font-semibold">Recent Debt Payments Received</h2>
+                </div>
+                <div className="divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+                  {recentPayments.map((r) => (
+                    <Link
+                      key={r.id}
+                      to={`/app/receipts/${r.id}`}
+                      className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          <span className="font-mono-num font-semibold">{r.receiptNumber}</span> ·{' '}
+                          {r.customerName || 'Customer'}
+                        </p>
+                        <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                          {formatLagosDateOnly(r.issuedDateLagos)} · {r.paymentMethod}
+                        </p>
+                      </div>
+                      <span className="font-mono-num text-sm font-semibold text-[#064E3B] dark:text-[#10B981]">
+                        +{formatKobo(r.totalKobo, business.currency)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        ) : (
         <div className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5">
@@ -613,6 +694,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
             </section>
           )}
         </div>
+        )
       ) : (
         <div className="space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5">
@@ -793,6 +875,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           onClose={() => setPayModal(null)}
           onRecorded={(receipt) => {
             setLastIssuedReceipt(receipt);
+            setV2RefreshKey((k) => k + 1);
             load();
           }}
         />

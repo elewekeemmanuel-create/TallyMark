@@ -34,6 +34,8 @@ import type { BusinessProfile, ReceiptLineItem } from '../../shared/types.ts';
 import type { PaymentMethod } from '../../shared/schemas.ts';
 import { attachV2ClaimsAndPushRoutes } from './claimsRoutes.ts';
 import { attachV2QuotesRoutes } from './quotesRoutes.ts';
+import { attachV2ReceivablesAndReportsRoutes } from './receivablesRoutes.ts';
+import { recordAnonymousAnalytics } from './analytics.ts';
 
 function formatDocNumber(prefix: string, seq: number): string {
   return `${prefix}${String(seq).padStart(4, '0')}`;
@@ -594,6 +596,7 @@ export function createV2Router(deps: {
       invoice_number: invoiceNumber,
       total_kobo: Number(invRow.total_kobo),
     });
+    recordAnonymousAnalytics('invoice_sent', '/app/invoices');
 
     const updated = db.prepare('SELECT * FROM invoices WHERE id = ?').get(invRow.id);
     return { invoice: mapInvoiceRow(updated) };
@@ -658,6 +661,9 @@ export function createV2Router(deps: {
           module: 'invoices_quotes',
           enabled: nextEnabled,
         });
+        if (nextEnabled) {
+          recordAnonymousAnalytics('module_enabled', '/app/settings');
+        }
       }
     });
 
@@ -979,6 +985,8 @@ export function createV2Router(deps: {
             line.lineTotalKobo
           );
         });
+
+        recordAnonymousAnalytics('invoice_created', '/app/invoices');
 
         if (input.sendNow) {
           return sendInvoiceTx(business, req.user!.id, invoiceId);
@@ -1705,6 +1713,7 @@ export function createV2Router(deps: {
       receipt_number: receiptNumber,
       remaining_kobo: newBalance,
     });
+    recordAnonymousAnalytics('payment_recorded', '/app/invoices');
 
     const payRow = db
       .prepare(
@@ -1861,6 +1870,12 @@ export function createV2Router(deps: {
     incrementUsage,
     sendInvoiceTx,
     mapInvoiceRow,
+  });
+
+  // ---- SLICE 4: RECEIVABLES, REMINDERS, CUSTOMERS, STATEMENTS, REPORTS & CSV EXPORTS ----
+  attachV2ReceivablesAndReportsRoutes(router, {
+    getOwnedBusiness,
+    logV2Audit,
   });
 
   return router;
