@@ -7,6 +7,7 @@ import {
   Download,
   ExternalLink,
   MoreHorizontal,
+  Printer,
   RefreshCw,
   Send,
   Share2,
@@ -15,10 +16,10 @@ import {
 import { Link, useRouter } from '../../lib/router';
 import { formatKobo, formatLagosDateOnly } from '../../shared/money';
 import type { BusinessProfile } from '../../shared/types';
-import type { PublicQuoteRecord, QuoteRecord } from '../../shared/v2/types';
+import type { QuoteRecord } from '../../shared/v2/types';
 import { v2Api } from '../api';
 import { QuoteDocument } from '../components/QuoteDocument';
-import { downloadQuotePdf } from '../pdf';
+import { buildPublicQuotePreview, downloadQuotePdf } from '../pdf';
 
 function formatLagosTimestamp(iso: string | null): string {
   if (!iso) return '';
@@ -36,58 +37,6 @@ function formatLagosTimestamp(iso: string | null): string {
   }
 }
 
-function buildQuotePublicPreview(quote: QuoteRecord, business: BusinessProfile): PublicQuoteRecord {
-  const snap = quote.snapshot || {
-    quoteNumber: quote.quoteNumber || 'DRAFT',
-    business: {
-      name: business.name,
-      logoDataUrl: business.logoDataUrl,
-      address: business.address,
-      phone: business.phone,
-      email: business.email,
-      tinRc: business.tinRc || '',
-      brandColor: business.brandColor,
-      currency: business.currency,
-    },
-    customer: {
-      name: quote.customerName,
-      address: quote.customerAddress,
-    },
-    bankAccounts: (business.bankAccounts || []).filter((b) => quote.bankAccountIds.includes(b.id)),
-    issueDate: quote.issueDate,
-    validUntil: quote.validUntil,
-    termsKind: quote.termsKind,
-    lines: quote.lines,
-    subtotalKobo: quote.subtotalKobo,
-    lineDiscountTotalKobo: quote.lineDiscountTotalKobo,
-    invoiceDiscountKobo: quote.invoiceDiscountKobo,
-    vatEnabled: quote.vatEnabled,
-    vatMode: quote.vatMode,
-    vatRateBps: quote.vatRateBps,
-    vatKobo: quote.vatKobo,
-    totalKobo: quote.totalKobo,
-    depositType: quote.depositType,
-    depositValue: quote.depositValue,
-    amountDueNowKobo: quote.amountDueNowKobo,
-    notes: quote.notes,
-    template: quote.template,
-    showBranding: true,
-  };
-
-  return {
-    publicId: quote.publicId,
-    status: quote.status,
-    isExpired: quote.isExpired,
-    sentAt: quote.sentAt,
-    decisionName: quote.decisionName,
-    decisionNote: quote.decisionNote,
-    decisionAt: quote.decisionAt,
-    voidReason: quote.voidReason,
-    voidedAt: quote.voidedAt,
-    snapshot: snap,
-  };
-}
-
 export function QuoteDetailPage({
   business,
   quoteId,
@@ -102,6 +51,7 @@ export function QuoteDetailPage({
   const [notice, setNotice] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [voidModalOpen, setVoidModalOpen] = useState(false);
   const [voidReason, setVoidReason] = useState('');
 
@@ -146,7 +96,7 @@ export function QuoteDetailPage({
     );
   }
 
-  const publicPreview = buildQuotePublicPreview(quote, business);
+  const publicPreview = buildPublicQuotePreview(quote, business);
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const publicUrl = `${origin}/q/${quote.publicId}`;
   const docNumber = quote.quoteNumber || 'Draft Quote';
@@ -274,20 +224,21 @@ export function QuoteDetailPage({
   };
 
   const handleDownloadPdf = async () => {
-    setBusyAction(true);
+    setPdfBusy(true);
+    setError(null);
     try {
       await downloadQuotePdf(publicPreview);
     } catch (err: any) {
       setError(err?.message || 'Unable to generate PDF');
     } finally {
-      setBusyAction(false);
+      setPdfBusy(false);
     }
   };
 
   return (
-    <div className="max-w-4xl space-y-5">
-      {/* Header & Single Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+    <div className="max-w-4xl space-y-5 print:max-w-none print:space-y-0">
+      {/* Header & Primary Actions */}
+      <div className="no-print flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
           <Link
             to="/app/documents"
@@ -359,6 +310,25 @@ export function QuoteDetailPage({
             </button>
           )}
 
+          <button
+            type="button"
+            disabled={pdfBusy}
+            onClick={handleDownloadPdf}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[44px]"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{pdfBusy ? 'Preparing PDF…' : 'Download PDF'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] min-h-[44px]"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print</span>
+          </button>
+
           {(canRevise || canVoid || quote.status !== 'DRAFT') && (
             <div className="relative">
               <button
@@ -409,19 +379,19 @@ export function QuoteDetailPage({
       </div>
 
       {notice && (
-        <div className="rounded-xl border border-[#064E3B]/25 bg-[#ECFDF5] p-3 text-xs text-[#064E3B] font-medium">
+        <div className="no-print rounded-xl border border-[#064E3B]/25 bg-[#ECFDF5] p-3 text-xs text-[#064E3B] font-medium">
           {notice}
         </div>
       )}
       {error && (
-        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
+        <div className="no-print rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
           {error}
         </div>
       )}
 
       {/* Customer Acceptance / Decline Banner */}
       {(quote.status === 'ACCEPTED' || quote.status === 'CONVERTED') && quote.decisionName && (
-        <div className="rounded-2xl border border-[#064E3B]/25 bg-[#ECFDF5] p-4 flex items-start gap-3">
+        <div className="no-print rounded-2xl border border-[#064E3B]/25 bg-[#ECFDF5] p-4 flex items-start gap-3">
           <CheckCircle2 className="w-5 h-5 text-[#064E3B] shrink-0 mt-0.5" />
           <div className="text-xs text-[#064E3B] space-y-0.5">
             <p className="font-semibold">
@@ -434,7 +404,7 @@ export function QuoteDetailPage({
       )}
 
       {quote.status === 'DECLINED' && quote.decisionName && (
-        <div className="rounded-2xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-4 flex items-start gap-3">
+        <div className="no-print rounded-2xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-4 flex items-start gap-3">
           <XCircle className="w-5 h-5 text-[#B91C1C] shrink-0 mt-0.5" />
           <div className="text-xs text-[#991B1B] space-y-0.5">
             <p className="font-semibold">
@@ -446,9 +416,9 @@ export function QuoteDetailPage({
         </div>
       )}
 
-      {/* Share & PDF Bar (when sent) */}
+      {/* Share Bar (when sent) */}
       {quote.status !== 'DRAFT' && (
-        <div className="flex flex-wrap gap-2">
+        <div className="no-print flex flex-wrap gap-2">
           <a
             href={whatsappUrl}
             target="_blank"
@@ -465,15 +435,6 @@ export function QuoteDetailPage({
           >
             <Copy className="w-3.5 h-3.5" />
             <span>Copy link</span>
-          </button>
-          <button
-            type="button"
-            disabled={busyAction}
-            onClick={handleDownloadPdf}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[40px]"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download PDF</span>
           </button>
           <a
             href={publicUrl}
@@ -492,7 +453,7 @@ export function QuoteDetailPage({
 
       {/* Void Modal */}
       {voidModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+        <div className="no-print fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <form
             onSubmit={handleVoid}
             className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"

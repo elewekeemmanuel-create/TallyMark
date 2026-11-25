@@ -219,7 +219,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0D110F] text-[#121513] dark:text-[#F4F1EA]">
+    <div className="min-h-screen print:min-h-0 bg-[#FAF8F3] dark:bg-[#0D110F] print:bg-white text-[#121513] dark:text-[#F4F1EA]">
       {/* Desktop Sidebar */}
       <aside className="no-print hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col border-r border-[#E5DEC9] dark:border-[#242D28] bg-[#F5F1E7] dark:bg-[#111714]">
         <div className="flex items-center justify-between px-5 h-16 border-b border-[#E5DEC9] dark:border-[#242D28]">
@@ -311,7 +311,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="md:pl-64 flex flex-col min-h-screen">
+      <div className="md:pl-64 print:pl-0 flex flex-col min-h-screen print:min-h-0">
         <header className="no-print sticky top-0 z-30 h-14 border-b border-[#E5DEC9] dark:border-[#242D28] bg-[#FAF8F3]/90 dark:bg-[#0D110F]/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link to="/app" className="md:hidden shrink-0">
@@ -355,7 +355,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 pb-24 md:pb-10 max-w-6xl w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 pb-24 md:pb-10 max-w-6xl w-full mx-auto print:p-0 print:max-w-none">
           {children}
         </main>
       </div>

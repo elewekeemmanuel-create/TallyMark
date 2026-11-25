@@ -77,6 +77,9 @@ function formatSupabaseAuthError(message: string | undefined, mode: 'signin' | '
   if (lower.includes('rate limit') || lower.includes('too many requests')) {
     return 'Too many attempts right now. Please wait a minute and try again.';
   }
+  if (lower.includes('code verifier') || lower.includes('pkce')) {
+    return 'Google sign-in expired or opened in a different window. Please tap Continue with Google again.';
+  }
 
   return msg || (mode === 'signin' ? 'Unable to sign in right now.' : 'Unable to create your account right now.');
 }
@@ -117,7 +120,42 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
   useEffect(() => {
     const onMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      if (event.data?.type === 'TALLYMARK_OAUTH_COMPLETE') {
+      if (event.data?.type === 'TALLYMARK_OAUTH_TOKENS' && isSupabaseConfigured && supabase) {
+        try {
+          const { error: setErr } = await supabase.auth.setSession({
+            access_token: String(event.data.accessToken || ''),
+            refresh_token: String(event.data.refreshToken || ''),
+          });
+          if (setErr) {
+            setError(formatSupabaseAuthError(setErr.message, mode));
+            return;
+          }
+          const me = await api.getMe();
+          onAuthenticated(me.user, me.business);
+          navigate(me.business ? '/app' : '/onboarding', { replace: true });
+        } catch (err: any) {
+          setError(formatSupabaseAuthError(err?.message, mode));
+        } finally {
+          setGoogleBusy(false);
+        }
+      } else if (event.data?.type === 'TALLYMARK_OAUTH_CODE' && isSupabaseConfigured && supabase) {
+        try {
+          const { error: exErr } = await supabase.auth.exchangeCodeForSession(
+            String(event.data.code || '')
+          );
+          if (exErr) {
+            setError(formatSupabaseAuthError(exErr.message, mode));
+            return;
+          }
+          const me = await api.getMe();
+          onAuthenticated(me.user, me.business);
+          navigate(me.business ? '/app' : '/onboarding', { replace: true });
+        } catch (err: any) {
+          setError(formatSupabaseAuthError(err?.message, mode));
+        } finally {
+          setGoogleBusy(false);
+        }
+      } else if (event.data?.type === 'TALLYMARK_OAUTH_COMPLETE') {
         if (!event.data.ok) {
           setGoogleBusy(false);
           setError(

@@ -304,9 +304,9 @@ export function InvoiceDetailPage({
   };
 
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="max-w-4xl space-y-5 print:max-w-none print:space-y-0">
       {/* Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             to="/app/documents"
@@ -494,20 +494,20 @@ export function InvoiceDetailPage({
       </div>
 
       {notice && (
-        <div className="rounded-xl border border-[#064E3B]/30 bg-[#ECFDF5] dark:bg-emerald-950/30 p-3 text-xs font-medium text-[#064E3B] dark:text-emerald-300">
+        <div className="no-print rounded-xl border border-[#064E3B]/30 bg-[#ECFDF5] dark:bg-emerald-950/30 p-3 text-xs font-medium text-[#064E3B] dark:text-emerald-300">
           {notice}
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3 text-xs text-[#B91C1C] dark:text-red-300">
+        <div className="no-print rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3 text-xs text-[#B91C1C] dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Pending Customer Payment Reports for this Invoice */}
       {pendingClaims.length > 0 && (
-        <section className="rounded-2xl border border-[#B45309]/40 bg-[#FEF9EC] dark:bg-amber-950/25 p-4 sm:p-5 space-y-3">
+        <section className="no-print rounded-2xl border border-[#B45309]/40 bg-[#FEF9EC] dark:bg-amber-950/25 p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="label-caps text-[#92400E] dark:text-amber-300">
@@ -647,7 +647,7 @@ export function InvoiceDetailPage({
 
       {/* Payments Recorded on this Invoice */}
       {invoice.status !== 'DRAFT' && (
-        <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+        <section className="no-print rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Payments recorded</h2>
             {isOpen && invoice.debtId && (
@@ -723,7 +723,7 @@ export function InvoiceDetailPage({
       {/* Record Payment Modal */}
       {payOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           role="dialog"
           aria-modal="true"
         >
@@ -815,7 +815,7 @@ export function InvoiceDetailPage({
       {/* Reason Modal (Void Invoice / Write Off Balance / Void Payment Receipt) */}
       {reasonModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           role="dialog"
           aria-modal="true"
         >
@@ -859,7 +859,7 @@ export function InvoiceDetailPage({
       {/* Signed Proof Viewer Modal */}
       {proofModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           role="dialog"
           aria-modal="true"
           onClick={() => setProofModal(null)}
@@ -903,7 +903,7 @@ export function InvoiceDetailPage({
       {/* Private Reject Claim Modal */}
       {rejectClaimTarget && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           role="dialog"
           aria-modal="true"
         >

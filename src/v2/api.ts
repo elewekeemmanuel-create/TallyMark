@@ -59,6 +59,28 @@ async function v2Request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+export function mapV2RpcError(
+  error: { code?: string; message?: string } | null | undefined,
+  migrationFile: string,
+  featureLabel: string,
+  fallbackStatus = 400
+): ApiError {
+  const msg = error?.message || 'Request failed';
+  const isMissingFn =
+    error?.code === 'PGRST202' ||
+    msg.includes('Could not find the function') ||
+    msg.includes('schema cache');
+
+  if (isMissingFn) {
+    return new ApiError(
+      `${featureLabel} database migration (${migrationFile}) has not been run in Supabase yet. Run ${migrationFile} in your Supabase SQL Editor, then refresh and try again.`,
+      503,
+      'MIGRATION_REQUIRED'
+    );
+  }
+  return new ApiError(msg, fallbackStatus);
+}
+
 function mapSupaBusiness(row: any): BusinessProfile {
   const mods = row.modules_enabled || {};
   return {
@@ -710,7 +732,7 @@ export const v2Api = {
         p_reference: payload.reference ?? null,
         p_idempotency_key: payload.idempotencyKey || `claim-confirm-${claimId}`,
       });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '006_v2_slice2_claims_push.sql', 'Payment claims');
       const r = data?.receipt;
       return {
         claim: data?.claim,
@@ -731,7 +753,7 @@ export const v2Api = {
         p_claim_id: claimId,
         p_reason: reason,
       });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '006_v2_slice2_claims_push.sql', 'Payment claims');
       return { claim: data };
     }
     return v2Request(`/api/v2/claims/${encodeURIComponent(claimId)}/reject`, {
@@ -866,10 +888,10 @@ export const v2Api = {
         p_template: payload.template || null,
         p_idempotency_key: payload.idempotencyKey || null,
       });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations');
       if (payload.sendNow) {
         const { error: sendErr } = await supabase.rpc('v2_send_quote', { p_quote_id: data.id });
-        if (sendErr) throw new ApiError(sendErr.message, 400);
+        if (sendErr) throw mapV2RpcError(sendErr, '007_v2_slice3_quotations.sql', 'Quotations');
       }
       return this.getQuote(data.id);
     }
@@ -900,10 +922,10 @@ export const v2Api = {
         p_template: payload.template || null,
         p_idempotency_key: null,
       });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations');
       if (payload.sendNow) {
         const { error: sendErr } = await supabase.rpc('v2_send_quote', { p_quote_id: data.id });
-        if (sendErr) throw new ApiError(sendErr.message, 400);
+        if (sendErr) throw mapV2RpcError(sendErr, '007_v2_slice3_quotations.sql', 'Quotations');
       }
       return this.getQuote(id);
     }
@@ -916,7 +938,7 @@ export const v2Api = {
   async sendQuote(id: string): Promise<{ quote: QuoteRecord }> {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.rpc('v2_send_quote', { p_quote_id: id });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations');
       return this.getQuote(id);
     }
     return v2Request(`/api/v2/quotes/${encodeURIComponent(id)}/send`, { method: 'POST' });
@@ -925,7 +947,7 @@ export const v2Api = {
   async voidQuote(id: string, reason: string): Promise<{ quote: QuoteRecord }> {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.rpc('v2_void_quote', { p_quote_id: id, p_reason: reason });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations');
       return this.getQuote(id);
     }
     return v2Request(`/api/v2/quotes/${encodeURIComponent(id)}/void`, {
@@ -940,7 +962,7 @@ export const v2Api = {
         p_quote_id: id,
         p_reason: reason || 'Revised with updated pricing',
       });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations');
       return this.getQuote(data.id);
     }
     return v2Request(`/api/v2/quotes/${encodeURIComponent(id)}/revise`, {
@@ -952,7 +974,7 @@ export const v2Api = {
   async regenerateQuoteLink(id: string): Promise<{ quote: QuoteRecord }> {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.rpc('v2_regenerate_quote_link', { p_quote_id: id });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations');
       return this.getQuote(id);
     }
     return v2Request(`/api/v2/quotes/${encodeURIComponent(id)}/regenerate-link`, {
@@ -969,7 +991,7 @@ export const v2Api = {
         p_quote_id: id,
         p_send_now: sendNow,
       });
-      if (error) throw new ApiError(error.message, 409);
+      if (error) throw mapV2RpcError(error, '007_v2_slice3_quotations.sql', 'Quotations', 409);
       api.trackAnalyticsEvent('quote_converted', '/app/quotes');
       const [qRes, invRes] = await Promise.all([
         this.getQuote(id),
@@ -1122,7 +1144,7 @@ export const v2Api = {
         p_tone: payload.tone,
         p_channel: payload.channel || 'whatsapp',
       });
-      if (error) throw new ApiError(error.message, 400);
+      if (error) throw mapV2RpcError(error, '008_v2_slice4_receivables_reports.sql', 'Payment reminders');
       api.trackAnalyticsEvent('reminder_sent', '/app/debtors');
       return data as any;
     }

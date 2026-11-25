@@ -160,6 +160,64 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode }, ErrorBou
   }
 }
 
+let inFlightOAuthExchange: Promise<{ session: any; error: string | null }> | null = null;
+let lastOAuthExchangeKey: string | null = null;
+
+async function completeSupabaseOAuthOnce(cb: ReturnType<typeof parseOAuthCallbackParams>) {
+  if (!supabase) return { session: null, error: 'Authentication client not configured.' };
+  const key = cb.code
+    ? `code:${cb.code}`
+    : cb.accessToken
+      ? `tok:${cb.accessToken.slice(0, 24)}`
+      : 'none';
+
+  if (inFlightOAuthExchange && lastOAuthExchangeKey === key) {
+    return inFlightOAuthExchange;
+  }
+
+  lastOAuthExchangeKey = key;
+  inFlightOAuthExchange = (async () => {
+    const { data: existing } = await supabase.auth.getSession();
+    if (existing.session) {
+      return { session: existing.session, error: null };
+    }
+
+    if (cb.code) {
+      const { data: exData, error: exErr } = await supabase.auth.exchangeCodeForSession(cb.code);
+      if (exErr) {
+        // Re-check session in case a concurrent tab/mount already completed exchange
+        const { data: afterErr } = await supabase.auth.getSession();
+        if (afterErr.session) {
+          return { session: afterErr.session, error: null };
+        }
+        return {
+          session: null,
+          error: exErr.message || 'Could not complete Google sign-in. Please try again.',
+        };
+      }
+      return { session: exData.session, error: null };
+    }
+
+    if (cb.accessToken && cb.refreshToken) {
+      const { data: setSessData, error: setSessErr } = await supabase.auth.setSession({
+        access_token: cb.accessToken,
+        refresh_token: cb.refreshToken,
+      });
+      if (setSessErr) {
+        return {
+          session: null,
+          error: setSessErr.message || 'Could not complete Google sign-in. Please try again.',
+        };
+      }
+      return { session: setSessData.session, error: null };
+    }
+
+    return { session: null, error: 'Google sign-in session could not be restored. Please try again.' };
+  })();
+
+  return inFlightOAuthExchange;
+}
+
 function TallymarkRoutes() {
   const { pathname, navigate } = useRouter();
   const initialOAuth = useRef(parseOAuthCallbackParams());
@@ -192,13 +250,10 @@ function TallymarkRoutes() {
   useEffect(() => {
     let active = true;
 
-    const finishPopupAndClose = (ok: boolean, errorMessage?: string | null) => {
+    const postToOpenerAndClose = (payload: Record<string, unknown>) => {
       if (typeof window !== 'undefined' && window.opener) {
         try {
-          window.opener.postMessage(
-            { type: 'TALLYMARK_OAUTH_COMPLETE', ok, error: errorMessage || null },
-            window.location.origin
-          );
+          window.opener.postMessage(payload, window.location.origin);
         } catch {
           // ignore cross-origin postMessage errors
         }
@@ -207,6 +262,13 @@ function TallymarkRoutes() {
       }
       return false;
     };
+
+    const finishPopupAndClose = (ok: boolean, errorMessage?: string | null) =>
+      postToOpenerAndClose({
+        type: 'TALLYMARK_OAUTH_COMPLETE',
+        ok,
+        error: errorMessage || null,
+      });
 
     const init = async () => {
       const cb = initialOAuth.current;
@@ -229,42 +291,40 @@ function TallymarkRoutes() {
             return;
           }
 
-          // Await Supabase client initialization (which runs detectSessionInUrl for PKCE/implicit)
-          let { data: sessData } = await supabase.auth.getSession();
-
-          // Explicit fallback: exchange PKCE ?code= if detectSessionInUrl didn't already consume it
-          if (!sessData.session && cb.code) {
-            const { data: exData, error: exErr } = await supabase.auth.exchangeCodeForSession(cb.code);
-            if (exErr) {
-              const errMsg = exErr.message || 'Could not complete Google sign-in. Please try again.';
-              if (cb.isCallbackRoute && finishPopupAndClose(false, errMsg)) {
-                return;
-              }
-              oauthHandlingRef.current = false;
-              setOauthMessage(null);
-              setAuthLoading(false);
-              if (active) {
-                navigate(`/login?auth_error=${encodeURIComponent(errMsg)}`, { replace: true });
-              }
+          // If running inside an OAuth popup, hand code or tokens back to the opener window
+          // so the opener completes auth inside its own (possibly partitioned) storage.
+          if (cb.isCallbackRoute && typeof window !== 'undefined' && window.opener) {
+            if (cb.accessToken && cb.refreshToken) {
+              postToOpenerAndClose({
+                type: 'TALLYMARK_OAUTH_TOKENS',
+                accessToken: cb.accessToken,
+                refreshToken: cb.refreshToken,
+              });
               return;
             }
-            sessData = { session: exData.session };
-          }
-
-          // Explicit fallback: set implicit hash tokens if present and not yet loaded
-          if (!sessData.session && cb.accessToken && cb.refreshToken) {
-            const { data: setSessData, error: setSessErr } = await supabase.auth.setSession({
-              access_token: cb.accessToken,
-              refresh_token: cb.refreshToken,
-            });
-            if (!setSessErr && setSessData.session) {
-              sessData = { session: setSessData.session };
+            if (cb.code) {
+              postToOpenerAndClose({
+                type: 'TALLYMARK_OAUTH_CODE',
+                code: cb.code,
+              });
+              return;
             }
           }
 
           if (isOAuthReturn) {
-            if (!sessData.session) {
-              const failMsg = 'Google sign-in session could not be restored. Please try again.';
+            // Strip auth query/hash immediately so reloads don't re-submit single-use codes
+            if (typeof window !== 'undefined' && (window.location.search || window.location.hash)) {
+              try {
+                window.history.replaceState({}, '', window.location.pathname || '/auth/callback');
+              } catch {
+                // ignore history errors
+              }
+            }
+
+            const result = await completeSupabaseOAuthOnce(cb);
+            if (!result.session) {
+              const failMsg =
+                result.error || 'Google sign-in session could not be restored. Please try again.';
               if (cb.isCallbackRoute && finishPopupAndClose(false, failMsg)) {
                 return;
               }

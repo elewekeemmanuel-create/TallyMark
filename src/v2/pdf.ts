@@ -8,6 +8,7 @@ import type {
   PaymentRecord,
   PublicInvoiceRecord,
   PublicQuoteRecord,
+  QuoteRecord,
 } from '../shared/v2/types';
 
 interface LoadedFontBytes {
@@ -206,41 +207,6 @@ export function buildInvoicePdfFilename(invoice: PublicInvoiceRecord): string {
   return `${base}.pdf`;
 }
 
-function drawStamp(page: PDFPage, inv: PublicInvoiceRecord, x: number, y: number, font: PDFFont) {
-  const { label, color } = getStampMeta(inv);
-  const w = 104;
-  const h = 34;
-  page.drawRectangle({
-    x,
-    y,
-    width: w,
-    height: h,
-    borderColor: color,
-    borderWidth: 2,
-    rotate: deg(-6),
-    opacity: 0.92,
-  });
-  page.drawRectangle({
-    x: x + 3,
-    y: y + 3,
-    width: w - 6,
-    height: h - 6,
-    borderColor: color,
-    borderWidth: 0.75,
-    rotate: deg(-6),
-    opacity: 0.75,
-  });
-  const textWidth = font.widthOfTextAtSize(label, 12);
-  page.drawText(label, {
-    x: x + (w - textWidth) / 2,
-    y: y + 12,
-    size: 12,
-    font,
-    color,
-    rotate: deg(-6),
-  });
-}
-
 async function embedLogo(pdfDoc: import('pdf-lib').PDFDocument, dataUrl: string | null) {
   if (!dataUrl) return null;
   try {
@@ -260,15 +226,18 @@ async function embedLogo(pdfDoc: import('pdf-lib').PDFDocument, dataUrl: string 
 /**
  * Generates a compact, true-vector A4 Invoice PDF (< 150 KB via font subsetting)
  * rendered strictly from the immutable invoice snapshot.
+ * Dynamically adapts vertical density and uses a 2-column bottom summary layout
+ * so real-world invoices fit crisply onto 1 single A4 page without dropping data.
  */
 export async function generateInvoicePdfBytes(
   invoice: PublicInvoiceRecord,
-  originOverride?: string
+  originOverride?: string,
+  fontBytesOverride?: LoadedFontBytes
 ): Promise<Uint8Array> {
   const snap = invoice.snapshot;
   const [{ PDFDocument, rgb, fontkit, QRCode }, fonts] = await Promise.all([
     loadPdfDeps(),
-    getFontBytes(),
+    fontBytesOverride ? Promise.resolve(fontBytesOverride) : getFontBytes(),
   ]);
 
   const pdfDoc = await PDFDocument.create();
@@ -285,7 +254,7 @@ export async function generateInvoicePdfBytes(
     originOverride || (typeof window !== 'undefined' ? window.location.origin : 'https://tallymark.app');
   const publicUrl = `${origin}/i/${invoice.publicId}`;
   const qrDataUrl = await QRCode.toDataURL(publicUrl, {
-    width: 160,
+    width: 144,
     margin: 1,
     color: { dark: '#121513', light: '#FFFDF9' },
   });
@@ -302,103 +271,403 @@ export async function generateInvoicePdfBytes(
 
   const pageWidth = 595.28; // A4
   const pageHeight = 841.89;
-  const margin = 42;
+
+  interface LayoutDensity {
+    margin: number;
+    accentH: number;
+    topPad: number;
+    logoMax: number;
+    bizTitleSz: number;
+    bizMetaSz: number;
+    bizMetaLead: number;
+    invNumSz: number;
+    stampW: number;
+    stampH: number;
+    stampFontSz: number;
+    sectionGap: number;
+    billTitleSz: number;
+    billTextSz: number;
+    billLead: number;
+    tableHeadH: number;
+    descSz: number;
+    numSz: number;
+    descLead: number;
+    rowPadTop: number;
+    rowPadBottom: number;
+    discSz: number;
+    discLead: number;
+    totalsSz: number;
+    totalsBoldSz: number;
+    totalsLead: number;
+    totalsBoldLead: number;
+    sideSz: number;
+    sideLead: number;
+    qrSize: number;
+    footerBottom: number;
+    footerGap: number;
+  }
+
+  const TIERS: LayoutDensity[] = [
+    // Tier 0: Crisp compact A4 (fits ~1–14 items + full metadata on 1 page)
+    {
+      margin: 34,
+      accentH: 6,
+      topPad: 28,
+      logoMax: 36,
+      bizTitleSz: 16.5,
+      bizMetaSz: 8,
+      bizMetaLead: 10,
+      invNumSz: 12.5,
+      stampW: 92,
+      stampH: 28,
+      stampFontSz: 10.5,
+      sectionGap: 11,
+      billTitleSz: 10,
+      billTextSz: 8,
+      billLead: 10.5,
+      tableHeadH: 19,
+      descSz: 8.5,
+      numSz: 8.2,
+      descLead: 10.5,
+      rowPadTop: 4.5,
+      rowPadBottom: 5.5,
+      discSz: 7.2,
+      discLead: 9.5,
+      totalsSz: 8.2,
+      totalsBoldSz: 9.5,
+      totalsLead: 12.5,
+      totalsBoldLead: 14.5,
+      sideSz: 7.8,
+      sideLead: 10,
+      qrSize: 40,
+      footerBottom: 24,
+      footerGap: 12,
+    },
+    // Tier 1: Tight single-page A4 (fits ~15–25 items on 1 page)
+    {
+      margin: 26,
+      accentH: 5,
+      topPad: 22,
+      logoMax: 30,
+      bizTitleSz: 14.5,
+      bizMetaSz: 7.5,
+      bizMetaLead: 9,
+      invNumSz: 11.5,
+      stampW: 84,
+      stampH: 24,
+      stampFontSz: 9.5,
+      sectionGap: 8,
+      billTitleSz: 9.2,
+      billTextSz: 7.5,
+      billLead: 9.2,
+      tableHeadH: 16.5,
+      descSz: 7.8,
+      numSz: 7.6,
+      descLead: 9.2,
+      rowPadTop: 2.8,
+      rowPadBottom: 3.4,
+      discSz: 6.8,
+      discLead: 8.2,
+      totalsSz: 7.6,
+      totalsBoldSz: 8.8,
+      totalsLead: 10.8,
+      totalsBoldLead: 12.5,
+      sideSz: 7.2,
+      sideLead: 8.8,
+      qrSize: 36,
+      footerBottom: 20,
+      footerGap: 8,
+    },
+    // Tier 2: Ultra-compact single-page A4 (fits ~26–36 items on 1 page)
+    {
+      margin: 22,
+      accentH: 4,
+      topPad: 18,
+      logoMax: 26,
+      bizTitleSz: 13,
+      bizMetaSz: 7,
+      bizMetaLead: 8.2,
+      invNumSz: 10.5,
+      stampW: 76,
+      stampH: 21,
+      stampFontSz: 8.5,
+      sectionGap: 6,
+      billTitleSz: 8.5,
+      billTextSz: 7,
+      billLead: 8.4,
+      tableHeadH: 14.5,
+      descSz: 7.2,
+      numSz: 7,
+      descLead: 8.2,
+      rowPadTop: 1.8,
+      rowPadBottom: 2.2,
+      discSz: 6.4,
+      discLead: 7.4,
+      totalsSz: 7.2,
+      totalsBoldSz: 8.2,
+      totalsLead: 9.6,
+      totalsBoldLead: 11,
+      sideSz: 6.8,
+      sideLead: 8,
+      qrSize: 32,
+      footerBottom: 16,
+      footerGap: 6,
+    },
+  ];
+
+  // Pre-compute totals rows so both height estimator and renderer stay 1:1
+  type TotalRowDef = { label: string; val: string; bold?: boolean; accent?: boolean; dividerBefore?: boolean };
+  const totalRows: TotalRowDef[] = [{ label: 'Subtotal', val: formatKobo(snap.subtotalKobo, cur) }];
+  if (snap.lineDiscountTotalKobo > 0) {
+    totalRows.push({ label: 'Line discounts', val: `-${formatKobo(snap.lineDiscountTotalKobo, cur)}` });
+  }
+  if (snap.invoiceDiscountKobo > 0) {
+    totalRows.push({ label: 'Invoice discount', val: `-${formatKobo(snap.invoiceDiscountKobo, cur)}` });
+  }
+  if (snap.vatEnabled && snap.vatKobo > 0) {
+    const rateLabel = (snap.vatRateBps / 100).toFixed(1).replace(/\.0$/, '');
+    const vatLabel =
+      snap.vatMode === 'inclusive' ? `VAT (${rateLabel}% incl.)` : `VAT (${rateLabel}%)`;
+    totalRows.push({ label: vatLabel, val: formatKobo(snap.vatKobo, cur) });
+  }
+  totalRows.push({
+    label: 'Invoice Total',
+    val: formatKobo(snap.totalKobo, cur),
+    bold: true,
+    dividerBefore: true,
+  });
+  if (snap.depositType !== 'none' && snap.amountDueNowKobo < snap.totalKobo && invoice.amountPaidKobo === 0) {
+    totalRows.push({
+      label: 'Amount due now',
+      val: formatKobo(snap.amountDueNowKobo, cur),
+      bold: true,
+      accent: true,
+    });
+  }
+  if (invoice.amountPaidKobo > 0) {
+    totalRows.push({ label: 'Amount paid', val: formatKobo(invoice.amountPaidKobo, cur) });
+  }
+  if (invoice.writtenOffKobo > 0) {
+    totalRows.push({ label: 'Written off', val: formatKobo(invoice.writtenOffKobo, cur) });
+  }
+  totalRows.push({
+    label: 'Balance due',
+    val: formatKobo(invoice.balanceDueKobo, cur),
+    bold: true,
+    accent: true,
+  });
+
+  const estimateSinglePageHeight = (d: LayoutDensity): number => {
+    const innerW = pageWidth - d.margin * 2;
+    const descW = innerW - 215;
+    const leftColW = innerW - 228;
+
+    // Header height
+    let bizLines = 1; // title
+    if (snap.business.address) {
+      bizLines += wrapLines(snap.business.address, sans, d.bizMetaSz, 260).slice(0, 2).length;
+    }
+    if (snap.business.phone || snap.business.email) bizLines += 1;
+    if (snap.business.tinRc) bizLines += 1;
+    const headerH = Math.max(d.stampH + 34, 18 + (bizLines - 1) * d.bizMetaLead) + d.sectionGap;
+
+    // Bill To + Dates height
+    const custAddrLines = snap.customer.address
+      ? wrapLines(snap.customer.address, sans, d.billTextSz, 240).slice(0, 2).length
+      : 0;
+    const billH = Math.max(3 * d.billLead + 4, 22 + custAddrLines * d.billLead) + d.sectionGap;
+
+    // Items table height
+    let itemsH = d.tableHeadH + 4;
+    for (const line of snap.lines) {
+      const descLines = Math.max(1, wrapLines(line.description, sansBold, d.descSz, descW).length);
+      itemsH +=
+        d.rowPadTop +
+        descLines * d.descLead +
+        (line.discountKobo > 0 ? d.discLead : 0) +
+        d.rowPadBottom;
+    }
+
+    // Bottom 2-column summary height (max of left column & right totals)
+    let rightH = 6;
+    for (const r of totalRows) {
+      if (r.dividerBefore) rightH += 4;
+      rightH += r.bold ? d.totalsBoldLead : d.totalsLead;
+    }
+
+    let leftH = 6;
+    const wordLines = wrapLines(`In words: ${koboToWords(snap.totalKobo, cur)}`, sans, d.sideSz, leftColW);
+    leftH += wordLines.length * d.sideLead + 6;
+    if (snap.bankAccounts && snap.bankAccounts.length > 0 && invoice.status !== 'VOID') {
+      leftH += d.sideLead + 3 + Math.min(3, snap.bankAccounts.length) * (d.sideLead + 1.5) + 6;
+    }
+    if (invoice.payments.length > 0) {
+      leftH += d.sideLead + 3 + Math.min(5, invoice.payments.length) * (d.sideLead + 1) + 6;
+    }
+    if (snap.notes) {
+      const noteLines = wrapLines(snap.notes, sans, d.sideSz, leftColW).slice(0, 4);
+      leftH += d.sideLead + 3 + noteLines.length * d.sideLead + 6;
+    }
+    if (invoice.status === 'VOID' && invoice.voidReason) {
+      const voidLines = wrapLines(`Voided: ${invoice.voidReason}`, sans, d.sideSz, leftColW).slice(0, 2);
+      leftH += voidLines.length * d.sideLead + 4;
+    }
+
+    const summaryH = Math.max(rightH, leftH) + d.sectionGap;
+    const footerReserve = d.footerBottom + d.qrSize + 10 + d.footerGap;
+
+    return d.topPad + headerH + billH + itemsH + summaryH + footerReserve;
+  };
+
+  // Pick the most readable density tier that fits on 1 single A4 page
+  let d = TIERS[TIERS.length - 1];
+  for (const tier of TIERS) {
+    if (estimateSinglePageHeight(tier) <= pageHeight) {
+      d = tier;
+      break;
+    }
+  }
+
+  const margin = d.margin;
   const innerWidth = pageWidth - margin * 2;
+  const footerTopY = d.footerBottom + d.qrSize + 8;
+  const minContentY = footerTopY + d.footerGap;
 
   const createStyledPage = () => {
     const p = pdfDoc.addPage([pageWidth, pageHeight]);
     p.drawRectangle({ x: 0, y: 0, width: pageWidth, height: pageHeight, color: paper });
-    p.drawRectangle({ x: 0, y: pageHeight - 8, width: pageWidth, height: 8, color: brandColor });
+    p.drawRectangle({ x: 0, y: pageHeight - d.accentH, width: pageWidth, height: d.accentH, color: brandColor });
     return p;
   };
 
   let page = createStyledPage();
+  let y = pageHeight - d.topPad;
 
-  let y = pageHeight - 44;
+  // Compact stamp helper scaled to active density tier
+  const drawCompactStamp = (targetPage: PDFPage, x: number, sy: number) => {
+    const { label, color } = getStampMeta(invoice);
+    targetPage.drawRectangle({
+      x,
+      y: sy,
+      width: d.stampW,
+      height: d.stampH,
+      borderColor: color,
+      borderWidth: 1.8,
+      rotate: deg(-5),
+      opacity: 0.92,
+    });
+    targetPage.drawRectangle({
+      x: x + 2.5,
+      y: sy + 2.5,
+      width: d.stampW - 5,
+      height: d.stampH - 5,
+      borderColor: color,
+      borderWidth: 0.65,
+      rotate: deg(-5),
+      opacity: 0.75,
+    });
+    const textWidth = monoBold.widthOfTextAtSize(label, d.stampFontSz);
+    targetPage.drawText(label, {
+      x: x + (d.stampW - textWidth) / 2,
+      y: sy + (d.stampH - d.stampFontSz) / 2 + 1.5,
+      size: d.stampFontSz,
+      font: monoBold,
+      color,
+      rotate: deg(-5),
+    });
+  };
 
   // Header left: Business logo + name + address + TIN/RC
   let leftX = margin;
   if (logoImage) {
-    const dims = logoImage.scaleToFit(44, 44);
-    page.drawImage(logoImage, { x: margin, y: y - 28, width: dims.width, height: dims.height });
-    leftX = margin + dims.width + 12;
+    const dims = logoImage.scaleToFit(d.logoMax, d.logoMax);
+    page.drawImage(logoImage, { x: margin, y: y - dims.height + 10, width: dims.width, height: dims.height });
+    leftX = margin + dims.width + 10;
   }
 
   const bizTitle = safeText(snap.business.name || 'Business');
   page.drawText(bizTitle, {
     x: leftX,
     y,
-    size: 19,
+    size: d.bizTitleSz,
     font: pickFontForText(bizTitle, serif, sansBold),
     color: ink,
   });
 
-  let bizMetaY = y - 14;
+  let bizMetaY = y - (d.bizMetaLead + 2);
   if (snap.business.address) {
-    for (const line of wrapLines(snap.business.address, sans, 8.5, 250).slice(0, 2)) {
-      page.drawText(line, { x: leftX, y: bizMetaY, size: 8.5, font: sans, color: muted });
-      bizMetaY -= 11;
+    for (const line of wrapLines(snap.business.address, sans, d.bizMetaSz, 265).slice(0, 2)) {
+      page.drawText(line, { x: leftX, y: bizMetaY, size: d.bizMetaSz, font: sans, color: muted });
+      bizMetaY -= d.bizMetaLead;
     }
   }
   const contactParts = [snap.business.phone, snap.business.email].filter(Boolean).join(' · ');
   if (contactParts) {
-    page.drawText(safeText(contactParts), { x: leftX, y: bizMetaY, size: 8.5, font: sans, color: muted });
-    bizMetaY -= 11;
+    page.drawText(safeText(contactParts), { x: leftX, y: bizMetaY, size: d.bizMetaSz, font: sans, color: muted });
+    bizMetaY -= d.bizMetaLead;
   }
   if (snap.business.tinRc) {
     page.drawText(safeText(`TIN / RC: ${snap.business.tinRc}`), {
       x: leftX,
       y: bizMetaY,
-      size: 8.5,
+      size: d.bizMetaSz,
       font: mono,
       color: ink,
     });
-    bizMetaY -= 11;
+    bizMetaY -= d.bizMetaLead;
   }
 
   // Header right: INVOICE title + number + stamp
   const titleText = 'INVOICE';
-  const titleW = monoBold.widthOfTextAtSize(titleText, 11);
+  const titleSz = Math.max(8.5, d.invNumSz - 2.5);
+  const titleW = monoBold.widthOfTextAtSize(titleText, titleSz);
   page.drawText(titleText, {
     x: pageWidth - margin - titleW,
-    y: y + 4,
-    size: 11,
+    y: y + 3,
+    size: titleSz,
     font: monoBold,
     color: brandColor,
   });
   const numText = safeText(snap.invoiceNumber);
-  const numW = monoBold.widthOfTextAtSize(numText, 14);
+  const numW = monoBold.widthOfTextAtSize(numText, d.invNumSz);
   page.drawText(numText, {
     x: pageWidth - margin - numW,
-    y: y - 14,
-    size: 14,
+    y: y - (d.invNumSz + 1),
+    size: d.invNumSz,
     font: monoBold,
     color: ink,
   });
 
-  drawStamp(page, invoice, pageWidth - margin - 106, y - 60, monoBold);
+  const stampBottomY = y - (d.invNumSz + d.stampH + 10);
+  drawCompactStamp(page, pageWidth - margin - d.stampW - 2, stampBottomY);
 
-  y = Math.min(bizMetaY - 12, y - 74);
+  y = Math.min(bizMetaY - 4, stampBottomY - 6);
   page.drawLine({
     start: { x: margin, y },
     end: { x: pageWidth - margin, y },
-    thickness: 0.75,
+    thickness: 0.7,
     color: hairline,
   });
-  y -= 18;
+  y -= d.sectionGap + 2;
 
-  // Bill To + Dates row (never includes customer phone or email!)
-  page.drawText('BILL TO', { x: margin, y, size: 7.5, font: monoBold, color: muted });
-  page.drawText(safeText(snap.customer.name), { x: margin, y: y - 14, size: 11, font: sansBold, color: ink });
-  let custY = y - 27;
+  // Bill To + Dates row (never includes customer phone or email)
+  page.drawText('BILL TO', { x: margin, y, size: 7, font: monoBold, color: muted });
+  page.drawText(safeText(snap.customer.name), {
+    x: margin,
+    y: y - (d.billLead + 1),
+    size: d.billTitleSz,
+    font: sansBold,
+    color: ink,
+  });
+  let custY = y - (d.billLead * 2 + 2);
   if (snap.customer.address) {
-    for (const line of wrapLines(snap.customer.address, sans, 8.5, 240).slice(0, 2)) {
-      page.drawText(line, { x: margin, y: custY, size: 8.5, font: sans, color: muted });
-      custY -= 11;
+    for (const line of wrapLines(snap.customer.address, sans, d.billTextSz, 240).slice(0, 2)) {
+      page.drawText(line, { x: margin, y: custY, size: d.billTextSz, font: sans, color: muted });
+      custY -= d.billLead;
     }
   }
 
-  const colR = pageWidth - margin - 185;
+  const colR = pageWidth - margin - 180;
   const metaRows: Array<[string, string]> = [
     ['ISSUE DATE', safeText(formatLagosDateOnly(snap.issueDate))],
     ['DUE DATE', safeText(formatLagosDateOnly(snap.dueDate))],
@@ -406,49 +675,49 @@ export async function generateInvoicePdfBytes(
   ];
   let metaY = y;
   for (const [k, v] of metaRows) {
-    page.drawText(k, { x: colR, y: metaY, size: 7.5, font: monoBold, color: muted });
-    const vw = mono.widthOfTextAtSize(v, 8.5);
-    page.drawText(v, { x: pageWidth - margin - vw, y: metaY, size: 8.5, font: mono, color: ink });
-    metaY -= 14;
+    page.drawText(k, { x: colR, y: metaY, size: 7, font: monoBold, color: muted });
+    const vw = mono.widthOfTextAtSize(v, d.billTextSz);
+    page.drawText(v, { x: pageWidth - margin - vw, y: metaY, size: d.billTextSz, font: mono, color: ink });
+    metaY -= d.billLead + 1.5;
   }
 
-  y = Math.min(custY - 12, metaY - 10);
+  y = Math.min(custY - 4, metaY - 2) - Math.max(2, d.sectionGap - 6);
 
-  // Table header helper (also reused on continuation pages)
-  const tableHeaderH = 22;
-  const colDesc = margin + 8;
-  const colQty = margin + innerWidth - 205;
-  const colUnit = margin + innerWidth - 115;
-  const colAmt = pageWidth - margin - 8;
+  // Table columns
+  const colDesc = margin + 6;
+  const colQty = margin + innerWidth - 195;
+  const colUnit = margin + innerWidth - 110;
+  const colAmt = pageWidth - margin - 6;
 
   const drawItemsHeader = () => {
     page.drawRectangle({
       x: margin,
-      y: y - tableHeaderH + 6,
+      y: y - d.tableHeadH + 5,
       width: innerWidth,
-      height: tableHeaderH,
+      height: d.tableHeadH,
       color: rgb(0.95, 0.935, 0.9),
     });
-    page.drawText('DESCRIPTION', { x: colDesc, y: y - 8, size: 7.5, font: monoBold, color: muted });
-    page.drawText('QTY', { x: colQty, y: y - 8, size: 7.5, font: monoBold, color: muted });
-    page.drawText('UNIT PRICE', { x: colUnit - 36, y: y - 8, size: 7.5, font: monoBold, color: muted });
-    const amtHeadW = monoBold.widthOfTextAtSize('AMOUNT', 7.5);
-    page.drawText('AMOUNT', { x: colAmt - amtHeadW, y: y - 8, size: 7.5, font: monoBold, color: muted });
-    y -= tableHeaderH + 8;
+    const headTextY = y - d.tableHeadH + 5 + (d.tableHeadH - 7) / 2;
+    page.drawText('DESCRIPTION', { x: colDesc, y: headTextY, size: 7, font: monoBold, color: muted });
+    page.drawText('QTY', { x: colQty, y: headTextY, size: 7, font: monoBold, color: muted });
+    page.drawText('UNIT PRICE', { x: colUnit - 34, y: headTextY, size: 7, font: monoBold, color: muted });
+    const amtHeadW = monoBold.widthOfTextAtSize('AMOUNT', 7);
+    page.drawText('AMOUNT', { x: colAmt - amtHeadW, y: headTextY, size: 7, font: monoBold, color: muted });
+    y -= d.tableHeadH + 3;
   };
 
   const ensureSpace = (neededHeight: number, repeatTableHeader = false) => {
-    if (y - neededHeight >= 112) return;
+    if (y - neededHeight >= minContentY) return;
     page = createStyledPage();
-    y = pageHeight - 40;
+    y = pageHeight - d.topPad;
     page.drawText(safeText(`${snap.business.name} · ${snap.invoiceNumber} (continued)`), {
       x: margin,
       y,
-      size: 8,
+      size: 7.5,
       font: mono,
       color: muted,
     });
-    y -= 20;
+    y -= 16;
     if (repeatTableHeader) {
       drawItemsHeader();
     }
@@ -458,173 +727,217 @@ export async function generateInvoicePdfBytes(
 
   // Line items
   for (const line of snap.lines) {
-    const descLines = wrapLines(line.description, sansBold, 9, innerWidth - 230);
-    const needed = Math.max(1, descLines.length) * 12 + (line.discountKobo > 0 ? 25 : 14);
+    const descLines = wrapLines(line.description, sansBold, d.descSz, innerWidth - 215);
+    const lineCount = Math.max(1, descLines.length);
+    const needed = d.rowPadTop + lineCount * d.descLead + (line.discountKobo > 0 ? d.discLead : 0) + d.rowPadBottom;
     ensureSpace(needed, true);
+
+    y -= d.rowPadTop;
     const qtyStr = formatQtyThousandths(line.qtyThousandths);
     const unitStr = formatKobo(line.unitPriceKobo, cur);
     const totalStr = formatKobo(line.lineTotalKobo, cur);
 
-    for (let i = 0; i < Math.max(1, descLines.length); i++) {
+    for (let i = 0; i < lineCount; i++) {
       page.drawText(descLines[i] || '', {
         x: colDesc,
-        y: y - i * 12,
-        size: 9,
+        y: y - i * d.descLead,
+        size: d.descSz,
         font: sansBold,
         color: ink,
       });
     }
-    page.drawText(qtyStr, { x: colQty, y, size: 8.5, font: mono, color: ink });
-    const uw = mono.widthOfTextAtSize(unitStr, 8.5);
-    page.drawText(unitStr, { x: colUnit + 22 - uw, y, size: 8.5, font: mono, color: ink });
-    const tw = monoBold.widthOfTextAtSize(totalStr, 9);
-    page.drawText(totalStr, { x: colAmt - tw, y, size: 9, font: monoBold, color: ink });
+    page.drawText(qtyStr, { x: colQty, y, size: d.numSz, font: mono, color: ink });
+    const uw = mono.widthOfTextAtSize(unitStr, d.numSz);
+    page.drawText(unitStr, { x: colUnit + 20 - uw, y, size: d.numSz, font: mono, color: ink });
+    const tw = monoBold.widthOfTextAtSize(totalStr, d.descSz);
+    page.drawText(totalStr, { x: colAmt - tw, y, size: d.descSz, font: monoBold, color: ink });
 
-    y -= Math.max(1, descLines.length) * 12 + 4;
+    y -= lineCount * d.descLead;
     if (line.discountKobo > 0) {
       page.drawText(`Line discount: -${formatKobo(line.discountKobo, cur)}`, {
         x: colDesc,
         y,
-        size: 7.5,
+        size: d.discSz,
         font: sans,
         color: muted,
       });
-      y -= 11;
+      y -= d.discLead;
     }
 
+    const lineY = y + Math.max(2, d.rowPadBottom * 0.5);
     page.drawLine({
-      start: { x: margin, y: y + 3 },
-      end: { x: pageWidth - margin, y: y + 3 },
-      thickness: 0.4,
+      start: { x: margin, y: lineY },
+      end: { x: pageWidth - margin, y: lineY },
+      thickness: 0.35,
       color: hairline,
     });
-    y -= 10;
+    y -= d.rowPadBottom;
   }
 
-  // Totals block (right aligned) — start new page if not enough room above footer
-  ensureSpace(125, false);
-  const totalsX = margin + innerWidth - 225;
-  const drawTotalRow = (label: string, val: string, bold = false, accent = false) => {
-    const f = bold ? sansBold : sans;
-    const mf = bold ? monoBold : mono;
-    const sz = bold ? 10 : 8.5;
-    page.drawText(label, { x: totalsX, y, size: sz, font: f, color: accent ? brandColor : muted });
-    const vw = mf.widthOfTextAtSize(val, sz);
-    page.drawText(val, { x: colAmt - vw, y, size: sz, font: mf, color: accent ? brandColor : ink });
-    y -= bold ? 17 : 14;
-  };
+  // Bottom 2-column summary zone:
+  // Left column: Amount in words, Payment Details (bank accounts), Payments Received, Notes, Void reason
+  // Right column: Totals summary
+  const leftColW = innerWidth - 228;
+  const totalsX = margin + innerWidth - 214;
 
-  drawTotalRow('Subtotal', formatKobo(snap.subtotalKobo, cur));
-  if (snap.lineDiscountTotalKobo > 0) {
-    drawTotalRow('Line discounts', `-${formatKobo(snap.lineDiscountTotalKobo, cur)}`);
-  }
-  if (snap.invoiceDiscountKobo > 0) {
-    drawTotalRow('Invoice discount', `-${formatKobo(snap.invoiceDiscountKobo, cur)}`);
-  }
-  if (snap.vatEnabled && snap.vatKobo > 0) {
-    const rateLabel = (snap.vatRateBps / 100).toFixed(1).replace(/\.0$/, '');
-    const vatLabel =
-      snap.vatMode === 'inclusive' ? `VAT (${rateLabel}% incl.)` : `VAT (${rateLabel}%)`;
-    drawTotalRow(vatLabel, formatKobo(snap.vatKobo, cur));
+  // Measure both columns accurately so ensureSpace never truncates or drops any inputted data
+  const wordLines = wrapLines(`In words: ${koboToWords(snap.totalKobo, cur)}`, sans, d.sideSz, leftColW);
+  const banksToDraw = invoice.status !== 'VOID' ? (snap.bankAccounts || []).slice(0, 3) : [];
+  const paymentsToDraw = invoice.payments.slice(0, 5);
+  const noteLines = snap.notes ? wrapLines(snap.notes, sans, d.sideSz, leftColW).slice(0, 4) : [];
+  const voidLines =
+    invoice.status === 'VOID' && invoice.voidReason
+      ? wrapLines(`Voided: ${invoice.voidReason}`, sans, d.sideSz, leftColW).slice(0, 2)
+      : [];
+
+  let estRightH = 4;
+  for (const r of totalRows) {
+    if (r.dividerBefore) estRightH += 4;
+    estRightH += r.bold ? d.totalsBoldLead : d.totalsLead;
   }
 
-  page.drawLine({
-    start: { x: totalsX, y: y + 8 },
-    end: { x: colAmt, y: y + 8 },
-    thickness: 0.75,
-    color: hairline,
-  });
-  y -= 4;
-
-  drawTotalRow('Invoice Total', formatKobo(snap.totalKobo, cur), true, false);
-  if (snap.depositType !== 'none' && snap.amountDueNowKobo < snap.totalKobo && invoice.amountPaidKobo === 0) {
-    drawTotalRow('Amount due now', formatKobo(snap.amountDueNowKobo, cur), true, true);
+  let estLeftH = wordLines.length * d.sideLead + 6;
+  if (banksToDraw.length > 0) {
+    estLeftH += d.sideLead + 3 + banksToDraw.length * (d.sideLead + 1.5) + 6;
   }
-  if (invoice.amountPaidKobo > 0) {
-    drawTotalRow('Amount paid', formatKobo(invoice.amountPaidKobo, cur));
+  if (paymentsToDraw.length > 0) {
+    estLeftH += d.sideLead + 3 + paymentsToDraw.length * (d.sideLead + 1) + 6;
   }
-  if (invoice.writtenOffKobo > 0) {
-    drawTotalRow('Written off', formatKobo(invoice.writtenOffKobo, cur));
+  if (noteLines.length > 0) {
+    estLeftH += d.sideLead + 3 + noteLines.length * d.sideLead + 6;
   }
-  drawTotalRow('Balance due', formatKobo(invoice.balanceDueKobo, cur), true, true);
-
-  // Amount in words
-  const words = wrapLines(`In words: ${koboToWords(snap.totalKobo, cur)}`, sans, 8, innerWidth);
-  y -= 4;
-  for (const wLine of words) {
-    page.drawText(wLine, { x: margin, y, size: 8, font: sans, color: muted });
-    y -= 11;
+  if (voidLines.length > 0) {
+    estLeftH += voidLines.length * d.sideLead + 4;
   }
 
-  // Bank Details (from snapshot ONLY)
-  if (snap.bankAccounts && snap.bankAccounts.length > 0 && y > 170) {
-    y -= 10;
-    page.drawText('PAYMENT DETAILS', { x: margin, y, size: 7.5, font: monoBold, color: brandColor });
-    y -= 13;
-    for (const bank of snap.bankAccounts.slice(0, 3)) {
-      page.drawText(
-        safeText(`${bank.bankName}  |  ${bank.accountNumber}  |  ${bank.accountName}`),
-        { x: margin, y, size: 8.5, font: mono, color: ink }
+  const neededBottomH = Math.max(estRightH, estLeftH) + 6;
+  ensureSpace(neededBottomH, false);
+
+  const summaryStartY = y - 6;
+
+  // Render Right Column: Totals
+  let rightY = summaryStartY;
+  for (const row of totalRows) {
+    if (row.dividerBefore) {
+      page.drawLine({
+        start: { x: totalsX, y: rightY + 7 },
+        end: { x: colAmt, y: rightY + 7 },
+        thickness: 0.7,
+        color: hairline,
+      });
+      rightY -= 3;
+    }
+    const f = row.bold ? sansBold : sans;
+    const mf = row.bold ? monoBold : mono;
+    const sz = row.bold ? d.totalsBoldSz : d.totalsSz;
+    page.drawText(row.label, {
+      x: totalsX,
+      y: rightY,
+      size: sz,
+      font: f,
+      color: row.accent ? brandColor : row.bold ? ink : muted,
+    });
+    const vw = mf.widthOfTextAtSize(row.val, sz);
+    page.drawText(row.val, {
+      x: colAmt - vw,
+      y: rightY,
+      size: sz,
+      font: mf,
+      color: row.accent ? brandColor : ink,
+    });
+    rightY -= row.bold ? d.totalsBoldLead : d.totalsLead;
+  }
+
+  // Render Left Column: In words + Bank Details + Payments Received + Notes + Void
+  let leftY = summaryStartY;
+  for (const wLine of wordLines) {
+    page.drawText(wLine, { x: margin, y: leftY, size: d.sideSz, font: sans, color: muted });
+    leftY -= d.sideLead;
+  }
+
+  if (banksToDraw.length > 0) {
+    leftY -= 5;
+    page.drawText('PAYMENT DETAILS', { x: margin, y: leftY, size: 7, font: monoBold, color: brandColor });
+    leftY -= d.sideLead + 1;
+    for (const bank of banksToDraw) {
+      const bankLine = safeText(`${bank.bankName} · ${bank.accountNumber} · ${bank.accountName}`);
+      const wrappedBank = wrapLines(bankLine, mono, d.sideSz, leftColW).slice(0, 2);
+      for (const bLine of wrappedBank) {
+        page.drawText(bLine, { x: margin, y: leftY, size: d.sideSz, font: mono, color: ink });
+        leftY -= d.sideLead + 1;
+      }
+    }
+  }
+
+  if (paymentsToDraw.length > 0) {
+    leftY -= 4;
+    page.drawText('PAYMENTS RECEIVED', { x: margin, y: leftY, size: 7, font: monoBold, color: muted });
+    leftY -= d.sideLead + 1;
+    for (const p of paymentsToDraw) {
+      const label = safeText(
+        `${formatLagosDateOnly(p.paymentDate)} · ${p.paymentMethod}${p.receiptNumber ? ` · ${p.receiptNumber}` : ''}`
       );
-      y -= 13;
-    }
-  }
-
-  // Payments Received Summary
-  if (invoice.payments.length > 0 && y > 140) {
-    y -= 8;
-    page.drawText('PAYMENTS RECEIVED', { x: margin, y, size: 7.5, font: monoBold, color: muted });
-    y -= 13;
-    for (const p of invoice.payments.slice(0, 5)) {
-      const line = `${formatLagosDateOnly(p.paymentDate)} · ${p.paymentMethod}${p.receiptNumber ? ` · ${p.receiptNumber}` : ''}`;
-      page.drawText(safeText(line), { x: margin, y, size: 8, font: sans, color: ink });
       const amtStr = formatKobo(p.amountKobo, cur);
-      const aw = mono.widthOfTextAtSize(amtStr, 8);
-      page.drawText(amtStr, { x: margin + 260 - aw, y, size: 8, font: mono, color: ink });
-      y -= 12;
+      const aw = mono.widthOfTextAtSize(amtStr, d.sideSz);
+      page.drawText(label, { x: margin, y: leftY, size: d.sideSz, font: sans, color: ink });
+      page.drawText(amtStr, { x: margin + leftColW - aw, y: leftY, size: d.sideSz, font: mono, color: ink });
+      leftY -= d.sideLead + 0.5;
     }
   }
 
-  // Notes
-  if (snap.notes && y > 115) {
-    y -= 8;
-    page.drawText('NOTES', { x: margin, y, size: 7.5, font: monoBold, color: muted });
-    y -= 12;
-    for (const nLine of wrapLines(snap.notes, sans, 8, innerWidth - 100).slice(0, 3)) {
-      page.drawText(nLine, { x: margin, y, size: 8, font: sans, color: muted });
-      y -= 11;
+  if (noteLines.length > 0) {
+    leftY -= 4;
+    page.drawText('NOTES', { x: margin, y: leftY, size: 7, font: monoBold, color: muted });
+    leftY -= d.sideLead + 1;
+    for (const nLine of noteLines) {
+      page.drawText(nLine, { x: margin, y: leftY, size: d.sideSz, font: sans, color: muted });
+      leftY -= d.sideLead;
     }
   }
 
-  // Footer: QR verification + optional "Made with Tallymark"
-  const footerY = 44;
+  if (voidLines.length > 0) {
+    leftY -= 4;
+    const danger = rgb(0.72, 0.11, 0.11);
+    for (const vLine of voidLines) {
+      page.drawText(vLine, { x: margin, y: leftY, size: d.sideSz, font: sansBold, color: danger });
+      leftY -= d.sideLead;
+    }
+  }
+
+  // Compact Footer: QR verification + optional "Made with Tallymark"
+  const footerY = d.footerBottom;
   page.drawLine({
-    start: { x: margin, y: footerY + 56 },
-    end: { x: pageWidth - margin, y: footerY + 56 },
-    thickness: 0.6,
+    start: { x: margin, y: footerTopY },
+    end: { x: pageWidth - margin, y: footerTopY },
+    thickness: 0.55,
     color: hairline,
   });
 
-  page.drawImage(qrImage, { x: pageWidth - margin - 48, y: footerY, width: 48, height: 48 });
+  page.drawImage(qrImage, {
+    x: pageWidth - margin - d.qrSize,
+    y: footerY,
+    width: d.qrSize,
+    height: d.qrSize,
+  });
   page.drawText('Scan to view live invoice status and receipts', {
     x: margin,
-    y: footerY + 34,
-    size: 8,
+    y: footerY + d.qrSize - 11,
+    size: 7.5,
     font: sansBold,
     color: ink,
   });
   page.drawText(publicUrl, {
     x: margin,
-    y: footerY + 21,
-    size: 7.5,
+    y: footerY + d.qrSize - 22,
+    size: 7,
     font: mono,
     color: muted,
   });
   if (snap.showBranding) {
     page.drawText('Made with Tallymark', {
       x: margin,
-      y: footerY + 6,
-      size: 7.5,
+      y: footerY + 2,
+      size: 7,
       font: sans,
       color: muted,
     });
@@ -648,6 +961,7 @@ export async function downloadInvoicePdf(invoice: PublicInvoiceRecord) {
 }
 
 function getQuoteStampMeta(quote: PublicQuoteRecord): { label: string; color: RGB } {
+  if (quote.status === 'DRAFT') return { label: 'DRAFT', color: colorRgb(0.36, 0.39, 0.37) };
   if (quote.status === 'VOID') return { label: 'VOID', color: colorRgb(0.72, 0.11, 0.11) };
   if (quote.status === 'ACCEPTED') return { label: 'ACCEPTED', color: colorRgb(0.024, 0.306, 0.231) };
   if (quote.status === 'CONVERTED') return { label: 'CONVERTED', color: colorRgb(0.024, 0.306, 0.231) };
@@ -656,53 +970,89 @@ function getQuoteStampMeta(quote: PublicQuoteRecord): { label: string; color: RG
   return { label: 'QUOTATION', color: colorRgb(0.36, 0.39, 0.37) };
 }
 
-function drawQuoteStamp(page: PDFPage, quote: PublicQuoteRecord, x: number, y: number, font: PDFFont) {
-  const { label, color } = getQuoteStampMeta(quote);
-  const w = 110;
-  const h = 34;
-  page.drawRectangle({
-    x,
-    y,
-    width: w,
-    height: h,
-    borderColor: color,
-    borderWidth: 2,
-    rotate: deg(-6),
-    opacity: 0.92,
-  });
-  page.drawRectangle({
-    x: x + 3,
-    y: y + 3,
-    width: w - 6,
-    height: h - 6,
-    borderColor: color,
-    borderWidth: 0.75,
-    rotate: deg(-6),
-    opacity: 0.75,
-  });
-  const textWidth = font.widthOfTextAtSize(label, 11.5);
-  page.drawText(label, {
-    x: x + (w - textWidth) / 2,
-    y: y + 12,
-    size: 11.5,
-    font,
-    color,
-    rotate: deg(-6),
-  });
+export function buildPublicQuotePreview(
+  quote: QuoteRecord,
+  business: BusinessProfile
+): PublicQuoteRecord {
+  const snap = quote.snapshot || {
+    quoteNumber: quote.quoteNumber || 'DRAFT',
+    business: {
+      name: business.name,
+      logoDataUrl: business.logoDataUrl,
+      address: business.address,
+      phone: business.phone,
+      email: business.email,
+      tinRc: business.tinRc || '',
+      brandColor: business.brandColor,
+      currency: business.currency,
+    },
+    customer: {
+      name: quote.customerName,
+      address: quote.customerAddress,
+    },
+    bankAccounts: (business.bankAccounts || []).filter((b) => quote.bankAccountIds.includes(b.id)),
+    issueDate: quote.issueDate,
+    validUntil: quote.validUntil,
+    termsKind: quote.termsKind,
+    lines: quote.lines,
+    subtotalKobo: quote.subtotalKobo,
+    lineDiscountTotalKobo: quote.lineDiscountTotalKobo,
+    invoiceDiscountKobo: quote.invoiceDiscountKobo,
+    vatEnabled: quote.vatEnabled,
+    vatMode: quote.vatMode,
+    vatRateBps: quote.vatRateBps,
+    vatKobo: quote.vatKobo,
+    totalKobo: quote.totalKobo,
+    depositType: quote.depositType,
+    depositValue: quote.depositValue,
+    amountDueNowKobo: quote.amountDueNowKobo,
+    notes: quote.notes,
+    template: quote.template,
+    showBranding: true,
+  };
+
+  return {
+    publicId: quote.publicId,
+    status: quote.status,
+    isExpired: quote.isExpired,
+    sentAt: quote.sentAt,
+    decisionName: quote.decisionName,
+    decisionNote: quote.decisionNote,
+    decisionAt: quote.decisionAt,
+    voidReason: quote.voidReason,
+    voidedAt: quote.voidedAt,
+    snapshot: snap,
+  };
+}
+
+export function buildQuotePdfFilename(quote: PublicQuoteRecord): string {
+  const numPart = (quote.snapshot.quoteNumber || 'quotation')
+    .replace(/[^A-Za-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 32);
+  const custPart = (quote.snapshot.customer?.name || '')
+    .replace(/[^A-Za-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 32);
+  const base = [numPart || 'quotation', custPart].filter(Boolean).join('-');
+  return `${base}.pdf`;
 }
 
 /**
  * Generates a compact, true-vector A4 Quotation PDF (< 150 KB via font subsetting)
  * rendered strictly from the immutable quote snapshot.
+ * Dynamically adapts vertical density and uses a 2-column bottom summary layout
+ * so real-world quotations fit crisply onto 1 single A4 page without dropping data.
  */
 export async function generateQuotePdfBytes(
   quote: PublicQuoteRecord,
-  originOverride?: string
+  originOverride?: string,
+  fontBytesOverride?: LoadedFontBytes
 ): Promise<Uint8Array> {
   const snap = quote.snapshot;
   const [{ PDFDocument, rgb, fontkit, QRCode }, fonts] = await Promise.all([
     loadPdfDeps(),
-    getFontBytes(),
+    fontBytesOverride ? Promise.resolve(fontBytesOverride) : getFontBytes(),
   ]);
 
   const pdfDoc = await PDFDocument.create();
@@ -714,16 +1064,23 @@ export async function generateQuotePdfBytes(
   const monoBold = await pdfDoc.embedFont(fonts.monoSemiBold, { subset: true });
   const serif = await pdfDoc.embedFont(fonts.serifRegular, { subset: true });
 
+  const hasLiveLink = Boolean(
+    quote.status !== 'DRAFT' && quote.publicId && quote.publicId !== 'draft'
+  );
   const origin =
     originOverride || (typeof window !== 'undefined' ? window.location.origin : 'https://tallymark.app');
-  const publicUrl = `${origin}/q/${quote.publicId}`;
-  const qrDataUrl = await QRCode.toDataURL(publicUrl, {
-    width: 160,
-    margin: 1,
-    color: { dark: '#121513', light: '#FFFDF9' },
-  });
-  const qrBytes = Uint8Array.from(atob(qrDataUrl.split(',')[1]), (c) => c.charCodeAt(0));
-  const qrImage = await pdfDoc.embedPng(qrBytes);
+  const publicUrl = hasLiveLink ? `${origin}/q/${quote.publicId}` : '';
+
+  let qrImage: import('pdf-lib').PDFImage | null = null;
+  if (hasLiveLink) {
+    const qrDataUrl = await QRCode.toDataURL(publicUrl, {
+      width: 144,
+      margin: 1,
+      color: { dark: '#121513', light: '#FFFDF9' },
+    });
+    const qrBytes = Uint8Array.from(atob(qrDataUrl.split(',')[1]), (c) => c.charCodeAt(0));
+    qrImage = await pdfDoc.embedPng(qrBytes);
+  }
   const logoImage = await embedLogo(pdfDoc, snap.business.logoDataUrl);
 
   const brandColor = hexToRgb(snap.business.brandColor || '#064E3B');
@@ -735,97 +1092,361 @@ export async function generateQuotePdfBytes(
 
   const pageWidth = 595.28;
   const pageHeight = 841.89;
-  const margin = 42;
+
+  interface QuoteDensity {
+    margin: number;
+    topPad: number;
+    accentH: number;
+    logoMax: number;
+    bizTitleSz: number;
+    bizMetaSz: number;
+    bizMetaLead: number;
+    invLabelSz: number;
+    invNumSz: number;
+    stampW: number;
+    stampH: number;
+    stampTextSz: number;
+    sectionGap: number;
+    billTitleSz: number;
+    billTextSz: number;
+    billLead: number;
+    tableHeadH: number;
+    descSz: number;
+    descLead: number;
+    numSz: number;
+    discSz: number;
+    discLead: number;
+    rowPadTop: number;
+    rowPadBottom: number;
+    totalsSz: number;
+    totalsBoldSz: number;
+    totalsLead: number;
+    totalsBoldLead: number;
+    sideSz: number;
+    sideLead: number;
+    qrSize: number;
+    footerBottom: number;
+    footerClearance: number;
+  }
+
+  const TIERS: QuoteDensity[] = [
+    {
+      margin: 34,
+      topPad: 32,
+      accentH: 6,
+      logoMax: 36,
+      bizTitleSz: 16.5,
+      bizMetaSz: 8,
+      bizMetaLead: 10,
+      invLabelSz: 9.5,
+      invNumSz: 12.5,
+      stampW: 92,
+      stampH: 26,
+      stampTextSz: 9.5,
+      sectionGap: 12,
+      billTitleSz: 10,
+      billTextSz: 8,
+      billLead: 10.5,
+      tableHeadH: 18,
+      descSz: 8.5,
+      descLead: 10.5,
+      numSz: 8,
+      discSz: 7,
+      discLead: 8.5,
+      rowPadTop: 4.5,
+      rowPadBottom: 4.5,
+      totalsSz: 8,
+      totalsBoldSz: 9.5,
+      totalsLead: 12,
+      totalsBoldLead: 14.5,
+      sideSz: 7.5,
+      sideLead: 9.5,
+      qrSize: 40,
+      footerBottom: 26,
+      footerClearance: 76,
+    },
+    {
+      margin: 28,
+      topPad: 26,
+      accentH: 5,
+      logoMax: 30,
+      bizTitleSz: 14.5,
+      bizMetaSz: 7.5,
+      bizMetaLead: 9,
+      invLabelSz: 8.5,
+      invNumSz: 11.5,
+      stampW: 82,
+      stampH: 22,
+      stampTextSz: 8.5,
+      sectionGap: 9,
+      billTitleSz: 9.2,
+      billTextSz: 7.5,
+      billLead: 9.2,
+      tableHeadH: 16,
+      descSz: 7.8,
+      descLead: 9.2,
+      numSz: 7.5,
+      discSz: 6.5,
+      discLead: 7.5,
+      rowPadTop: 3,
+      rowPadBottom: 3,
+      totalsSz: 7.5,
+      totalsBoldSz: 8.8,
+      totalsLead: 10.5,
+      totalsBoldLead: 12.5,
+      sideSz: 7,
+      sideLead: 8.5,
+      qrSize: 34,
+      footerBottom: 20,
+      footerClearance: 64,
+    },
+    {
+      margin: 24,
+      topPad: 22,
+      accentH: 4,
+      logoMax: 24,
+      bizTitleSz: 13,
+      bizMetaSz: 7,
+      bizMetaLead: 8.2,
+      invLabelSz: 8,
+      invNumSz: 10.5,
+      stampW: 74,
+      stampH: 20,
+      stampTextSz: 7.8,
+      sectionGap: 7,
+      billTitleSz: 8.5,
+      billTextSz: 7,
+      billLead: 8.2,
+      tableHeadH: 14,
+      descSz: 7.2,
+      descLead: 8.2,
+      numSz: 7,
+      discSz: 6.2,
+      discLead: 7,
+      rowPadTop: 2,
+      rowPadBottom: 2,
+      totalsSz: 7,
+      totalsBoldSz: 8.2,
+      totalsLead: 9.2,
+      totalsBoldLead: 11,
+      sideSz: 6.8,
+      sideLead: 7.8,
+      qrSize: 30,
+      footerBottom: 16,
+      footerClearance: 54,
+    },
+  ];
+
+  const totalRows: Array<{ label: string; val: string; bold?: boolean; accent?: boolean; dividerBefore?: boolean }> = [
+    { label: 'Subtotal', val: formatKobo(snap.subtotalKobo, cur) },
+  ];
+  if (snap.lineDiscountTotalKobo > 0) {
+    totalRows.push({ label: 'Line discounts', val: `-${formatKobo(snap.lineDiscountTotalKobo, cur)}` });
+  }
+  if (snap.invoiceDiscountKobo > 0) {
+    totalRows.push({ label: 'Quote discount', val: `-${formatKobo(snap.invoiceDiscountKobo, cur)}` });
+  }
+  if (snap.vatEnabled && snap.vatKobo > 0) {
+    const rateLabel = (snap.vatRateBps / 100).toFixed(1).replace(/\.0$/, '');
+    const vatLabel =
+      snap.vatMode === 'inclusive' ? `VAT (${rateLabel}% incl.)` : `VAT (${rateLabel}%)`;
+    totalRows.push({ label: vatLabel, val: formatKobo(snap.vatKobo, cur) });
+  }
+  totalRows.push({
+    label: 'Quote Total',
+    val: formatKobo(snap.totalKobo, cur),
+    bold: true,
+    accent: true,
+    dividerBefore: true,
+  });
+  if (snap.depositType !== 'none' && snap.amountDueNowKobo < snap.totalKobo) {
+    totalRows.push({
+      label: 'Deposit if accepted',
+      val: formatKobo(snap.amountDueNowKobo, cur),
+      bold: true,
+    });
+  }
+
+  const estimateSinglePageFit = (d: QuoteDensity): boolean => {
+    const iw = pageWidth - d.margin * 2;
+    let used = d.topPad;
+    const bizMetaLines =
+      (snap.business.address ? Math.min(2, wrapLines(snap.business.address, sans, d.bizMetaSz, 250).length) : 0) +
+      ([snap.business.phone, snap.business.email].filter(Boolean).length > 0 ? 1 : 0) +
+      (snap.business.tinRc ? 1 : 0);
+    const headerH = Math.max(16 + bizMetaLines * d.bizMetaLead + 10, d.invNumSz + d.stampH + 22);
+    used += headerH + d.sectionGap;
+
+    const custAddrLines = snap.customer.address
+      ? Math.min(2, wrapLines(snap.customer.address, sans, d.billTextSz, 240).length)
+      : 0;
+    const billH = Math.max(d.billLead * (2 + custAddrLines) + 4, d.billLead * 3 + 6);
+    used += billH + d.sectionGap;
+
+    used += d.tableHeadH + 4;
+    for (const line of snap.lines) {
+      const descCount = Math.max(1, wrapLines(line.description, sansBold, d.descSz, iw - 215).length);
+      used += d.rowPadTop + descCount * d.descLead + (line.discountKobo > 0 ? d.discLead : 0) + d.rowPadBottom;
+    }
+
+    const leftColW = iw - 228;
+    const rightH =
+      totalRows.reduce((acc, r) => acc + (r.bold ? d.totalsBoldLead : d.totalsLead) + (r.dividerBefore ? 4 : 0), 0) +
+      6;
+    let leftH = wrapLines(`In words: ${koboToWords(snap.totalKobo, cur)}`, sans, d.sideSz, leftColW).length * d.sideLead + 6;
+    if (snap.notes) {
+      leftH += d.sideLead + 4 + Math.min(5, wrapLines(snap.notes, sans, d.sideSz, leftColW).length) * d.sideLead + 6;
+    }
+    if (quote.status === 'VOID' && quote.voidReason) {
+      leftH += d.sideLead * 2 + 4;
+    }
+    used += 8 + Math.max(rightH, leftH);
+    return used <= pageHeight - d.footerClearance;
+  };
+
+  const d: QuoteDensity = TIERS.find((tier) => estimateSinglePageFit(tier)) || TIERS[TIERS.length - 1];
+  const margin = d.margin;
   const innerWidth = pageWidth - margin * 2;
+  const footerTopY = d.footerBottom + d.qrSize + 8;
+  const minContentY = footerTopY + 8;
 
-  const page = pdfDoc.addPage([pageWidth, pageHeight]);
-  page.drawRectangle({ x: 0, y: 0, width: pageWidth, height: pageHeight, color: paper });
-  page.drawRectangle({ x: 0, y: pageHeight - 8, width: pageWidth, height: 8, color: brandColor });
+  const createStyledPage = () => {
+    const p = pdfDoc.addPage([pageWidth, pageHeight]);
+    p.drawRectangle({ x: 0, y: 0, width: pageWidth, height: pageHeight, color: paper });
+    p.drawRectangle({ x: 0, y: pageHeight - d.accentH, width: pageWidth, height: d.accentH, color: brandColor });
+    return p;
+  };
 
-  let y = pageHeight - 44;
+  const drawCompactQuoteStamp = (targetPage: PDFPage, x: number, yPos: number) => {
+    const { label, color } = getQuoteStampMeta(quote);
+    targetPage.drawRectangle({
+      x,
+      y: yPos,
+      width: d.stampW,
+      height: d.stampH,
+      borderColor: color,
+      borderWidth: 1.6,
+      rotate: deg(-5),
+      opacity: 0.92,
+    });
+    targetPage.drawRectangle({
+      x: x + 2.5,
+      y: yPos + 2.5,
+      width: d.stampW - 5,
+      height: d.stampH - 5,
+      borderColor: color,
+      borderWidth: 0.65,
+      rotate: deg(-5),
+      opacity: 0.75,
+    });
+    const tw = monoBold.widthOfTextAtSize(label, d.stampTextSz);
+    targetPage.drawText(label, {
+      x: x + (d.stampW - tw) / 2,
+      y: yPos + (d.stampH - d.stampTextSz) / 2 + 1,
+      size: d.stampTextSz,
+      font: monoBold,
+      color,
+      rotate: deg(-5),
+    });
+  };
+
+  let page = createStyledPage();
+  let y = pageHeight - d.topPad;
 
   // Header left: business identity
   let leftX = margin;
   if (logoImage) {
-    const dims = logoImage.scaleToFit(44, 44);
-    page.drawImage(logoImage, { x: margin, y: y - 28, width: dims.width, height: dims.height });
-    leftX = margin + dims.width + 12;
+    const dims = logoImage.scaleToFit(d.logoMax, d.logoMax);
+    page.drawImage(logoImage, {
+      x: margin,
+      y: y - dims.height + 12,
+      width: dims.width,
+      height: dims.height,
+    });
+    leftX = margin + dims.width + 10;
   }
 
   page.drawText(safeText(snap.business.name), {
     x: leftX,
     y,
-    size: 19,
+    size: d.bizTitleSz,
     font: serif,
     color: ink,
   });
 
-  let bizMetaY = y - 14;
+  let bizMetaY = y - (d.bizMetaLead + 2);
   if (snap.business.address) {
-    for (const line of wrapLines(snap.business.address, sans, 8.5, 250).slice(0, 2)) {
-      page.drawText(line, { x: leftX, y: bizMetaY, size: 8.5, font: sans, color: muted });
-      bizMetaY -= 11;
+    for (const line of wrapLines(snap.business.address, sans, d.bizMetaSz, 260).slice(0, 2)) {
+      page.drawText(line, { x: leftX, y: bizMetaY, size: d.bizMetaSz, font: sans, color: muted });
+      bizMetaY -= d.bizMetaLead;
     }
   }
   const contactParts = [snap.business.phone, snap.business.email].filter(Boolean).join(' · ');
   if (contactParts) {
-    page.drawText(safeText(contactParts), { x: leftX, y: bizMetaY, size: 8.5, font: sans, color: muted });
-    bizMetaY -= 11;
+    page.drawText(safeText(contactParts), { x: leftX, y: bizMetaY, size: d.bizMetaSz, font: sans, color: muted });
+    bizMetaY -= d.bizMetaLead;
   }
   if (snap.business.tinRc) {
     page.drawText(safeText(`TIN / RC: ${snap.business.tinRc}`), {
       x: leftX,
       y: bizMetaY,
-      size: 8.5,
+      size: d.bizMetaSz,
       font: mono,
       color: ink,
     });
-    bizMetaY -= 11;
+    bizMetaY -= d.bizMetaLead;
   }
 
   // Header right: QUOTATION + number + stamp
   const titleText = 'QUOTATION';
-  const titleW = monoBold.widthOfTextAtSize(titleText, 11);
+  const titleW = monoBold.widthOfTextAtSize(titleText, d.invLabelSz);
   page.drawText(titleText, {
     x: pageWidth - margin - titleW,
-    y: y + 4,
-    size: 11,
+    y: y + 3,
+    size: d.invLabelSz,
     font: monoBold,
     color: brandColor,
   });
   const numText = safeText(snap.quoteNumber);
-  const numW = monoBold.widthOfTextAtSize(numText, 14);
+  const numW = monoBold.widthOfTextAtSize(numText, d.invNumSz);
   page.drawText(numText, {
     x: pageWidth - margin - numW,
-    y: y - 14,
-    size: 14,
+    y: y - (d.invNumSz + 1),
+    size: d.invNumSz,
     font: monoBold,
     color: ink,
   });
 
-  drawQuoteStamp(page, quote, pageWidth - margin - 112, y - 60, monoBold);
+  const stampBottomY = y - (d.invNumSz + d.stampH + 10);
+  drawCompactQuoteStamp(page, pageWidth - margin - d.stampW - 2, stampBottomY);
 
-  y = Math.min(bizMetaY - 12, y - 74);
+  y = Math.min(bizMetaY - 4, stampBottomY - 6);
   page.drawLine({
     start: { x: margin, y },
     end: { x: pageWidth - margin, y },
-    thickness: 0.75,
+    thickness: 0.7,
     color: hairline,
   });
-  y -= 18;
+  y -= d.sectionGap + 2;
 
-  // Prepared For (NEVER includes customer phone or email) + Dates
-  page.drawText('PREPARED FOR', { x: margin, y, size: 7.5, font: monoBold, color: muted });
-  page.drawText(safeText(snap.customer.name), { x: margin, y: y - 14, size: 11, font: sansBold, color: ink });
-  let custY = y - 27;
+  // Prepared For (never includes customer phone or email) + Dates
+  page.drawText('PREPARED FOR', { x: margin, y, size: 7, font: monoBold, color: muted });
+  page.drawText(safeText(snap.customer.name), {
+    x: margin,
+    y: y - (d.billLead + 1),
+    size: d.billTitleSz,
+    font: sansBold,
+    color: ink,
+  });
+  let custY = y - (d.billLead * 2 + 2);
   if (snap.customer.address) {
-    for (const line of wrapLines(snap.customer.address, sans, 8.5, 240).slice(0, 2)) {
-      page.drawText(line, { x: margin, y: custY, size: 8.5, font: sans, color: muted });
-      custY -= 11;
+    for (const line of wrapLines(snap.customer.address, sans, d.billTextSz, 240).slice(0, 2)) {
+      page.drawText(line, { x: margin, y: custY, size: d.billTextSz, font: sans, color: muted });
+      custY -= d.billLead;
     }
   }
 
-  const colR = pageWidth - margin - 185;
+  const colR = pageWidth - margin - 180;
   const metaRows: Array<[string, string]> = [
     ['ISSUE DATE', safeText(formatLagosDateOnly(snap.issueDate))],
     ['VALID UNTIL', safeText(formatLagosDateOnly(snap.validUntil))],
@@ -833,164 +1454,244 @@ export async function generateQuotePdfBytes(
   ];
   let metaY = y;
   for (const [k, v] of metaRows) {
-    page.drawText(k, { x: colR, y: metaY, size: 7.5, font: monoBold, color: muted });
-    const vw = mono.widthOfTextAtSize(v, 8.5);
-    page.drawText(v, { x: pageWidth - margin - vw, y: metaY, size: 8.5, font: mono, color: ink });
-    metaY -= 14;
+    page.drawText(k, { x: colR, y: metaY, size: 7, font: monoBold, color: muted });
+    const vw = mono.widthOfTextAtSize(v, d.billTextSz);
+    page.drawText(v, { x: pageWidth - margin - vw, y: metaY, size: d.billTextSz, font: mono, color: ink });
+    metaY -= d.billLead + 1.5;
   }
 
-  y = Math.min(custY - 12, metaY - 10);
+  y = Math.min(custY - 4, metaY - 2) - Math.max(2, d.sectionGap - 6);
 
-  // Table header
-  const tableHeaderH = 22;
-  page.drawRectangle({
-    x: margin,
-    y: y - tableHeaderH + 6,
-    width: innerWidth,
-    height: tableHeaderH,
-    color: rgb(0.95, 0.935, 0.9),
-  });
-  const colDesc = margin + 8;
-  const colQty = margin + innerWidth - 205;
-  const colUnit = margin + innerWidth - 115;
-  const colAmt = pageWidth - margin - 8;
+  // Table columns
+  const colDesc = margin + 6;
+  const colQty = margin + innerWidth - 195;
+  const colUnit = margin + innerWidth - 110;
+  const colAmt = pageWidth - margin - 6;
 
-  page.drawText('DESCRIPTION', { x: colDesc, y: y - 8, size: 7.5, font: monoBold, color: muted });
-  page.drawText('QTY', { x: colQty, y: y - 8, size: 7.5, font: monoBold, color: muted });
-  page.drawText('UNIT PRICE', { x: colUnit - 36, y: y - 8, size: 7.5, font: monoBold, color: muted });
-  const amtHeadW = monoBold.widthOfTextAtSize('AMOUNT', 7.5);
-  page.drawText('AMOUNT', { x: colAmt - amtHeadW, y: y - 8, size: 7.5, font: monoBold, color: muted });
+  const drawItemsHeader = () => {
+    page.drawRectangle({
+      x: margin,
+      y: y - d.tableHeadH + 5,
+      width: innerWidth,
+      height: d.tableHeadH,
+      color: rgb(0.95, 0.935, 0.9),
+    });
+    const headTextY = y - d.tableHeadH + 5 + (d.tableHeadH - 7) / 2;
+    page.drawText('DESCRIPTION', { x: colDesc, y: headTextY, size: 7, font: monoBold, color: muted });
+    page.drawText('QTY', { x: colQty, y: headTextY, size: 7, font: monoBold, color: muted });
+    page.drawText('UNIT PRICE', { x: colUnit - 34, y: headTextY, size: 7, font: monoBold, color: muted });
+    const amtHeadW = monoBold.widthOfTextAtSize('AMOUNT', 7);
+    page.drawText('AMOUNT', { x: colAmt - amtHeadW, y: headTextY, size: 7, font: monoBold, color: muted });
+    y -= d.tableHeadH + 3;
+  };
 
-  y -= tableHeaderH + 8;
+  const ensureSpace = (neededHeight: number, repeatTableHeader = false) => {
+    if (y - neededHeight >= minContentY) return;
+    page = createStyledPage();
+    y = pageHeight - d.topPad;
+    page.drawText(safeText(`${snap.business.name} · ${snap.quoteNumber} (continued)`), {
+      x: margin,
+      y,
+      size: 7.5,
+      font: mono,
+      color: muted,
+    });
+    y -= 16;
+    if (repeatTableHeader) {
+      drawItemsHeader();
+    }
+  };
+
+  drawItemsHeader();
 
   // Line items
   for (const line of snap.lines) {
-    const descLines = wrapLines(line.description, sansBold, 9, innerWidth - 230);
+    const descLines = wrapLines(line.description, sansBold, d.descSz, innerWidth - 215);
+    const lineCount = Math.max(1, descLines.length);
+    const needed = d.rowPadTop + lineCount * d.descLead + (line.discountKobo > 0 ? d.discLead : 0) + d.rowPadBottom;
+    ensureSpace(needed, true);
+
+    y -= d.rowPadTop;
     const qtyStr = formatQtyThousandths(line.qtyThousandths);
     const unitStr = formatKobo(line.unitPriceKobo, cur);
     const totalStr = formatKobo(line.lineTotalKobo, cur);
 
-    for (let i = 0; i < Math.max(1, descLines.length); i++) {
+    for (let i = 0; i < lineCount; i++) {
       page.drawText(descLines[i] || '', {
         x: colDesc,
-        y: y - i * 12,
-        size: 9,
+        y: y - i * d.descLead,
+        size: d.descSz,
         font: sansBold,
         color: ink,
       });
     }
-    page.drawText(qtyStr, { x: colQty, y, size: 8.5, font: mono, color: ink });
-    const uw = mono.widthOfTextAtSize(unitStr, 8.5);
-    page.drawText(unitStr, { x: colUnit + 22 - uw, y, size: 8.5, font: mono, color: ink });
-    const tw = monoBold.widthOfTextAtSize(totalStr, 9);
-    page.drawText(totalStr, { x: colAmt - tw, y, size: 9, font: monoBold, color: ink });
+    page.drawText(qtyStr, { x: colQty, y, size: d.numSz, font: mono, color: ink });
+    const uw = mono.widthOfTextAtSize(unitStr, d.numSz);
+    page.drawText(unitStr, { x: colUnit + 20 - uw, y, size: d.numSz, font: mono, color: ink });
+    const tw = monoBold.widthOfTextAtSize(totalStr, d.descSz);
+    page.drawText(totalStr, { x: colAmt - tw, y, size: d.descSz, font: monoBold, color: ink });
 
-    y -= Math.max(1, descLines.length) * 12 + 4;
+    y -= lineCount * d.descLead;
     if (line.discountKobo > 0) {
       page.drawText(`Line discount: -${formatKobo(line.discountKobo, cur)}`, {
         x: colDesc,
         y,
-        size: 7.5,
+        size: d.discSz,
         font: sans,
         color: muted,
       });
-      y -= 11;
+      y -= d.discLead;
     }
 
+    const lineY = y + Math.max(2, d.rowPadBottom * 0.5);
     page.drawLine({
-      start: { x: margin, y: y + 3 },
-      end: { x: pageWidth - margin, y: y + 3 },
-      thickness: 0.4,
+      start: { x: margin, y: lineY },
+      end: { x: pageWidth - margin, y: lineY },
+      thickness: 0.35,
       color: hairline,
     });
-    y -= 10;
+    y -= d.rowPadBottom;
   }
 
-  // Totals block
-  const totalsX = margin + innerWidth - 225;
-  const drawTotalRow = (label: string, val: string, bold = false, accent = false) => {
-    const f = bold ? sansBold : sans;
-    const mf = bold ? monoBold : mono;
-    const sz = bold ? 10 : 8.5;
-    page.drawText(label, { x: totalsX, y, size: sz, font: f, color: accent ? brandColor : muted });
-    const vw = mf.widthOfTextAtSize(val, sz);
-    page.drawText(val, { x: colAmt - vw, y, size: sz, font: mf, color: accent ? brandColor : ink });
-    y -= bold ? 17 : 14;
-  };
+  // Bottom 2-column summary zone: Left (In words, Notes & Terms, Void) | Right (Totals)
+  const leftColW = innerWidth - 228;
+  const totalsX = margin + innerWidth - 214;
 
-  drawTotalRow('Subtotal', formatKobo(snap.subtotalKobo, cur));
-  if (snap.lineDiscountTotalKobo > 0) {
-    drawTotalRow('Line discounts', `-${formatKobo(snap.lineDiscountTotalKobo, cur)}`);
-  }
-  if (snap.invoiceDiscountKobo > 0) {
-    drawTotalRow('Quote discount', `-${formatKobo(snap.invoiceDiscountKobo, cur)}`);
-  }
-  if (snap.vatEnabled && snap.vatKobo > 0) {
-    const rateLabel = (snap.vatRateBps / 100).toFixed(1).replace(/\.0$/, '');
-    const vatLabel =
-      snap.vatMode === 'inclusive' ? `VAT (${rateLabel}% incl.)` : `VAT (${rateLabel}%)`;
-    drawTotalRow(vatLabel, formatKobo(snap.vatKobo, cur));
+  const wordLines = wrapLines(`In words: ${koboToWords(snap.totalKobo, cur)}`, sans, d.sideSz, leftColW);
+  const noteLines = snap.notes ? wrapLines(snap.notes, sans, d.sideSz, leftColW).slice(0, 5) : [];
+  const voidLines =
+    quote.status === 'VOID' && quote.voidReason
+      ? wrapLines(`Voided: ${quote.voidReason}`, sans, d.sideSz, leftColW).slice(0, 2)
+      : [];
+
+  let estRightH = 4;
+  for (const r of totalRows) {
+    if (r.dividerBefore) estRightH += 4;
+    estRightH += r.bold ? d.totalsBoldLead : d.totalsLead;
   }
 
-  page.drawLine({
-    start: { x: totalsX, y: y + 8 },
-    end: { x: colAmt, y: y + 8 },
-    thickness: 0.75,
-    color: hairline,
-  });
-  y -= 4;
-
-  drawTotalRow('Quote Total', formatKobo(snap.totalKobo, cur), true, true);
-  if (snap.depositType !== 'none' && snap.amountDueNowKobo < snap.totalKobo) {
-    drawTotalRow('Deposit if accepted', formatKobo(snap.amountDueNowKobo, cur), true, false);
+  let estLeftH = wordLines.length * d.sideLead + 6;
+  if (noteLines.length > 0) {
+    estLeftH += d.sideLead + 3 + noteLines.length * d.sideLead + 6;
+  }
+  if (voidLines.length > 0) {
+    estLeftH += voidLines.length * d.sideLead + 4;
   }
 
-  const words = wrapLines(`In words: ${koboToWords(snap.totalKobo, cur)}`, sans, 8, innerWidth);
-  y -= 4;
-  for (const wLine of words) {
-    page.drawText(wLine, { x: margin, y, size: 8, font: sans, color: muted });
-    y -= 11;
+  ensureSpace(Math.max(estRightH, estLeftH) + 6, false);
+  const summaryStartY = y - 6;
+
+  // Render Right Column: Totals
+  let rightY = summaryStartY;
+  for (const row of totalRows) {
+    if (row.dividerBefore) {
+      page.drawLine({
+        start: { x: totalsX, y: rightY + 7 },
+        end: { x: colAmt, y: rightY + 7 },
+        thickness: 0.7,
+        color: hairline,
+      });
+      rightY -= 3;
+    }
+    const f = row.bold ? sansBold : sans;
+    const mf = row.bold ? monoBold : mono;
+    const sz = row.bold ? d.totalsBoldSz : d.totalsSz;
+    page.drawText(row.label, {
+      x: totalsX,
+      y: rightY,
+      size: sz,
+      font: f,
+      color: row.accent ? brandColor : row.bold ? ink : muted,
+    });
+    const vw = mf.widthOfTextAtSize(row.val, sz);
+    page.drawText(row.val, {
+      x: colAmt - vw,
+      y: rightY,
+      size: sz,
+      font: mf,
+      color: row.accent ? brandColor : ink,
+    });
+    rightY -= row.bold ? d.totalsBoldLead : d.totalsLead;
   }
 
-  if (snap.notes && y > 135) {
-    y -= 8;
-    page.drawText('NOTES & TERMS', { x: margin, y, size: 7.5, font: monoBold, color: muted });
-    y -= 12;
-    for (const nLine of wrapLines(snap.notes, sans, 8, innerWidth - 100).slice(0, 3)) {
-      page.drawText(nLine, { x: margin, y, size: 8, font: sans, color: muted });
-      y -= 11;
+  // Render Left Column: In words + Notes + Void
+  let leftY = summaryStartY;
+  for (const wLine of wordLines) {
+    page.drawText(wLine, { x: margin, y: leftY, size: d.sideSz, font: sans, color: muted });
+    leftY -= d.sideLead;
+  }
+
+  if (noteLines.length > 0) {
+    leftY -= 5;
+    page.drawText('NOTES & TERMS', { x: margin, y: leftY, size: 7, font: monoBold, color: muted });
+    leftY -= d.sideLead + 1;
+    for (const nLine of noteLines) {
+      page.drawText(nLine, { x: margin, y: leftY, size: d.sideSz, font: sans, color: muted });
+      leftY -= d.sideLead;
     }
   }
 
-  // Footer with QR verification
-  const footerY = 44;
+  if (voidLines.length > 0) {
+    leftY -= 4;
+    const danger = rgb(0.72, 0.11, 0.11);
+    for (const vLine of voidLines) {
+      page.drawText(vLine, { x: margin, y: leftY, size: d.sideSz, font: sansBold, color: danger });
+      leftY -= d.sideLead;
+    }
+  }
+
+  // Compact Footer: QR verification (for issued quotes) or draft label
+  const footerY = d.footerBottom;
   page.drawLine({
-    start: { x: margin, y: footerY + 56 },
-    end: { x: pageWidth - margin, y: footerY + 56 },
-    thickness: 0.6,
+    start: { x: margin, y: footerTopY },
+    end: { x: pageWidth - margin, y: footerTopY },
+    thickness: 0.55,
     color: hairline,
   });
 
-  page.drawImage(qrImage, { x: pageWidth - margin - 48, y: footerY, width: 48, height: 48 });
-  page.drawText('Scan to view live quote status or respond online', {
-    x: margin,
-    y: footerY + 34,
-    size: 8,
-    font: sansBold,
-    color: ink,
-  });
-  page.drawText(publicUrl, {
-    x: margin,
-    y: footerY + 21,
-    size: 7.5,
-    font: mono,
-    color: muted,
-  });
+  if (qrImage && hasLiveLink) {
+    page.drawImage(qrImage, {
+      x: pageWidth - margin - d.qrSize,
+      y: footerY,
+      width: d.qrSize,
+      height: d.qrSize,
+    });
+    page.drawText('Scan to view live quote status or respond online', {
+      x: margin,
+      y: footerY + d.qrSize - 11,
+      size: 7.5,
+      font: sansBold,
+      color: ink,
+    });
+    page.drawText(publicUrl, {
+      x: margin,
+      y: footerY + d.qrSize - 22,
+      size: 7,
+      font: mono,
+      color: muted,
+    });
+  } else {
+    page.drawText('Draft quotation · Not yet issued', {
+      x: margin,
+      y: footerY + d.qrSize - 12,
+      size: 7.5,
+      font: sansBold,
+      color: ink,
+    });
+    page.drawText(`Valid until ${formatLagosDateOnly(snap.validUntil)}`, {
+      x: margin,
+      y: footerY + d.qrSize - 23,
+      size: 7,
+      font: mono,
+      color: muted,
+    });
+  }
+
   if (snap.showBranding) {
     page.drawText('Made with Tallymark', {
       x: margin,
-      y: footerY + 6,
-      size: 7.5,
+      y: footerY + 2,
+      size: 7,
       font: sans,
       color: muted,
     });
@@ -1005,11 +1706,12 @@ export async function downloadQuotePdf(quote: PublicQuoteRecord) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${(quote.snapshot.quoteNumber || 'quote').replace(/[^A-Za-z0-9_-]/g, '_')}.pdf`;
+  a.download = buildQuotePdfFilename(quote);
+  a.rel = 'noopener';
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 // ============================================================================

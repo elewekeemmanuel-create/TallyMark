@@ -98,12 +98,24 @@ async function resilientSupabaseFetch(
   }
 }
 
+const isEmbeddedIframe = (() => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
+
 export const supabase: SupabaseClient | null =
   isSupabaseConfigured
     ? createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
-          flowType: 'pkce',
-          detectSessionInUrl: true,
+          // Embedded preview iframes have partitioned localStorage that popups cannot share.
+          // Use implicit flow inside iframes and full PKCE in top-level browser tabs.
+          // detectSessionInUrl is disabled so App.tsx performs a single deduplicated exchange.
+          flowType: isEmbeddedIframe ? 'implicit' : 'pkce',
+          detectSessionInUrl: false,
           persistSession: true,
           autoRefreshToken: true,
         },

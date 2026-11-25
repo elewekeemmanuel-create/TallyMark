@@ -966,7 +966,7 @@ test('Vector Invoice PDF is valid PDF and strictly under 150 KB with font subset
           name: 'Ngozi / Builders & Co.',
           address: '22 Trans Amadi, Port Harcourt',
         },
-        lines: Array.from({ length: 25 }, (_, i) => ({
+        lines: Array.from({ length: 65 }, (_, i) => ({
           description: `Supply item #${i + 1} - Heavy duty conduit pipe`,
           qtyThousandths: 1000,
           unitPriceKobo: 1_000_000,
@@ -974,17 +974,17 @@ test('Vector Invoice PDF is valid PDF and strictly under 150 KB with font subset
           grossKobo: 1_000_000,
           lineTotalKobo: 1_000_000,
         })),
-        subtotalKobo: 25_000_000,
+        subtotalKobo: 65_000_000,
         lineDiscountTotalKobo: 0,
         invoiceDiscountKobo: 0,
         vatEnabled: false,
         vatMode: 'exclusive' as const,
         vatRateBps: 750,
         vatKobo: 0,
-        totalKobo: 25_000_000,
+        totalKobo: 65_000_000,
         depositType: 'none' as const,
         depositValue: 0,
-        amountDueNowKobo: 25_000_000,
+        amountDueNowKobo: 65_000_000,
         bankAccounts: [],
         notes: 'Draft invoice preview.',
         showBranding: true,
@@ -994,10 +994,10 @@ test('Vector Invoice PDF is valid PDF and strictly under 150 KB with font subset
 
     assert.equal(buildInvoicePdfFilename(sampleDoc), 'INV-0009-Ngozi_Builders_Co.pdf');
 
-    // Draft + multi-page invoice paginates cleanly into 2+ pages
+    // Extreme 65-line invoice still paginates cleanly into 2+ pages without clipping
     const multiBytes = await generateInvoicePdfBytes(sampleDoc, 'https://tallymark.app');
     const loadedMulti = await PDFDocument.load(multiBytes);
-    assert.ok(loadedMulti.getPageCount() >= 2, '25-line invoice should paginate across multiple pages');
+    assert.ok(loadedMulti.getPageCount() >= 2, '65-line invoice should paginate across multiple pages');
   } finally {
     globalThis.fetch = originalFetch;
   }

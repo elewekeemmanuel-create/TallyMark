@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Download, Plus, Trash2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Link, useRouter } from '../../lib/router';
 import {
@@ -21,7 +21,9 @@ import {
   type DepositType,
   type PaymentTermsKind,
 } from '../../shared/v2/money';
+import type { PublicQuoteRecord } from '../../shared/v2/types';
 import { v2Api } from '../api';
+import { downloadQuotePdf } from '../pdf';
 
 interface LineFormRow {
   key: string;
@@ -89,6 +91,7 @@ export function QuoteEditorPage({
   const [template, setTemplate] = useState(business.defaultTemplate || 'modern');
 
   const [submitting, setSubmitting] = useState<'draft' | 'send' | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -256,6 +259,87 @@ export function QuoteEditorPage({
       setError(err?.message || 'Unable to save quote. Please check your details and try again.');
     } finally {
       setSubmitting(null);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    setError(null);
+    if (!customerName.trim()) {
+      setError('Enter or select a customer name before downloading the PDF.');
+      return;
+    }
+    if (parsedLines.length === 0) {
+      setError('Add at least one item with a description before downloading the PDF.');
+      return;
+    }
+    if (validUntil < issueDate) {
+      setError('Valid until date cannot be earlier than the issue date.');
+      return;
+    }
+
+    setPdfBusy(true);
+    try {
+      const previewDoc: PublicQuoteRecord = {
+        publicId: 'draft',
+        status: 'DRAFT',
+        isExpired: false,
+        sentAt: null,
+        decisionName: null,
+        decisionNote: null,
+        decisionAt: null,
+        voidReason: null,
+        voidedAt: null,
+        snapshot: {
+          quoteNumber: 'DRAFT',
+          business: {
+            name: business.name,
+            logoDataUrl: business.logoDataUrl,
+            address: business.address,
+            phone: business.phone,
+            email: business.email,
+            tinRc: business.tinRc || '',
+            brandColor: business.brandColor,
+            currency: business.currency,
+          },
+          customer: {
+            name: customerName.trim(),
+            address: customerAddress.trim(),
+          },
+          bankAccounts: (business.bankAccounts || []).filter((b) => selectedBankIds.includes(b.id)),
+          issueDate,
+          validUntil,
+          termsKind,
+          lines: totals.lines.map((line, idx) => ({
+            id: `draft-line-${idx + 1}`,
+            position: idx,
+            description: line.description,
+            qtyThousandths: line.qtyThousandths,
+            unitPriceKobo: line.unitPriceKobo,
+            discountKobo: line.discountKobo,
+            grossKobo: line.grossKobo,
+            lineTotalKobo: line.lineTotalKobo,
+          })),
+          subtotalKobo: totals.subtotalKobo,
+          lineDiscountTotalKobo: totals.lineDiscountTotalKobo,
+          invoiceDiscountKobo: totals.invoiceDiscountKobo,
+          vatEnabled: business.vatEnabled,
+          vatMode: business.vatMode,
+          vatRateBps: business.vatRateBps,
+          vatKobo: totals.vatKobo,
+          totalKobo: totals.totalKobo,
+          depositType: totals.depositType,
+          depositValue: totals.depositValue,
+          amountDueNowKobo: totals.amountDueNowKobo,
+          notes: notes.trim(),
+          template: template as 'modern' | 'classic' | 'compact',
+          showBranding: true,
+        },
+      };
+      await downloadQuotePdf(previewDoc);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to generate quotation PDF right now.');
+    } finally {
+      setPdfBusy(false);
     }
   };
 
@@ -670,7 +754,7 @@ export function QuoteEditorPage({
         <div className="flex flex-col sm:flex-row gap-2.5">
           <button
             type="button"
-            disabled={submitting !== null}
+            disabled={submitting !== null || pdfBusy}
             onClick={() => handleSubmit(true)}
             className="flex-1 rounded-xl bg-[#064E3B] px-5 py-3 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60 min-h-[46px]"
           >
@@ -678,11 +762,20 @@ export function QuoteEditorPage({
           </button>
           <button
             type="button"
-            disabled={submitting !== null}
+            disabled={submitting !== null || pdfBusy}
             onClick={() => handleSubmit(false)}
             className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-5 py-3 text-sm font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[46px]"
           >
             {submitting === 'draft' ? 'Saving…' : 'Save draft'}
+          </button>
+          <button
+            type="button"
+            disabled={submitting !== null || pdfBusy}
+            onClick={handleDownloadPdf}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 py-3 text-sm font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[46px]"
+          >
+            <Download className="w-4 h-4" />
+            <span>{pdfBusy ? 'Preparing PDF…' : 'Download PDF'}</span>
           </button>
         </div>
       </section>

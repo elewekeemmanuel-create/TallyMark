@@ -492,20 +492,132 @@
         pointer-events: none;
       }
       @media print {
+        @page {
+          size: A4 portrait;
+          margin: 8mm;
+        }
+        html,
         body {
-          background: #ffffff;
+          height: auto !important;
+          background: #ffffff !important;
+          line-height: 1.3 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
         .no-print {
           display: none !important;
         }
         .wrap {
-          padding: 0;
-          max-width: none;
+          padding: 0 !important;
+          max-width: none !important;
         }
         .sheet {
-          border: none;
-          border-radius: 0;
-          box-shadow: none;
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+        }
+        .accent-bar {
+          height: 5px !important;
+        }
+        .sheet-body {
+          padding: 12px 14px 10px !important;
+        }
+        .biz-logo {
+          width: 36px !important;
+          height: 36px !important;
+        }
+        .biz-name {
+          font-size: 19px !important;
+        }
+        .meta-line {
+          font-size: 10.5px !important;
+          margin-top: 1px !important;
+        }
+        .doc-number {
+          font-size: 15px !important;
+        }
+        .stamp {
+          margin-top: 5px !important;
+          padding: 2px 8px !important;
+          font-size: 10px !important;
+        }
+        .divider {
+          margin: 10px 0 !important;
+        }
+        .bill-grid {
+          grid-template-columns: 1.2fr 1fr !important;
+          gap: 10px !important;
+        }
+        .cust-name {
+          font-size: 12.5px !important;
+          margin-top: 2px !important;
+        }
+        .dates-box {
+          gap: 2px !important;
+        }
+        .kv {
+          font-size: 10.5px !important;
+        }
+        table {
+          margin-top: 10px !important;
+        }
+        th {
+          padding: 5px 7px !important;
+          font-size: 9px !important;
+        }
+        td {
+          padding: 5px 7px !important;
+          font-size: 10.5px !important;
+        }
+        tr {
+          break-inside: avoid;
+        }
+        .line-disc {
+          font-size: 9.5px !important;
+        }
+        .totals-wrap {
+          margin-top: 10px !important;
+          max-width: 260px !important;
+          gap: 3px !important;
+          break-inside: avoid;
+        }
+        .total-row {
+          font-size: 10.5px !important;
+        }
+        .total-row-strong {
+          font-size: 12px !important;
+          padding-top: 5px !important;
+        }
+        .total-row-accent {
+          font-size: 12.5px !important;
+        }
+        .words {
+          margin-top: 8px !important;
+          font-size: 10px !important;
+        }
+        .card-section {
+          margin-top: 10px !important;
+          padding: 8px 10px !important;
+          border-radius: 8px !important;
+          break-inside: avoid;
+        }
+        .bank-item {
+          padding: 4px 0 !important;
+        }
+        .bank-acct {
+          font-size: 11.5px !important;
+        }
+        .pay-item {
+          padding: 4px 0 !important;
+          font-size: 10.5px !important;
+        }
+        .notes-text {
+          margin-top: 3px !important;
+          font-size: 10.5px !important;
+        }
+        .footer-brand {
+          margin-top: 10px !important;
+          font-size: 9.5px !important;
         }
       }
     </style>
