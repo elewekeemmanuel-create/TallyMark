@@ -116,7 +116,7 @@ function RouteLoadingFallback() {
     <div
       role="status"
       aria-live="polite"
-      className="py-16 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]"
+      className="py-16 text-center text-sm text-tm-ink-muted"
     >
       Loading screen…
     </div>
@@ -141,14 +141,14 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode }, ErrorBou
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#FAF8F3] text-[#121513] flex items-center justify-center p-6">
-          <div className="max-w-md w-full rounded-2xl border border-[#E5DEC9] bg-white p-6 space-y-3 text-center">
-            <h1 className="font-display text-3xl">Something went wrong</h1>
-            <p className="text-sm text-[#5C635D]">{this.state.message}</p>
+        <div className="min-h-screen bg-tm-bg-secondary text-tm-ink flex items-center justify-center p-6">
+          <div className="max-w-md w-full rounded-[24px] bg-tm-primary border border-tm-border p-8 space-y-3 text-center shadow-sm">
+            <h1 className="text-2xl font-semibold tracking-[-0.02em]">Something went wrong</h1>
+            <p className="text-sm text-tm-ink-muted">{this.state.message}</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white"
+              className="mt-2 rounded-[10px] bg-tm-emerald hover:bg-tm-emerald-hover px-5 py-2.5 text-sm font-semibold text-white transition-colors"
             >
               Reload Tallymark
             </button>
@@ -416,10 +416,12 @@ function TallymarkRoutes() {
   // Dedicated OAuth callback screen (or OAuth return on /) stays in loading state until exchange finishes
   if (pathname === '/auth/callback' || pathname === '/auth/callback/' || oauthHandlingRef.current) {
     return (
-      <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0D110F] flex items-center justify-center">
+      <div className="min-h-screen bg-tm-bg-secondary flex items-center justify-center">
         <div className="text-center space-y-2">
-          <p className="font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">Tallymark</p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-2xl font-semibold tracking-[-0.025em] text-tm-ink">
+            Tallymark
+          </p>
+          <p className="text-sm text-tm-ink-muted">
             {oauthMessage || 'Completing sign-in…'}
           </p>
         </div>
@@ -435,10 +437,12 @@ function TallymarkRoutes() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0D110F] flex items-center justify-center">
+      <div className="min-h-screen bg-tm-bg-secondary flex items-center justify-center">
         <div className="text-center space-y-2">
-          <p className="font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">Tallymark</p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">Opening your receipt book…</p>
+          <p className="text-2xl font-semibold tracking-[-0.025em] text-tm-ink">
+            Tallymark
+          </p>
+          <p className="text-sm text-tm-ink-muted">Opening your workspace…</p>
         </div>
       </div>
     );

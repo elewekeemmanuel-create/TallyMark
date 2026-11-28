@@ -28,35 +28,113 @@
   unicode-range: U+20A6;
 }
 
+@theme inline {
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Surface hierarchy: crisp white primary, soft grey secondary */
+  --color-tm-bg: var(--tm-bg);
+  --color-tm-bg-secondary: var(--tm-bg-secondary);
+  --color-tm-primary: var(--tm-surface-primary);
+  --color-tm-secondary: var(--tm-surface-secondary);
+  --color-tm-surface: var(--tm-surface);
+  --color-tm-surface-muted: var(--tm-surface-muted);
+
+  /* Typography & structural borders */
+  --color-tm-ink: var(--tm-ink);
+  --color-tm-ink-muted: var(--tm-ink-muted);
+  --color-tm-border: var(--tm-border);
+  --color-tm-border-subtle: var(--tm-border-subtle);
+
+  /* Tallymark Emerald & Mint accents */
+  --color-tm-emerald: var(--tm-emerald);
+  --color-tm-emerald-hover: var(--tm-emerald-hover);
+  --color-tm-emerald-bright: var(--tm-emerald-bright);
+  --color-tm-mint: var(--tm-mint);
+  --color-tm-mint-soft: var(--tm-mint-soft);
+  --color-tm-mint-border: var(--tm-mint-border);
+}
+
 @layer base {
   :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-sans: 'NairaPlexFallback', 'Figtree', 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    color-scheme: light;
+    --font-display: 'NairaPlexFallback', 'Poppins', system-ui, -apple-system, sans-serif;
+    --font-sans: 'NairaPlexFallback', 'Poppins', system-ui, -apple-system, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
-    --tm-bg: #FAF8F3;
+
+    /* Primary surfaces (crisp white) & secondary sections (soft grey) */
+    --tm-bg: #FFFFFF;
+    --tm-bg-secondary: #F5F7F8;
+    --tm-surface-primary: #FFFFFF;
+    --tm-surface-secondary: #F5F7F8;
     --tm-surface: #FFFFFF;
-    --tm-surface-muted: #F3EFE6;
-    --tm-ink: #121513;
-    --tm-ink-muted: #5C635D;
-    --tm-accent: #064E3B;
-    --tm-brass: #B89B6A;
-    --tm-border: #E5DEC9;
+    --tm-surface-muted: #F5F7F8;
+
+    /* Text & dividers */
+    --tm-ink: #111827;
+    --tm-ink-muted: #6B7280;
+    --tm-border: #E5E7EB;
+    --tm-border-subtle: #F1F3F5;
+
+    /* Tallymark Emerald & Mint accents */
+    --tm-emerald: #064E3B;
+    --tm-emerald-hover: #04392B;
+    --tm-emerald-bright: #047857;
+    --tm-mint: #6EE7B7;
+    --tm-mint-soft: #ECFDF5;
+    --tm-mint-border: #A7F3D0;
+
+    /* Semantic accent aliases */
+    --tm-accent: var(--tm-emerald);
+    --tm-accent-bright: var(--tm-emerald-bright);
   }
 
   .dark {
-    --tm-bg: #0D110F;
-    --tm-surface: #151B18;
-    --tm-surface-muted: #1B231F;
-    --tm-ink: #F4F1EA;
-    --tm-ink-muted: #9BA39D;
+    color-scheme: dark;
+    --tm-bg: #0B0F0E;
+    --tm-bg-secondary: #111715;
+    --tm-surface-primary: #131917;
+    --tm-surface-secondary: #1A221F;
+    --tm-surface: #131917;
+    --tm-surface-muted: #1A221F;
+
+    --tm-ink: #F3F4F6;
+    --tm-ink-muted: #9CA3AF;
+    --tm-border: #232D29;
+    --tm-border-subtle: #1A221F;
+
+    --tm-emerald: #064E3B;
+    --tm-emerald-hover: #04392B;
+    --tm-emerald-bright: #10B981;
+    --tm-mint: #6EE7B7;
+    --tm-mint-soft: rgba(110, 231, 183, 0.12);
+    --tm-mint-border: rgba(110, 231, 183, 0.25);
+
     --tm-accent: #10B981;
-    --tm-brass: #C9B182;
-    --tm-border: #252E29;
+    --tm-accent-bright: #34D399;
   }
 
   html {
     font-family: var(--font-sans);
+    background-color: var(--tm-bg);
+    color: var(--tm-ink);
     scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--tm-bg);
+    color: var(--tm-ink);
+  }
+
+  ::selection {
+    background-color: var(--tm-mint-soft);
+    color: var(--tm-emerald);
+  }
+
+  .dark ::selection {
+    background-color: rgba(110, 231, 183, 0.22);
+    color: var(--tm-mint);
   }
 
   :focus-visible {
@@ -67,7 +145,8 @@
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .font-sans-ui {
@@ -84,14 +163,13 @@
 }
 
 .label-caps {
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  font-weight: 500;
 }
 
-/* Subtle paper thermal texture & perforated edge */
+/* Subtle paper thermal texture & perforated edge (preserved for printable receipts) */
 .receipt-paper-grain {
   background-color: #FFFDF9;
   background-image: radial-gradient(rgba(18, 21, 19, 0.025) 1px, transparent 0);
@@ -113,6 +191,125 @@
     linear-gradient(225deg, #FFFDF9 50%, transparent 50%);
   background-size: 12px 8px;
   background-repeat: repeat-x;
+}
+
+/* Landing page scoped pure-white surface overrides & restrained motion primitives */
+.landing-page {
+  font-family: 'NairaPlexFallback', 'Poppins', system-ui, -apple-system, sans-serif;
+  background-color: #FFFFFF;
+  color: #111827;
+  overflow-x: clip;
+}
+
+.landing-page .font-display,
+.landing-page .font-sans-ui {
+  font-family: 'NairaPlexFallback', 'Poppins', system-ui, -apple-system, sans-serif;
+}
+
+.landing-page .receipt-paper-grain {
+  background-color: #FFFFFF;
+  background-image: none;
+  border-color: #E5E7EB;
+}
+
+.landing-page .receipt-serrated-bottom::after {
+  background: linear-gradient(135deg, #FFFFFF 50%, transparent 50%),
+    linear-gradient(225deg, #FFFFFF 50%, transparent 50%);
+  background-size: 12px 8px;
+  background-repeat: repeat-x;
+}
+
+.landing-card {
+  border-radius: 20px;
+  border: 1px solid #E5E7EB;
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 4px 12px -2px rgba(17, 24, 39, 0.04);
+}
+
+.landing-card-dark {
+  border-radius: 20px;
+  border: 1px solid #064E3B;
+  box-shadow:
+    0 1px 2px rgba(6, 78, 59, 0.14),
+    0 8px 20px -6px rgba(6, 78, 59, 0.22);
+}
+
+.landing-card-hover {
+  transition:
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-btn {
+  border-radius: 12px;
+  transition:
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.landing-btn:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (min-width: 1024px) {
+  .landing-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 2px 4px rgba(17, 24, 39, 0.05),
+      0 12px 24px -6px rgba(17, 24, 39, 0.08);
+  }
+
+  .landing-card-dark.landing-card-hover:hover {
+    box-shadow:
+      0 2px 4px rgba(6, 78, 59, 0.16),
+      0 14px 28px -6px rgba(6, 78, 59, 0.28);
+  }
+
+  .landing-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .landing-btn:active {
+    transform: scale(0.98);
+  }
+}
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-reveal.landing-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes receiptRowSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    background-color: #ECFDF5;
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(0);
+    background-color: #ECFDF5;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    background-color: transparent;
+  }
+}
+
+.receipt-row-enter {
+  animation: receiptRowSlideIn 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Rubber stamp aesthetic */
@@ -186,19 +383,88 @@
     padding-bottom: 2.5px !important;
   }
 
+  @page thermal80mm {
+    size: 80mm auto;
+    margin: 2mm;
+  }
+
   .print-compact-80mm {
+    page: thermal80mm;
     width: 80mm !important;
     max-width: 80mm !important;
     margin: 0 auto !important;
   }
+
+  .invoice-print-sheet.print-compact-80mm {
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+    break-inside: auto !important;
+  }
+
+  .invoice-print-sheet.print-compact-80mm > div:nth-child(2) {
+    padding: 3mm !important;
+  }
+
+  .invoice-print-sheet.print-compact-80mm .invoice-print-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .invoice-print-sheet.print-compact-80mm .invoice-print-meta,
+  .invoice-print-sheet.print-compact-80mm .invoice-print-bottom {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .invoice-print-sheet.print-compact-80mm .invoice-print-meta > div,
+  .invoice-print-sheet.print-compact-80mm .invoice-print-meta > div > div {
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+
+  .invoice-print-sheet.print-compact-80mm .invoice-print-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .invoice-print-sheet.print-compact-80mm .invoice-print-table th,
+  .invoice-print-sheet.print-compact-80mm .invoice-print-table td {
+    padding: 2.5px 2px !important;
+    font-size: 8.5px !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .landing-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .landing-card-hover:hover,
+  .landing-btn:hover,
+  .landing-btn:active {
+    transform: none !important;
+  }
+
+  .receipt-row-enter {
+    animation: none !important;
   }
 }

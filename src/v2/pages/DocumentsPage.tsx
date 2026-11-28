@@ -17,13 +17,13 @@ function invoiceStatusBadge(inv: InvoiceRecord) {
     return <span className="text-xs font-medium text-[#B91C1C]">Void</span>;
   }
   if (inv.status === 'DRAFT') {
-    return <span className="text-xs font-medium text-[#5C635D]">Draft</span>;
+    return <span className="text-xs font-medium text-[#6B7280]">Draft</span>;
   }
   if (inv.status === 'PAID') {
-    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#10B981]">Paid</span>;
+    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">Paid</span>;
   }
   if (inv.status === 'SETTLED') {
-    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#10B981]">Settled</span>;
+    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">Settled</span>;
   }
   if (inv.isOverdue) {
     return <span className="text-xs font-medium text-[#B91C1C]">Overdue</span>;
@@ -31,7 +31,7 @@ function invoiceStatusBadge(inv: InvoiceRecord) {
   if (inv.status === 'PART_PAID') {
     return <span className="text-xs font-medium text-[#B45309] dark:text-amber-400">Part paid</span>;
   }
-  return <span className="text-xs font-medium text-[#5C635D] dark:text-[#9BA39D]">Sent</span>;
+  return <span className="text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF]">Sent</span>;
 }
 
 function quoteStatusBadge(q: QuoteRecord) {
@@ -39,13 +39,13 @@ function quoteStatusBadge(q: QuoteRecord) {
     return <span className="text-xs font-medium text-[#B91C1C]">Void</span>;
   }
   if (q.status === 'DRAFT') {
-    return <span className="text-xs font-medium text-[#5C635D]">Draft</span>;
+    return <span className="text-xs font-medium text-[#6B7280]">Draft</span>;
   }
   if (q.status === 'CONVERTED') {
-    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#10B981]">Converted</span>;
+    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">Converted</span>;
   }
   if (q.status === 'ACCEPTED') {
-    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#10B981]">Accepted</span>;
+    return <span className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">Accepted</span>;
   }
   if (q.status === 'DECLINED') {
     return <span className="text-xs font-medium text-[#B91C1C]">Declined</span>;
@@ -53,7 +53,7 @@ function quoteStatusBadge(q: QuoteRecord) {
   if (q.isExpired) {
     return <span className="text-xs font-medium text-[#B45309] dark:text-amber-400">Expired</span>;
   }
-  return <span className="text-xs font-medium text-[#5C635D] dark:text-[#9BA39D]">Sent</span>;
+  return <span className="text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF]">Sent</span>;
 }
 
 export function DocumentsPage({ business }: { business: BusinessProfile }) {
@@ -135,7 +135,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Documents</p>
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Documents</p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">
             {tab === 'invoices' ? 'Invoices' : tab === 'quotes' ? 'Quotes' : 'Receipts'}
           </h1>
@@ -143,7 +143,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
         {tab === 'invoices' && (
           <Link
             to="/app/invoices/new"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+            className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
           >
             <PlusCircle className="w-4 h-4" />
             <span>New Invoice</span>
@@ -152,7 +152,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
         {tab === 'quotes' && (
           <Link
             to="/app/quotes/new"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+            className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
           >
             <PlusCircle className="w-4 h-4" />
             <span>New Quote</span>
@@ -161,7 +161,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
       </div>
 
       {/* Document Type Tabs */}
-      <div className="inline-flex rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-[#F5F1E7] dark:bg-[#111714] p-1 gap-1">
+      <div className="inline-flex rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F4F6F8] dark:bg-[#111715] p-1 gap-1">
         {(
           [
             { id: 'invoices', label: 'Invoices' },
@@ -176,7 +176,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
             className={`rounded-lg px-4 py-2 text-xs font-semibold min-h-[36px] transition-colors ${
               tab === t.id
                 ? 'bg-[#064E3B] text-white'
-                : 'text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513] dark:hover:text-white'
+                : 'text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white'
             }`}
           >
             {t.label}
@@ -190,13 +190,13 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[#5C635D] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
                 value={quoteSearch}
                 onChange={(e) => setQuoteSearch(e.target.value)}
                 placeholder="Search customer or quote number…"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] pl-10 pr-4 py-2.5 text-sm min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] pl-10 pr-4 py-2.5 text-sm min-h-[44px]"
               />
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -215,10 +215,10 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
                   key={f.id}
                   type="button"
                   onClick={() => setQuoteFilter(f.id)}
-                  className={`rounded-xl px-3 py-2 text-xs font-medium min-h-[40px] border transition-colors ${
+                  className={`rounded-[10px] px-3 py-2 text-xs font-medium min-h-[40px] border transition-colors ${
                     quoteFilter === f.id
                       ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                      : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-[#5C635D] dark:text-[#9BA39D]'
+                      : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-[#6B7280] dark:text-[#9CA3AF]'
                   }`}
                 >
                   {f.label}
@@ -228,45 +228,45 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
           </div>
 
           {quotesError && (
-            <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
+            <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
               {quotesError}
             </div>
           )}
 
           {quotesLoading ? (
-            <div className="py-12 text-center text-xs text-[#5C635D]">Loading quotes…</div>
+            <div className="py-12 text-center text-xs text-[#6B7280]">Loading quotes…</div>
           ) : quotes.length === 0 ? (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-3">
-              <FileText className="w-8 h-8 mx-auto text-[#5C635D]" />
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-3">
+              <FileText className="w-8 h-8 mx-auto text-[#6B7280]" />
               <h2 className="font-display text-2xl">No quotes yet</h2>
-              <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] max-w-sm mx-auto">
+              <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] max-w-sm mx-auto">
                 Send a clear quotation for your customer to accept on their phone, then turn it into an invoice in one tap.
               </p>
               <Link
                 to="/app/quotes/new"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white min-h-[44px]"
+                className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white min-h-[44px]"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Create your first quote</span>
               </Link>
             </div>
           ) : (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#EFEAD9] dark:divide-[#242D28]">
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
               {quotes.map((q) => (
                 <Link
                   key={q.id}
                   to={q.status === 'DRAFT' ? `/app/quotes/${q.id}/edit` : `/app/quotes/${q.id}`}
-                  className="flex items-center justify-between gap-4 p-4 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] transition-colors"
+                  className="flex items-center justify-between gap-4 p-4 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] transition-colors"
                 >
                   <div className="min-w-0 space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-semibold text-[#064E3B] dark:text-[#10B981]">
+                      <span className="font-mono text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
                         {q.quoteNumber || 'DRAFT'}
                       </span>
                       {quoteStatusBadge(q)}
                     </div>
                     <p className="text-sm font-semibold truncate">{q.customerName}</p>
-                    <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                    <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                       Issued {formatLagosDateOnly(q.issueDate)} · Valid until{' '}
                       {formatLagosDateOnly(q.validUntil)}
                     </p>
@@ -276,7 +276,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
                       {formatKobo(q.totalKobo, q.currency)}
                     </p>
                     {q.convertedInvoiceNumber && (
-                      <p className="font-mono text-xs text-[#064E3B] dark:text-[#10B981]">
+                      <p className="font-mono text-xs text-[#064E3B] dark:text-[#6EE7B7]">
                         {q.convertedInvoiceNumber}
                       </p>
                     )}
@@ -293,13 +293,13 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
           {/* Search + Status Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[#5C635D] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search customer or invoice number…"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] pl-10 pr-4 py-2.5 text-sm min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] pl-10 pr-4 py-2.5 text-sm min-h-[44px]"
               />
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -317,10 +317,10 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
                   key={f.id}
                   type="button"
                   onClick={() => setFilter(f.id)}
-                  className={`rounded-xl px-3 py-2 text-xs font-medium min-h-[40px] border transition-colors ${
+                  className={`rounded-[10px] px-3 py-2 text-xs font-medium min-h-[40px] border transition-colors ${
                     filter === f.id
                       ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                      : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-[#5C635D] dark:text-[#9BA39D]'
+                      : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-[#6B7280] dark:text-[#9CA3AF]'
                   }`}
                 >
                   {f.label}
@@ -330,36 +330,36 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
+            <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
               {error}
             </div>
           )}
 
           {loading ? (
-            <div className="py-12 text-center text-xs text-[#5C635D]">Loading invoices…</div>
+            <div className="py-12 text-center text-xs text-[#6B7280]">Loading invoices…</div>
           ) : invoices.length === 0 ? (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-3">
-              <ReceiptText className="w-8 h-8 mx-auto text-[#5C635D]" />
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-3">
+              <ReceiptText className="w-8 h-8 mx-auto text-[#6B7280]" />
               <h2 className="font-display text-2xl">No invoices yet</h2>
-              <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] max-w-sm mx-auto">
+              <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] max-w-sm mx-auto">
                 Send a clear invoice with your bank details and track what is paid and what is left.
               </p>
               <Link
                 to="/app/invoices/new"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white min-h-[44px]"
+                className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white min-h-[44px]"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Create your first invoice</span>
               </Link>
             </div>
           ) : (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#EFEAD9] dark:divide-[#242D28]">
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
               {invoices.map((inv) => {
                 const isDownloading = downloadingInvoiceId === inv.id;
                 return (
                   <div
                     key={inv.id}
-                    className="flex items-center justify-between gap-3 p-4 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] transition-colors"
+                    className="flex items-center justify-between gap-3 p-4 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] transition-colors"
                   >
                     <Link
                       to={
@@ -371,13 +371,13 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
                     >
                       <div className="min-w-0 space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-semibold text-[#064E3B] dark:text-[#10B981]">
+                          <span className="font-mono text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
                             {inv.invoiceNumber || 'DRAFT'}
                           </span>
                           {invoiceStatusBadge(inv)}
                         </div>
                         <p className="text-sm font-semibold truncate">{inv.customerName}</p>
-                        <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                        <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                           Issued {formatLagosDateOnly(inv.issueDate)} · Due{' '}
                           {formatLagosDateOnly(inv.dueDate)}
                         </p>
@@ -399,7 +399,7 @@ export function DocumentsPage({ business }: { business: BusinessProfile }) {
                       onClick={(e) => handleQuickDownloadInvoicePdf(e, inv.id)}
                       aria-label={`Download PDF for ${inv.invoiceNumber || 'draft invoice'}`}
                       title="Download PDF"
-                      className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-2.5 py-2 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:border-[#064E3B] hover:text-[#064E3B] dark:hover:text-[#10B981] disabled:opacity-50 min-h-[38px]"
+                      className="shrink-0 inline-flex items-center gap-1 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-2.5 py-2 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:border-[#064E3B] hover:text-[#064E3B] dark:hover:text-[#10B981] disabled:opacity-50 min-h-[38px]"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">

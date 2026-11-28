@@ -56,7 +56,7 @@ function bucketBadge(item: ReceivableItem): { label: string; className: string }
   if (item.ageingBucket === 'not_yet_due') {
     return {
       label: item.dueDate ? `Due ${formatLagosDateOnly(item.dueDate)}` : 'Current',
-      className: 'bg-[#F3EFE6] dark:bg-[#1B231F] text-[#444A45] dark:text-[#C5CCC7]',
+      className: 'bg-[#F4F6F8] dark:bg-[#1A221F] text-[#374151] dark:text-[#C5CCC7]',
     };
   }
   if (item.ageingBucket === '1_7') {
@@ -189,21 +189,21 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
   return (
     <div className="space-y-4">
       {/* Header summary & Customers Directory shortcut */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Total owed to you</p>
-          <p className="mt-1 font-mono-num text-2xl sm:text-3xl font-bold text-[#121513] dark:text-[#F4F1EA]">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Total owed to you</p>
+          <p className="mt-1 font-mono-num text-2xl sm:text-3xl font-bold text-[#111827] dark:text-[#F3F4F6]">
             {formatKobo(summary.totalOutstandingKobo, business.currency)}
           </p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
             {summary.totalOpenCount} unpaid {summary.totalOpenCount === 1 ? 'item' : 'items'} across invoices, quick credit, and part-paid receipts
           </p>
         </div>
         <Link
           to="/app/customers"
-          className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-2.5 text-xs font-semibold text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1B231F] min-h-[42px]"
+          className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-2.5 text-xs font-semibold text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[42px]"
         >
-          <Users className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+          <Users className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
           <span>Customers &amp; Statements</span>
         </Link>
       </div>
@@ -218,23 +218,23 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
               key={card.key}
               type="button"
               onClick={() => setBucket(active ? 'ALL' : card.key)}
-              className={`text-left rounded-2xl border p-3.5 transition-colors ${
+              className={`text-left rounded-[20px] border p-3.5 transition-colors ${
                 active
                   ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                  : 'border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]'
+                  : 'border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <p
                   className={`text-[11px] font-semibold uppercase tracking-wide ${
-                    active ? 'text-white/80' : 'text-[#5C635D] dark:text-[#9BA39D]'
+                    active ? 'text-white/80' : 'text-[#6B7280] dark:text-[#9CA3AF]'
                   }`}
                 >
                   {card.label}
                 </p>
                 <span
                   className={`font-mono-num text-[11px] font-semibold ${
-                    active ? 'text-white/85' : 'text-[#5C635D] dark:text-[#9BA39D]'
+                    active ? 'text-white/85' : 'text-[#6B7280] dark:text-[#9CA3AF]'
                   }`}
                 >
                   {stats.count}
@@ -245,7 +245,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
               </p>
               <p
                 className={`text-[11px] mt-0.5 ${
-                  active ? 'text-white/75' : 'text-[#5C635D] dark:text-[#9BA39D]'
+                  active ? 'text-white/75' : 'text-[#6B7280] dark:text-[#9CA3AF]'
                 }`}
               >
                 {card.sublabel}
@@ -265,10 +265,10 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                 key={tab.value}
                 type="button"
                 onClick={() => setSource(tab.value)}
-                className={`rounded-xl px-3 py-2 text-xs font-semibold min-h-[38px] transition-colors ${
+                className={`rounded-[10px] px-3 py-2 text-xs font-semibold min-h-[38px] transition-colors ${
                   active
                     ? 'bg-[#064E3B] text-white'
-                    : 'border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-[#444A45] dark:text-[#C5CCC7]'
+                    : 'border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-[#374151] dark:text-[#C5CCC7]'
                 }`}
               >
                 {tab.label}
@@ -279,7 +279,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
             <button
               type="button"
               onClick={() => setBucket('ALL')}
-              className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 py-2 text-xs font-medium text-[#5C635D] dark:text-[#9BA39D] min-h-[38px]"
+              className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 py-2 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] min-h-[38px]"
             >
               Clear ageing filter
             </button>
@@ -287,32 +287,32 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
         </div>
 
         <div className="relative sm:w-64">
-          <Search className="w-4 h-4 text-[#5C635D] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search customer or ref..."
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] pl-9 pr-3 py-2 text-xs min-h-[38px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] pl-9 pr-3 py-2 text-xs min-h-[38px]"
           />
         </div>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] px-4 py-3 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
+        <div className="rounded-[10px] border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] px-4 py-3 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
           {error}
         </div>
       )}
 
       {/* Receivables list */}
       {loading ? (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
           Loading unpaid balances…
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-3">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-3">
           <p className="text-sm font-semibold">No unpaid balances match this filter</p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
             {source !== 'ALL' || bucket !== 'ALL' || search
               ? 'Try clearing your filters to view all customers who owe you.'
               : 'All customer balances are settled. Issue a new invoice or record a credit sale when needed.'}
@@ -325,14 +325,14 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                 setBucket('ALL');
                 setSearch('');
               }}
-              className="inline-flex items-center rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
+              className="inline-flex items-center rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
             >
               Show all balances
             </button>
           ) : (
             <Link
               to="/app/invoices/new"
-              className="inline-flex items-center rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
+              className="inline-flex items-center rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
             >
               New Invoice
             </Link>
@@ -352,7 +352,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
             return (
               <div
                 key={item.debtId}
-                className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 space-y-3"
+                className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 space-y-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0 space-y-1">
@@ -360,31 +360,31 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                       {item.customerId ? (
                         <Link
                           to={`/app/customers/${item.customerId}`}
-                          className="text-sm font-semibold text-[#121513] dark:text-[#F4F1EA] hover:underline inline-flex items-center gap-1"
+                          className="text-sm font-semibold text-[#111827] dark:text-[#F3F4F6] hover:underline inline-flex items-center gap-1"
                         >
-                          <User className="w-3.5 h-3.5 text-[#5C635D]" />
+                          <User className="w-3.5 h-3.5 text-[#6B7280]" />
                           <span>{item.customerName}</span>
                         </Link>
                       ) : (
-                        <p className="text-sm font-semibold text-[#121513] dark:text-[#F4F1EA]">
+                        <p className="text-sm font-semibold text-[#111827] dark:text-[#F3F4F6]">
                           {item.customerName}
                         </p>
                       )}
-                      <span className="rounded-md border border-[#E5DEC9] dark:border-[#2B352F] px-2 py-0.5 text-[11px] font-medium text-[#5C635D] dark:text-[#9BA39D]">
+                      <span className="rounded-md border border-gray-200/70 dark:border-[#232D29] px-2 py-0.5 text-[11px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">
                         {sourceLabel(item.sourceType)}
                       </span>
                       <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
                         {badge.label}
                       </span>
                     </div>
-                    <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                    <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                       {item.referenceNumber}
                       {item.customerPhone ? ` · ${item.customerPhone}` : ''}
                       {' · Issued '}
                       {formatLagosDateOnly(item.issueDate)}
                     </p>
                     {item.lastReminderAt && (
-                      <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+                      <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                         Last reminded {formatLagosDateOnly(item.lastReminderAt.slice(0, 10))} ({item.lastReminderTone || 'gentle'})
                         {item.remindedWithin3Days ? ' · sent within last 3 days' : ''}
                       </p>
@@ -392,12 +392,12 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                   </div>
 
                   <div className="text-right">
-                    <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">What&apos;s left</p>
-                    <p className="font-mono-num text-lg font-bold text-[#121513] dark:text-[#F4F1EA]">
+                    <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">What&apos;s left</p>
+                    <p className="font-mono-num text-lg font-bold text-[#111827] dark:text-[#F3F4F6]">
                       {formatKobo(item.balanceDueKobo, business.currency)}
                     </p>
                     {item.amountPaidKobo > 0 && (
-                      <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+                      <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                         Paid {formatKobo(item.amountPaidKobo, business.currency)} of{' '}
                         {formatKobo(item.totalKobo, business.currency)}
                       </p>
@@ -405,11 +405,11 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#EFE9DA] dark:border-[#202924]">
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-[#1F2925]">
                   <button
                     type="button"
                     onClick={() => openReminderModal(item)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[38px]"
+                    className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[38px]"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>Remind on WhatsApp</span>
@@ -418,7 +418,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                   {detailLink ? (
                     <Link
                       to={detailLink}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3.5 py-2 text-xs font-semibold text-[#121513] dark:text-[#F4F1EA] min-h-[38px]"
+                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3.5 py-2 text-xs font-semibold text-[#111827] dark:text-[#F3F4F6] min-h-[38px]"
                     >
                       <span>Open {item.sourceType === 'INVOICE' ? 'Invoice' : 'Receipt'}</span>
                     </Link>
@@ -427,7 +427,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                       <button
                         type="button"
                         onClick={() => onRecordPayment(item)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3.5 py-2 text-xs font-semibold text-[#121513] dark:text-[#F4F1EA] min-h-[38px]"
+                        className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3.5 py-2 text-xs font-semibold text-[#111827] dark:text-[#F3F4F6] min-h-[38px]"
                       >
                         <span>Record payment</span>
                       </button>
@@ -437,7 +437,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                   {item.customerId && (
                     <Link
                       to={`/app/customers/${item.customerId}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 py-2 text-xs font-medium text-[#5C635D] dark:text-[#9BA39D] min-h-[38px]"
+                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 py-2 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] min-h-[38px]"
                     >
                       <span>Statement</span>
                     </Link>
@@ -459,14 +459,14 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
           aria-label="Send WhatsApp payment reminder"
         >
           <div
-            className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-5 space-y-4"
+            className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#131917] p-5 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">WhatsApp Reminder</p>
+                <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">WhatsApp Reminder</p>
                 <h2 className="font-display text-2xl mt-0.5">{remindTarget.customerName}</h2>
-                <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                   Balance: {formatKobo(remindTarget.balanceDueKobo, business.currency)} · {remindTarget.referenceNumber}
                 </p>
               </div>
@@ -474,14 +474,14 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                 type="button"
                 onClick={() => setRemindTarget(null)}
                 aria-label="Close"
-                className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+                className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {remindTarget.remindedWithin3Days && (
-              <div className="rounded-xl border border-[#F59E0B] bg-[#FFFBEB] dark:bg-[#332409] px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-[#92400E] dark:text-[#FCD34D]">
+              <div className="rounded-[10px] border border-[#F59E0B] bg-[#FFFBEB] dark:bg-[#332409] px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-[#92400E] dark:text-[#FCD34D]">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold">Already reminded within the last 3 days</p>
@@ -502,10 +502,10 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                 <button
                   type="button"
                   onClick={() => switchTone('gentle')}
-                  className={`rounded-xl px-3 py-2 text-xs font-semibold min-h-[40px] ${
+                  className={`rounded-[10px] px-3 py-2 text-xs font-semibold min-h-[40px] ${
                     remindTone === 'gentle'
                       ? 'bg-[#064E3B] text-white'
-                      : 'border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714]'
+                      : 'border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715]'
                   }`}
                 >
                   Gentle reminder
@@ -513,10 +513,10 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                 <button
                   type="button"
                   onClick={() => switchTone('firm')}
-                  className={`rounded-xl px-3 py-2 text-xs font-semibold min-h-[40px] ${
+                  className={`rounded-[10px] px-3 py-2 text-xs font-semibold min-h-[40px] ${
                     remindTone === 'firm'
                       ? 'bg-[#064E3B] text-white'
-                      : 'border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714]'
+                      : 'border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715]'
                   }`}
                 >
                   Firm follow-up
@@ -533,19 +533,19 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                 rows={4}
                 value={remindText}
                 onChange={(e) => setRemindText(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] p-3 text-xs leading-relaxed"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] p-3 text-xs leading-relaxed"
               />
             </div>
 
             {remindNotice && (
-              <p className="text-xs font-medium text-[#064E3B] dark:text-[#10B981]">{remindNotice}</p>
+              <p className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">{remindNotice}</p>
             )}
 
             <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setRemindTarget(null)}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2.5 text-xs font-semibold min-h-[42px]"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2.5 text-xs font-semibold min-h-[42px]"
               >
                 Close
               </button>
@@ -558,7 +558,7 @@ export function V2ReceivablesSection({ business, onRecordPayment }: V2Receivable
                     void handleLogReminder();
                   }
                 }}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[42px]"
+                className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[42px]"
               >
                 <span>Open WhatsApp &amp; Log</span>
                 <ExternalLink className="w-3.5 h-3.5" />

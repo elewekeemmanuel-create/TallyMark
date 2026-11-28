@@ -15,6 +15,7 @@ export interface BusinessProfile {
   ownerId: string;
   name: string;
   logoDataUrl: string | null;
+  signatureDataUrl?: string | null;
   address: string;
   phone: string;
   email: string;
@@ -95,6 +96,7 @@ export interface PublicReceiptRecord {
   parentReceiptNumber: string | null;
   businessName: string;
   businessLogoDataUrl: string | null;
+  businessSignatureDataUrl?: string | null;
   businessAddress: string;
   businessPhone: string;
   businessEmail: string;

@@ -78,17 +78,17 @@ export function QuoteDetailPage({
   };
 
   if (loading) {
-    return <div className="py-16 text-center text-xs text-[#5C635D]">Loading quote…</div>;
+    return <div className="py-16 text-center text-xs text-[#6B7280]">Loading quote…</div>;
   }
 
   if (!quote) {
     return (
-      <div className="rounded-2xl border border-[#E5DEC9] bg-white p-8 text-center space-y-3">
+      <div className="rounded-[20px] border border-gray-200/70 bg-white p-8 text-center space-y-3">
         <h1 className="font-display text-2xl">Quote not found</h1>
         {error && <p className="text-xs text-[#B91C1C]">{error}</p>}
         <Link
           to="/app/documents"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white"
+          className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white"
         >
           Back to Documents
         </Link>
@@ -242,13 +242,13 @@ export function QuoteDetailPage({
         <div>
           <Link
             to="/app/documents"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] hover:text-[#121513] dark:text-[#9BA39D]"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#111827] dark:text-[#9CA3AF]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Documents</span>
           </Link>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">{docNumber}</h1>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
             {quote.customerName} · Valid until {formatLagosDateOnly(quote.validUntil)}
           </p>
         </div>
@@ -260,14 +260,14 @@ export function QuoteDetailPage({
                 type="button"
                 disabled={busyAction}
                 onClick={handleSend}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+                className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
               >
                 <Send className="w-4 h-4" />
                 <span>Send quote</span>
               </button>
               <Link
                 to={`/app/quotes/${quote.id}/edit`}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 py-2.5 text-xs font-semibold min-h-[44px]"
+                className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-4 py-2.5 text-xs font-semibold min-h-[44px]"
               >
                 Edit draft
               </Link>
@@ -279,7 +279,7 @@ export function QuoteDetailPage({
               type="button"
               disabled={busyAction}
               onClick={handleConvert}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] disabled:opacity-60 min-h-[44px]"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] disabled:opacity-60 min-h-[44px]"
             >
               <span>{busyAction ? 'Converting…' : 'Convert to invoice'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -289,7 +289,7 @@ export function QuoteDetailPage({
           {quote.status === 'CONVERTED' && quote.convertedInvoiceId && (
             <Link
               to={`/app/invoices/${quote.convertedInvoiceId}`}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
             >
               <span>
                 Open {quote.convertedInvoiceNumber ? quote.convertedInvoiceNumber : 'invoice'}
@@ -303,7 +303,7 @@ export function QuoteDetailPage({
               type="button"
               disabled={busyAction}
               onClick={handleRevise}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px]"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Revise quote</span>
@@ -314,7 +314,7 @@ export function QuoteDetailPage({
             type="button"
             disabled={pdfBusy}
             onClick={handleDownloadPdf}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[44px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] disabled:opacity-60 min-h-[44px]"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{pdfBusy ? 'Preparing PDF…' : 'Download PDF'}</span>
@@ -323,7 +323,7 @@ export function QuoteDetailPage({
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] min-h-[44px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] min-h-[44px]"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print</span>
@@ -335,17 +335,17 @@ export function QuoteDetailPage({
                 type="button"
                 aria-label="More quote actions"
                 onClick={() => setMoreOpen((v) => !v)}
-                className="inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2.5 min-h-[44px]"
+                className="inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2.5 min-h-[44px]"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
               {moreOpen && (
-                <div className="absolute right-0 mt-1.5 w-52 rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] shadow-lg py-1.5 z-20 text-xs">
+                <div className="absolute right-0 mt-1.5 w-52 rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] shadow-lg py-1.5 z-20 text-xs">
                   {canRevise && (
                     <button
                       type="button"
                       onClick={handleRevise}
-                      className="w-full text-left px-3.5 py-2.5 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] font-medium"
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] font-medium"
                     >
                       Revise quote (void &amp; copy)
                     </button>
@@ -354,7 +354,7 @@ export function QuoteDetailPage({
                     <button
                       type="button"
                       onClick={handleRegenerateLink}
-                      className="w-full text-left px-3.5 py-2.5 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] font-medium"
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] font-medium"
                     >
                       Regenerate public link
                     </button>
@@ -379,19 +379,19 @@ export function QuoteDetailPage({
       </div>
 
       {notice && (
-        <div className="no-print rounded-xl border border-[#064E3B]/25 bg-[#ECFDF5] p-3 text-xs text-[#064E3B] font-medium">
+        <div className="no-print rounded-[10px] border border-[#064E3B]/25 bg-[#ECFDF5] p-3 text-xs text-[#064E3B] font-medium">
           {notice}
         </div>
       )}
       {error && (
-        <div className="no-print rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
+        <div className="no-print rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] p-3 text-xs text-[#B91C1C]">
           {error}
         </div>
       )}
 
       {/* Customer Acceptance / Decline Banner */}
       {(quote.status === 'ACCEPTED' || quote.status === 'CONVERTED') && quote.decisionName && (
-        <div className="no-print rounded-2xl border border-[#064E3B]/25 bg-[#ECFDF5] p-4 flex items-start gap-3">
+        <div className="no-print rounded-[20px] border border-[#064E3B]/25 bg-[#ECFDF5] p-4 flex items-start gap-3">
           <CheckCircle2 className="w-5 h-5 text-[#064E3B] shrink-0 mt-0.5" />
           <div className="text-xs text-[#064E3B] space-y-0.5">
             <p className="font-semibold">
@@ -404,7 +404,7 @@ export function QuoteDetailPage({
       )}
 
       {quote.status === 'DECLINED' && quote.decisionName && (
-        <div className="no-print rounded-2xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-4 flex items-start gap-3">
+        <div className="no-print rounded-[20px] border border-[#B91C1C]/30 bg-[#FEF2F2] p-4 flex items-start gap-3">
           <XCircle className="w-5 h-5 text-[#B91C1C] shrink-0 mt-0.5" />
           <div className="text-xs text-[#991B1B] space-y-0.5">
             <p className="font-semibold">
@@ -423,7 +423,7 @@ export function QuoteDetailPage({
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#064E3B] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-semibold text-[#064E3B] dark:text-[#10B981] min-h-[40px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#064E3B] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] min-h-[40px]"
           >
             <Share2 className="w-3.5 h-3.5" />
             <span>Share on WhatsApp</span>
@@ -431,7 +431,7 @@ export function QuoteDetailPage({
           <button
             type="button"
             onClick={handleWebShare}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[40px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-medium min-h-[40px]"
           >
             <Copy className="w-3.5 h-3.5" />
             <span>Copy link</span>
@@ -440,7 +440,7 @@ export function QuoteDetailPage({
             href={publicUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[40px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-medium min-h-[40px]"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span>Public view</span>
@@ -456,10 +456,10 @@ export function QuoteDetailPage({
         <div className="no-print fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <form
             onSubmit={handleVoid}
-            className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"
+            className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4"
           >
             <h2 className="font-display text-2xl">Void {docNumber}?</h2>
-            <p className="text-xs text-[#5C635D]">
+            <p className="text-xs text-[#6B7280]">
               Voiding marks this quote inactive while keeping its quote number in your records.
             </p>
             <div>
@@ -475,21 +475,21 @@ export function QuoteDetailPage({
                 value={voidReason}
                 onChange={(e) => setVoidReason(e.target.value)}
                 placeholder="e.g. Customer changed specification"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2.5 text-sm min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#101512] px-3 py-2.5 text-sm min-h-[44px]"
               />
             </div>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setVoidModalOpen(false)}
-                className="rounded-xl border border-[#DED6C2] px-4 py-2 text-xs font-semibold min-h-[40px]"
+                className="rounded-[10px] border border-gray-200 px-4 py-2 text-xs font-semibold min-h-[40px]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={busyAction}
-                className="rounded-xl bg-[#B91C1C] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
+                className="rounded-[10px] bg-[#B91C1C] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
               >
                 Void quote
               </button>

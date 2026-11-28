@@ -346,15 +346,15 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Money Out</p>
-          <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Money Out</p>
+          <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
             Expenses
           </h1>
         </div>
         <button
           type="button"
           onClick={() => (showForm ? setShowForm(false) : startNew())}
-          className="min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
+          className="min-h-[44px] inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
         >
           <Plus className="w-4 h-4" />
           <span>{showForm ? 'Hide Form' : 'Add Expense'}</span>
@@ -362,7 +362,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
       </div>
 
       {closedDayPrompt && (
-        <div className="rounded-xl border border-[#B45309]/40 bg-[#FEF3C7]/70 dark:bg-amber-950/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="rounded-[10px] border border-[#B45309]/40 bg-[#FEF3C7]/70 dark:bg-amber-950/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start gap-2.5 text-sm text-[#92400E] dark:text-amber-300">
             <Lock className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{closedDayPrompt.message}</span>
@@ -371,7 +371,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
             <button
               type="button"
               onClick={() => setClosedDayPrompt(null)}
-              className="min-h-[38px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 text-xs font-medium"
+              className="min-h-[38px] rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 text-xs font-medium"
             >
               Dismiss
             </button>
@@ -383,7 +383,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                 setShowCorrectionFor(closedDayPrompt);
                 setClosedDayPrompt(null);
               }}
-              className="min-h-[38px] rounded-xl bg-[#064E3B] px-3.5 text-xs font-semibold text-white"
+              className="min-h-[38px] rounded-[10px] bg-[#064E3B] px-3.5 text-xs font-semibold text-white"
             >
               Post Correction Entry
             </button>
@@ -394,7 +394,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
       {showForm && (
         <form
           onSubmit={handleSave}
-          className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-6 space-y-5"
+          className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 sm:p-6 space-y-5"
         >
           <div className="flex items-center justify-between">
             <h2 className="font-display text-2xl">
@@ -406,7 +406,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                 setShowForm(false);
                 setEditing(null);
               }}
-              className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+              className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
             >
               <X className="w-4 h-4" />
             </button>
@@ -414,7 +414,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+              <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                 Amount ({business.currency}) *
               </label>
               <div className="flex gap-2">
@@ -424,13 +424,13 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   value={amountInput}
                   onChange={(e) => setAmountInput(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-lg font-semibold min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-lg font-semibold min-h-[44px]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setKeypadOpen(true)}
-                  className="shrink-0 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 text-xs font-medium min-h-[44px]"
+                  className="shrink-0 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 text-xs font-medium min-h-[44px]"
                 >
                   Keypad
                 </button>
@@ -438,7 +438,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
             </div>
 
             <div>
-              <label htmlFor="exp-date" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+              <label htmlFor="exp-date" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                 Date *
               </label>
               <input
@@ -446,14 +446,14 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                 type="date"
                 value={entryDate}
                 onChange={(e) => setEntryDate(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Category *
             </label>
             <div className="flex flex-wrap gap-2">
@@ -462,10 +462,10 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   key={cat}
                   type="button"
                   onClick={() => setCategoryPreset(cat)}
-                  className={`min-h-[38px] rounded-xl border px-3 text-xs font-medium transition-colors ${
+                  className={`min-h-[38px] rounded-[10px] border px-3 text-xs font-medium transition-colors ${
                     categoryPreset === cat
                       ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                      : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714]'
+                      : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715]'
                   }`}
                 >
                   {cat}
@@ -474,10 +474,10 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
               <button
                 type="button"
                 onClick={() => setCategoryPreset('CUSTOM')}
-                className={`min-h-[38px] rounded-xl border px-3 text-xs font-medium transition-colors ${
+                className={`min-h-[38px] rounded-[10px] border px-3 text-xs font-medium transition-colors ${
                   categoryPreset === 'CUSTOM'
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715]'
                 }`}
               >
                 + Custom
@@ -497,7 +497,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+              <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                 Paid To / Payee (optional)
               </label>
               <SpeechInput
@@ -507,7 +507,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
               />
             </div>
             <div>
-              <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+              <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                 Payment Method
               </label>
               <div className="grid grid-cols-5 gap-1.5">
@@ -516,10 +516,10 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                     key={m}
                     type="button"
                     onClick={() => setPaymentMethod(m)}
-                    className={`min-h-[44px] rounded-xl border text-xs font-medium ${
+                    className={`min-h-[44px] rounded-[10px] border text-xs font-medium ${
                       paymentMethod === m
                         ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                        : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714]'
+                        : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715]'
                     }`}
                   >
                     {m}
@@ -530,7 +530,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
           </div>
 
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Note (optional)
             </label>
             <SpeechTextarea
@@ -542,12 +542,12 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
           </div>
 
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Proof of Payment Photo (private, optional)
             </label>
             <div className="flex flex-wrap items-center gap-3">
-              <label className="min-h-[44px] inline-flex items-center gap-2 rounded-xl border border-dashed border-[#C9B99A] dark:border-[#36423B] bg-[#FAF8F3] dark:bg-[#111714] px-4 py-2 text-xs font-medium cursor-pointer">
-                <Upload className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+              <label className="min-h-[44px] inline-flex items-center gap-2 rounded-[10px] border border-dashed border-gray-200 dark:border-[#36423B] bg-[#F6F7F8] dark:bg-[#111715] px-4 py-2 text-xs font-medium cursor-pointer">
+                <Upload className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
                 <span>{uploadingProof ? 'Uploading…' : proofPath ? 'Replace proof photo' : 'Upload receipt / transfer proof'}</span>
                 <input
                   type="file"
@@ -578,7 +578,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3 flex items-center justify-between gap-3">
+            <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3 flex items-center justify-between gap-3">
               <p className="text-xs text-[#B91C1C] dark:text-red-300">{error}</p>
               <button
                 type="submit"
@@ -597,14 +597,14 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                 setShowForm(false);
                 setEditing(null);
               }}
-              className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 text-sm font-medium"
+              className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 text-sm font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || uploadingProof}
-              className="min-h-[44px] rounded-xl bg-[#064E3B] px-5 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
+              className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-5 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
             >
               {saving ? 'Saving…' : editing ? 'Save Changes' : 'Save Expense'}
             </button>
@@ -613,7 +613,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
       )}
 
       {!showForm && error && (
-        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 flex items-center justify-between gap-3">
+        <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 flex items-center justify-between gap-3">
           <p className="text-xs text-[#B91C1C] dark:text-red-300">{error}</p>
           <button
             type="button"
@@ -626,22 +626,22 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
       )}
 
       {/* Filters & Summary */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 space-y-3">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
           <div className="relative lg:col-span-2">
-            <Search className="w-4 h-4 text-[#8B918B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search payee, note, category…"
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] pl-10 pr-3 py-2 text-sm min-h-[42px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] pl-10 pr-3 py-2 text-sm min-h-[42px]"
             />
           </div>
           <select
             value={filterCat}
             onChange={(e) => setFilterCat(e.target.value)}
-            className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-sm min-h-[42px]"
+            className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-sm min-h-[42px]"
           >
             <option value="ALL">All Categories</option>
             {EXPENSE_CATEGORY_PRESETS.map((c) => (
@@ -651,7 +651,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
           <select
             value={filterMethod}
             onChange={(e) => setFilterMethod(e.target.value)}
-            className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-sm min-h-[42px]"
+            className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-sm min-h-[42px]"
           >
             <option value="ALL">All Methods</option>
             <option value="Cash">Cash</option>
@@ -660,27 +660,27 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
             <option value="Card">Card</option>
             <option value="Other">Other</option>
           </select>
-          <div className="flex items-center justify-between px-3 rounded-xl bg-[#F5F1E7] dark:bg-[#111714] text-xs">
-            <span className="text-[#5C635D] dark:text-[#9BA39D]">Total shown</span>
+          <div className="flex items-center justify-between px-3 rounded-[10px] bg-[#F4F6F8] dark:bg-[#111715] text-xs">
+            <span className="text-[#6B7280] dark:text-[#9CA3AF]">Total shown</span>
             <span className="font-mono-num font-semibold">
               {formatKobo(totalFilteredKobo, business.currency)}
             </span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[#5C635D] dark:text-[#9BA39D]">Date range:</span>
+          <span className="text-[#6B7280] dark:text-[#9CA3AF]">Date range:</span>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-2.5 py-1.5"
+            className="rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-2.5 py-1.5"
           />
           <span>to</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-2.5 py-1.5"
+            className="rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-2.5 py-1.5"
           />
           {(dateFrom || dateTo || filterCat !== 'ALL' || filterMethod !== 'ALL' || q) && (
             <button
@@ -692,7 +692,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                 setDateFrom('');
                 setDateTo('');
               }}
-              className="text-[#064E3B] dark:text-[#10B981] font-medium hover:underline"
+              className="text-[#064E3B] dark:text-[#6EE7B7] font-medium hover:underline"
             >
               Clear filters
             </button>
@@ -703,21 +703,21 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-2xl bg-[#F3EFE6] dark:bg-[#1B231F] animate-pulse" />
+            <div key={i} className="h-20 rounded-[20px] bg-[#F4F6F8] dark:bg-[#1A221F] animate-pulse" />
           ))}
         </div>
       ) : expenses.length === 0 ? (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-2">
-          <div className="mx-auto w-11 h-11 rounded-2xl bg-[#F3EFE6] dark:bg-[#1B231F] flex items-center justify-center text-[#064E3B] dark:text-[#10B981]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-2">
+          <div className="mx-auto w-11 h-11 rounded-[20px] bg-[#F4F6F8] dark:bg-[#1A221F] flex items-center justify-center text-[#064E3B] dark:text-[#6EE7B7]">
             <Wallet className="w-5 h-5" />
           </div>
           <p className="font-display text-2xl">No expenses logged yet</p>
-          <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
             Record stock purchases, fuel, rent, salaries, or transport costs with optional proof photos.
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
           {expenses.map((exp) => (
             <div
               key={exp.id}
@@ -728,7 +728,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   <AuthProofImage
                     proofUrl={exp.proofUrl}
                     alt={`Proof for ${exp.category}`}
-                    className="w-12 h-12 rounded-xl object-cover border border-[#DED6C2] dark:border-[#2B352F]"
+                    className="w-12 h-12 rounded-[10px] object-cover border border-gray-200 dark:border-[#232D29]"
                     onClick={(resolved) => setLightboxUrl(resolved)}
                   />
                 )}
@@ -736,7 +736,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-semibold">{exp.category}</span>
                     {exp.payee && (
-                      <span className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                      <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                         · {exp.payee}
                       </span>
                     )}
@@ -747,13 +747,13 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                       </span>
                     )}
                     {exp.source === 'voice' && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#064E3B] dark:text-[#10B981]">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#064E3B] dark:text-[#6EE7B7]">
                         <Mic className="w-3 h-3" />
                         <span>Voice</span>
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
                     {formatLagosDateOnly(exp.entryDate)} · {exp.paymentMethod}
                     {exp.note ? ` · ${exp.note}` : ''}
                   </p>
@@ -769,7 +769,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   onClick={() => openRevisions(exp)}
                   title="Edit history"
                   aria-label="Edit history"
-                  className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] dark:text-[#9BA39D]"
+                  className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] text-[#6B7280] dark:text-[#9CA3AF]"
                 >
                   <History className="w-4 h-4" />
                 </button>
@@ -778,7 +778,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   onClick={() => startEdit(exp)}
                   title={exp.isClosedDay ? 'Day closed — post correction' : 'Edit expense'}
                   aria-label="Edit expense"
-                  className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] dark:text-[#9BA39D]"
+                  className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] text-[#6B7280] dark:text-[#9CA3AF]"
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
@@ -787,7 +787,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                   onClick={() => handleDelete(exp)}
                   title={exp.isClosedDay ? 'Day closed — locked' : 'Delete expense'}
                   aria-label="Delete expense"
-                  className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] hover:text-[#B91C1C]"
+                  className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] text-[#6B7280] hover:text-[#B91C1C]"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -804,10 +804,10 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#131917] p-6 shadow-2xl space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Audit Trail</p>
+                <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Audit Trail</p>
                 <h3 className="font-display text-2xl">
                   {revisionsTarget.category} ·{' '}
                   {formatKobo(revisionsTarget.amountKobo, business.currency)}
@@ -816,15 +816,15 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
               <button
                 type="button"
                 onClick={() => setRevisionsTarget(null)}
-                className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+                className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             {revisionsLoading ? (
-              <p className="text-xs text-[#5C635D]">Loading history…</p>
+              <p className="text-xs text-[#6B7280]">Loading history…</p>
             ) : revisions.length === 0 ? (
-              <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
                 No edits or corrections recorded for this expense.
               </p>
             ) : (
@@ -832,15 +832,15 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
                 {revisions.map((rev) => (
                   <div
                     key={rev.id}
-                    className="rounded-xl border border-[#E5DEC9] dark:border-[#26302B] bg-white dark:bg-[#111714] p-3 text-xs space-y-1"
+                    className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#111715] p-3 text-xs space-y-1"
                   >
                     <div className="flex justify-between font-semibold">
                       <span>{rev.action}</span>
-                      <span className="font-mono-num text-[#5C635D]">
+                      <span className="font-mono-num text-[#6B7280]">
                         {formatLagosDateTime(rev.changedAt)}
                       </span>
                     </div>
-                    {rev.reason && <p className="text-[#5C635D] dark:text-[#9BA39D]">{rev.reason}</p>}
+                    {rev.reason && <p className="text-[#6B7280] dark:text-[#9CA3AF]">{rev.reason}</p>}
                   </div>
                 ))}
               </div>
@@ -866,7 +866,7 @@ export function ExpensesPage({ business }: { business: BusinessProfile }) {
             >
               <X className="w-4 h-4" />
             </button>
-            <img src={lightboxUrl} alt="Expense proof" className="max-h-[82vh] rounded-xl object-contain" />
+            <img src={lightboxUrl} alt="Expense proof" className="max-h-[82vh] rounded-[10px] object-contain" />
           </div>
         </div>
       )}

@@ -31,6 +31,16 @@ export const DateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD');
 
+export const RASTER_IMAGE_DATA_URL_REGEX =
+  /^data:image\/(png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=]+$/;
+
+export function sanitizeRasterImageDataUrl(val: string | null | undefined): string | null {
+  if (!val || typeof val !== 'string') return null;
+  const trimmed = val.trim();
+  if (!trimmed || trimmed.length > 700_000) return null;
+  return RASTER_IMAGE_DATA_URL_REGEX.test(trimmed) ? trimmed : null;
+}
+
 export const BusinessInputSchema = z.object({
   name: z.string().trim().min(2, 'Business name is required').max(100),
   logoDataUrl: z
@@ -39,6 +49,15 @@ export const BusinessInputSchema = z.object({
     .refine(
       (val) => !val || /^data:image\/(png|jpeg|jpg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(val),
       'Invalid image data format'
+    )
+    .optional()
+    .nullable(),
+  signatureDataUrl: z
+    .string()
+    .max(700000, 'Signature image must be under 500 KB')
+    .refine(
+      (val) => !val || RASTER_IMAGE_DATA_URL_REGEX.test(val),
+      'Signature must be a PNG, JPG, or WEBP image'
     )
     .optional()
     .nullable(),

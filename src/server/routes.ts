@@ -135,6 +135,7 @@ function mapBusinessRow(row: any): BusinessProfile {
     ownerId: row.owner_id,
     name: row.name,
     logoDataUrl: row.logo_data_url || null,
+    signatureDataUrl: row.signature_data_url || null,
     address: row.address || '',
     phone: row.phone || '',
     email: row.email || '',
@@ -209,6 +210,7 @@ export function mapPublicReceiptRow(row: any): PublicReceiptRecord {
     parentReceiptNumber: row.parent_receipt_number || null,
     businessName: row.business_name,
     businessLogoDataUrl: row.business_logo_data_url || null,
+    businessSignatureDataUrl: row.business_signature_data_url || null,
     businessAddress: row.business_address || '',
     businessPhone: row.business_phone || '',
     businessEmail: row.business_email || '',
@@ -789,7 +791,15 @@ export function createApiRouter() {
       res.status(404).json({ error: 'Receipt not found' });
       return;
     }
-    const row = db.prepare('SELECT * FROM public_receipts WHERE public_id = ?').get(publicId);
+    const row = db
+      .prepare(
+        `SELECT pr.*, COALESCE(pr.business_signature_data_url, b.signature_data_url) AS business_signature_data_url
+         FROM public_receipts pr
+         LEFT JOIN receipts r ON r.id = pr.receipt_id
+         LEFT JOIN businesses b ON b.id = r.business_id
+         WHERE pr.public_id = ?`
+      )
+      .get(publicId);
     if (!row) {
       res.status(404).json({ error: 'Receipt not found' });
       return;
@@ -821,7 +831,7 @@ export function createApiRouter() {
       if (existing) {
         db.prepare(
           `UPDATE businesses
-           SET name = ?, logo_data_url = ?, address = ?, phone = ?, email = ?,
+           SET name = ?, logo_data_url = ?, signature_data_url = ?, address = ?, phone = ?, email = ?,
                brand_color = ?, receipt_prefix = ?, currency = ?, vat_enabled = ?,
                vat_mode = ?, opening_cash_kobo = ?, default_template = ?,
                close_day_reminder_time = ?, updated_at = ?
@@ -829,6 +839,7 @@ export function createApiRouter() {
         ).run(
           input.name,
           input.logoDataUrl ?? null,
+          input.signatureDataUrl !== undefined ? input.signatureDataUrl : (existing.signatureDataUrl ?? null),
           input.address,
           input.phone,
           input.email,
@@ -851,16 +862,17 @@ export function createApiRouter() {
       const id = crypto.randomUUID();
       db.prepare(
         `INSERT INTO businesses (
-          id, owner_id, name, logo_data_url, address, phone, email,
+          id, owner_id, name, logo_data_url, signature_data_url, address, phone, email,
           brand_color, receipt_prefix, next_sequence, currency,
           vat_enabled, vat_mode, vat_rate_bps, opening_cash_kobo,
           default_template, close_day_reminder_time, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 750, ?, ?, ?, ?, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 750, ?, ?, ?, ?, ?)`
       ).run(
         id,
         req.user!.id,
         input.name,
         input.logoDataUrl ?? null,
+        input.signatureDataUrl ?? null,
         input.address,
         input.phone,
         input.email,
@@ -891,6 +903,10 @@ export function createApiRouter() {
     const merged = {
       name: req.body.name ?? existing.name,
       logoDataUrl: req.body.logoDataUrl !== undefined ? req.body.logoDataUrl : existing.logoDataUrl,
+      signatureDataUrl:
+        req.body.signatureDataUrl !== undefined
+          ? req.body.signatureDataUrl
+          : (existing.signatureDataUrl ?? null),
       address: req.body.address ?? existing.address,
       phone: req.body.phone ?? existing.phone,
       email: req.body.email ?? existing.email,
@@ -913,7 +929,7 @@ export function createApiRouter() {
     try {
       db.prepare(
         `UPDATE businesses
-         SET name = ?, logo_data_url = ?, address = ?, phone = ?, email = ?,
+         SET name = ?, logo_data_url = ?, signature_data_url = ?, address = ?, phone = ?, email = ?,
              brand_color = ?, receipt_prefix = ?, currency = ?, vat_enabled = ?,
              vat_mode = ?, opening_cash_kobo = ?, default_template = ?,
              close_day_reminder_time = ?, updated_at = ?
@@ -921,6 +937,7 @@ export function createApiRouter() {
       ).run(
         input.name,
         input.logoDataUrl ?? null,
+        input.signatureDataUrl ?? null,
         input.address,
         input.phone,
         input.email,

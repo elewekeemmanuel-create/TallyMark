@@ -19,7 +19,7 @@ export default defineConfig(() => {
           short_name: 'Tallymark',
           description: 'Issue the receipt. Keep the book. Know your day.',
           theme_color: '#064E3B',
-          background_color: '#FAF8F3',
+          background_color: '#FFFFFF',
           display: 'standalone',
           start_url: '/app',
           scope: '/',

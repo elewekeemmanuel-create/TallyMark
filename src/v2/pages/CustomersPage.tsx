@@ -39,12 +39,12 @@ export function CustomersPage({ business }: CustomersPageProps) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Directory</p>
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Directory</p>
           <h1 className="font-display text-3xl sm:text-4xl">Customers</h1>
         </div>
         <Link
           to="/app/invoices/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[42px]"
+          className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[42px]"
         >
           <FileText className="w-4 h-4" />
           <span>New Invoice</span>
@@ -53,13 +53,13 @@ export function CustomersPage({ business }: CustomersPageProps) {
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4">
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Saved customers</p>
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Saved customers</p>
           <p className="mt-1 font-mono-num text-2xl font-bold">{customers.length}</p>
         </div>
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4">
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Total balance owed</p>
-          <p className="mt-1 font-mono-num text-2xl font-bold text-[#064E3B] dark:text-[#10B981]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Total balance owed</p>
+          <p className="mt-1 font-mono-num text-2xl font-bold text-[#064E3B] dark:text-[#6EE7B7]">
             {formatKobo(totalOwedKobo, business.currency)}
           </p>
         </div>
@@ -67,35 +67,35 @@ export function CustomersPage({ business }: CustomersPageProps) {
 
       {/* Search */}
       <div className="relative">
-        <Search className="w-4 h-4 text-[#5C635D] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Search className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by customer name, phone, or email..."
-          className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] pl-10 pr-4 py-2.5 text-sm min-h-[44px]"
+          className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] pl-10 pr-4 py-2.5 text-sm min-h-[44px]"
         />
       </div>
 
       {error && (
-        <div className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] px-4 py-3 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
+        <div className="rounded-[10px] border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] px-4 py-3 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
           Loading customers…
         </div>
       ) : customers.length === 0 ? (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#F3EFE6] dark:bg-[#1B231F] text-[#064E3B] dark:text-[#10B981] mx-auto flex items-center justify-center">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-3">
+          <div className="w-11 h-11 rounded-[20px] bg-[#F4F6F8] dark:bg-[#1A221F] text-[#064E3B] dark:text-[#6EE7B7] mx-auto flex items-center justify-center">
             <Users className="w-5 h-5" />
           </div>
           <p className="text-sm font-semibold">
             {search ? 'No customer matched your search' : 'No saved customers yet'}
           </p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] max-w-sm mx-auto">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] max-w-sm mx-auto">
             {search
               ? 'Try another name or phone number.'
               : 'Customers are saved automatically when you issue an invoice, quote, or receipt.'}
@@ -103,14 +103,14 @@ export function CustomersPage({ business }: CustomersPageProps) {
           {!search && (
             <Link
               to="/app/invoices/new"
-              className="inline-flex items-center rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white min-h-[40px]"
+              className="inline-flex items-center rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white min-h-[40px]"
             >
               Create your first invoice
             </Link>
           )}
         </div>
       ) : (
-        <div className="divide-y divide-[#EFE9DA] dark:divide-[#202924] rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden">
+        <div className="divide-y divide-gray-100 dark:divide-[#1F2925] rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] overflow-hidden">
           {customers.map((c) => {
             const docSummaryParts: string[] = [];
             if (c.invoiceCount > 0) docSummaryParts.push(`${c.invoiceCount} inv`);
@@ -122,13 +122,13 @@ export function CustomersPage({ business }: CustomersPageProps) {
               <Link
                 key={c.id}
                 to={`/app/customers/${c.id}`}
-                className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] transition-colors"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] transition-colors"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#121513] dark:text-[#F4F1EA] truncate">
+                  <p className="text-sm font-semibold text-[#111827] dark:text-[#F3F4F6] truncate">
                     {c.name}
                   </p>
-                  <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] truncate mt-0.5">
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] truncate mt-0.5">
                     {c.phone || c.email || 'No phone saved'}
                     {docSummaryParts.length > 0 ? ` · ${docSummaryParts.join(' · ')}` : ''}
                   </p>
@@ -136,20 +136,20 @@ export function CustomersPage({ business }: CustomersPageProps) {
 
                 <div className="flex items-center gap-2.5 shrink-0">
                   <div className="text-right">
-                    <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+                    <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                       {c.balanceOwedKobo > 0 ? 'Owes' : 'Settled'}
                     </p>
                     <p
                       className={`font-mono-num text-sm font-bold ${
                         c.balanceOwedKobo > 0
                           ? 'text-[#B91C1C] dark:text-[#FCA5A5]'
-                          : 'text-[#064E3B] dark:text-[#10B981]'
+                          : 'text-[#064E3B] dark:text-[#6EE7B7]'
                       }`}
                     >
                       {formatKobo(c.balanceOwedKobo, business.currency)}
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-[#5C635D]" />
+                  <ChevronRight className="w-4 h-4 text-[#6B7280]" />
                 </div>
               </Link>
             );

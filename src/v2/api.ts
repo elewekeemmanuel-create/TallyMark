@@ -88,6 +88,15 @@ function mapSupaBusiness(row: any): BusinessProfile {
     ownerId: row.owner_id,
     name: row.name,
     logoDataUrl: row.logo_data_url || null,
+    signatureDataUrl: Object.prototype.hasOwnProperty.call(row, 'signature_data_url')
+      ? row.signature_data_url || null
+      : (() => {
+          try {
+            return localStorage.getItem(`tallymark_issuer_sig_${row.owner_id}`) || null;
+          } catch {
+            return null;
+          }
+        })(),
     address: row.address || '',
     phone: row.phone || '',
     email: row.email || '',

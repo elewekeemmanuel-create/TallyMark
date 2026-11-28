@@ -293,7 +293,7 @@ export function SpeechInput({
         {...rest}
         value={value}
         onChange={(e) => onChangeValue(e.target.value)}
-        className={`w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm text-[#121513] dark:text-[#F4F1EA] placeholder:text-[#8B918B] focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30 focus:border-[#064E3B] dark:focus:ring-[#10B981]/30 dark:focus:border-[#10B981] min-h-[44px] ${
+        className={`w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-sm text-[#111827] dark:text-[#F3F4F6] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#064E3B]/20 focus:border-[#064E3B] dark:focus:ring-[#6EE7B7]/25 dark:focus:border-[#6EE7B7] min-h-[44px] ${
           supported ? 'pr-12' : ''
         } ${className}`}
       />
@@ -303,10 +303,10 @@ export function SpeechInput({
           onClick={toggle}
           title={listening ? 'Stop dictation' : micLabel}
           aria-label={listening ? 'Stop dictation' : micLabel}
-          className={`absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
+          className={`absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-9 h-9 rounded-[8px] transition-colors ${
             listening
               ? 'bg-[#B91C1C] text-white'
-              : 'text-[#5C635D] dark:text-[#9BA39D] hover:bg-[#F3EFE6] dark:hover:bg-[#1F2923] hover:text-[#064E3B] dark:hover:text-[#10B981]'
+              : 'text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#ECFDF5] dark:hover:bg-[#1A221F] hover:text-[#064E3B] dark:hover:text-[#6EE7B7]'
           }`}
         >
           {listening ? <Square className="w-3.5 h-3.5 fill-current" /> : <Mic className="w-4 h-4" />}
@@ -344,7 +344,7 @@ export function SpeechTextarea({
         {...rest}
         value={value}
         onChange={(e) => onChangeValue(e.target.value)}
-        className={`w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm text-[#121513] dark:text-[#F4F1EA] placeholder:text-[#8B918B] focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30 focus:border-[#064E3B] dark:focus:ring-[#10B981]/30 dark:focus:border-[#10B981] ${
+        className={`w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-sm text-[#111827] dark:text-[#F3F4F6] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#064E3B]/20 focus:border-[#064E3B] dark:focus:ring-[#6EE7B7]/25 dark:focus:border-[#6EE7B7] ${
           supported ? 'pr-12' : ''
         } ${className}`}
       />
@@ -354,10 +354,10 @@ export function SpeechTextarea({
           onClick={toggle}
           title={listening ? 'Stop dictation' : micLabel}
           aria-label={listening ? 'Stop dictation' : micLabel}
-          className={`absolute right-2 top-2 inline-flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
+          className={`absolute right-2 top-2 inline-flex items-center justify-center w-9 h-9 rounded-[8px] transition-colors ${
             listening
               ? 'bg-[#B91C1C] text-white'
-              : 'text-[#5C635D] dark:text-[#9BA39D] hover:bg-[#F3EFE6] dark:hover:bg-[#1F2923] hover:text-[#064E3B] dark:hover:text-[#10B981]'
+              : 'text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#ECFDF5] dark:hover:bg-[#1A221F] hover:text-[#064E3B] dark:hover:text-[#6EE7B7]'
           }`}
         >
           {listening ? <Square className="w-3.5 h-3.5 fill-current" /> : <Mic className="w-4 h-4" />}

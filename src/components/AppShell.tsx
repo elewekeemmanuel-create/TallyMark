@@ -34,19 +34,17 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-const DESKTOP_NAV = [
-  { to: '/app', label: 'Home', icon: Home },
-  { to: '/app/speak', label: 'Speak Your Day', icon: Mic },
-  { to: '/app/cashbook', label: 'Cash Book', icon: BookOpen },
-  { to: '/app/new', label: 'New Receipt', icon: PlusCircle },
-  { to: '/app/quick-sale', label: 'Quick Sale', icon: Zap },
-  { to: '/app/credit-sale', label: 'Credit Sale', icon: CreditCard },
-  { to: '/app/receipts', label: 'Receipts', icon: ReceiptText },
-  { to: '/app/debtors', label: 'Debtors & Creditors', icon: Users },
-  { to: '/app/expenses', label: 'Expenses', icon: Wallet },
-  { to: '/app/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/app/settings', label: 'Settings', icon: Settings },
-] as const;
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: number;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
 
 const NEW_CHOICES = [
   {
@@ -82,10 +80,30 @@ const NEW_CHOICES = [
 ] as const;
 
 const MORE_LINKS = [
-  { to: '/app/debtors', label: 'Debtors & Creditors', subtitle: 'Track who owes & supplier bills', icon: Users },
-  { to: '/app/expenses', label: 'Expenses', subtitle: 'Log & filter business spending', icon: Wallet },
-  { to: '/app/reports', label: 'Reports & Exports', subtitle: 'Net summary, charts & CSV / PDF', icon: BarChart3 },
-  { to: '/app/settings', label: 'Business Settings', subtitle: 'Logo, prefix, VAT, close-day reminder', icon: Settings },
+  {
+    to: '/app/debtors',
+    label: 'Debtors & Creditors',
+    subtitle: 'Track who owes & supplier bills',
+    icon: Users,
+  },
+  {
+    to: '/app/expenses',
+    label: 'Expenses',
+    subtitle: 'Log & filter business spending',
+    icon: Wallet,
+  },
+  {
+    to: '/app/reports',
+    label: 'Reports & Exports',
+    subtitle: 'Net summary, charts & CSV / PDF',
+    icon: BarChart3,
+  },
+  {
+    to: '/app/settings',
+    label: 'Business Settings',
+    subtitle: 'Logo, prefix, VAT, close-day reminder',
+    icon: Settings,
+  },
 ] as const;
 
 export function AppShell({ business, user, title, children }: AppShellProps) {
@@ -133,25 +151,77 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
     };
   }, [v2Enabled, pathname]);
 
-  const desktopNavItems = v2Enabled
+  const desktopNavGroups: NavGroup[] = v2Enabled
     ? [
-        { to: '/app', label: 'Home', icon: Home },
-        { to: '/app/speak', label: 'Speak Your Day', icon: Mic },
-        { to: '/app/cashbook', label: 'Cash Book', icon: BookOpen },
-        { to: '/app/documents', label: 'Documents', icon: FileText },
-        { to: '/app/claims', label: 'Payment Reports', icon: Bell, badge: pendingClaimsCount },
-        { to: '/app/invoices/new', label: 'New Invoice', icon: PlusCircle },
-        { to: '/app/quotes/new', label: 'New Quote', icon: FileText },
-        { to: '/app/new', label: 'New Receipt', icon: ReceiptText },
-        { to: '/app/quick-sale', label: 'Quick Sale', icon: Zap },
-        { to: '/app/credit-sale', label: 'Credit Sale', icon: CreditCard },
-        { to: '/app/debtors', label: 'Who owes me', icon: Users },
-        { to: '/app/customers', label: 'Customers', icon: Users },
-        { to: '/app/expenses', label: 'Expenses', icon: Wallet },
-        { to: '/app/reports', label: 'Reports', icon: BarChart3 },
-        { to: '/app/settings', label: 'Settings', icon: Settings },
+        {
+          label: 'Overview',
+          items: [
+            { to: '/app', label: 'Home', icon: Home },
+            { to: '/app/speak', label: 'Speak Your Day', icon: Mic },
+            { to: '/app/cashbook', label: 'Cash Book', icon: BookOpen },
+          ],
+        },
+        {
+          label: 'Record',
+          items: [
+            { to: '/app/new', label: 'New Receipt', icon: ReceiptText },
+            { to: '/app/invoices/new', label: 'New Invoice', icon: PlusCircle },
+            { to: '/app/quotes/new', label: 'New Quote', icon: FileText },
+            { to: '/app/quick-sale', label: 'Quick Sale', icon: Zap },
+            { to: '/app/credit-sale', label: 'Credit Sale', icon: CreditCard },
+          ],
+        },
+        {
+          label: 'Money & Docs',
+          items: [
+            { to: '/app/documents', label: 'Documents', icon: FileText },
+            { to: '/app/claims', label: 'Payment Reports', icon: Bell, badge: pendingClaimsCount },
+            { to: '/app/debtors', label: 'Who owes me', icon: Users },
+            { to: '/app/customers', label: 'Customers', icon: Users },
+            { to: '/app/expenses', label: 'Expenses', icon: Wallet },
+          ],
+        },
+        {
+          label: 'Manage',
+          items: [
+            { to: '/app/reports', label: 'Reports', icon: BarChart3 },
+            { to: '/app/settings', label: 'Settings', icon: Settings },
+          ],
+        },
       ]
-    : DESKTOP_NAV;
+    : [
+        {
+          label: 'Overview',
+          items: [
+            { to: '/app', label: 'Home', icon: Home },
+            { to: '/app/speak', label: 'Speak Your Day', icon: Mic },
+            { to: '/app/cashbook', label: 'Cash Book', icon: BookOpen },
+          ],
+        },
+        {
+          label: 'Record',
+          items: [
+            { to: '/app/new', label: 'New Receipt', icon: PlusCircle },
+            { to: '/app/quick-sale', label: 'Quick Sale', icon: Zap },
+            { to: '/app/credit-sale', label: 'Credit Sale', icon: CreditCard },
+          ],
+        },
+        {
+          label: 'Money & Docs',
+          items: [
+            { to: '/app/receipts', label: 'Receipts', icon: ReceiptText },
+            { to: '/app/debtors', label: 'Debtors & Creditors', icon: Users },
+            { to: '/app/expenses', label: 'Expenses', icon: Wallet },
+          ],
+        },
+        {
+          label: 'Manage',
+          items: [
+            { to: '/app/reports', label: 'Reports', icon: BarChart3 },
+            { to: '/app/settings', label: 'Settings', icon: Settings },
+          ],
+        },
+      ];
 
   const newChoices = v2Enabled
     ? [
@@ -219,37 +289,39 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen print:min-h-0 bg-[#FAF8F3] dark:bg-[#0D110F] print:bg-white text-[#121513] dark:text-[#F4F1EA]">
-      {/* Desktop Sidebar */}
-      <aside className="no-print hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col border-r border-[#E5DEC9] dark:border-[#242D28] bg-[#F5F1E7] dark:bg-[#111714]">
-        <div className="flex items-center justify-between px-5 h-16 border-b border-[#E5DEC9] dark:border-[#242D28]">
+    <div className="min-h-screen print:min-h-0 bg-tm-bg-secondary print:bg-white text-tm-ink">
+      {/* Sleek Desktop Sidebar — Crisp white primary surface */}
+      <aside className="no-print hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col border-r border-tm-border bg-tm-primary">
+        <div className="flex items-center justify-between px-5 h-16 border-b border-tm-border-subtle">
           <Link to="/app" className="rounded-lg">
             <TallymarkWordmark size="md" />
           </Link>
         </div>
 
-        <div className="px-5 py-3.5 border-b border-[#E5DEC9] dark:border-[#242D28]">
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Business</p>
-          <div className="mt-1.5 flex items-center gap-2.5">
+        {/* Business Profile Tray — Soft grey secondary surface */}
+        <div className="px-4 pt-4 pb-3">
+          <div className="rounded-2xl bg-tm-secondary p-3 flex items-center gap-3">
             {business.logoDataUrl ? (
               <img
                 src={business.logoDataUrl}
                 alt={business.name}
                 referrerPolicy="no-referrer"
-                className="w-8 h-8 rounded-lg object-contain border border-[#DED6C2] dark:border-[#2B352F] bg-white p-0.5 shrink-0"
+                className="w-9 h-9 rounded-[10px] object-contain bg-white border border-tm-border p-0.5 shrink-0"
               />
             ) : (
               <span
-                className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-xs font-semibold text-white shrink-0"
+                className="w-9 h-9 rounded-[10px] inline-flex items-center justify-center text-xs font-semibold text-white shrink-0"
                 style={{ backgroundColor: business.brandColor || '#064E3B' }}
               >
                 {business.name.slice(0, 2).toUpperCase()}
               </span>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">{business.name}</p>
+              <p className="text-sm font-semibold text-tm-ink truncate">
+                {business.name}
+              </p>
               {user && (
-                <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] truncate">
+                <p className="text-xs text-tm-ink-muted truncate">
                   {user.name || user.email}
                 </p>
               )}
@@ -257,54 +329,73 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5" aria-label="Primary navigation">
-          {desktopNavItems.map((item) => {
-            const active =
-              item.to === '/app/documents' ? isDocumentsActive : isActive(item.to);
-            const Icon = item.icon;
-            const badgeCount = 'badge' in item ? Number((item as any).badge || 0) : 0;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`flex items-center justify-between gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors min-h-[42px] ${
-                  active
-                    ? 'bg-[#064E3B] text-white'
-                    : 'text-[#444A45] dark:text-[#B5BCB7] hover:bg-[#EAE3D3] dark:hover:bg-[#1B231F]'
-                }`}
-              >
-                <span className="flex items-center gap-3 min-w-0">
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap truncate">{item.label}</span>
-                </span>
-                {badgeCount > 0 && (
-                  <span
-                    aria-label={`${badgeCount} pending payment reports`}
-                    className={`font-mono text-[11px] font-bold rounded-md px-1.5 py-0.5 leading-none ${
-                      active ? 'bg-white text-[#064E3B]' : 'bg-[#B91C1C] text-white'
-                    }`}
-                  >
-                    {badgeCount > 99 ? '99+' : badgeCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+        {/* Grouped Navigation */}
+        <nav
+          className="flex-1 overflow-y-auto px-3 pb-4 space-y-5"
+          aria-label="Primary navigation"
+        >
+          {desktopNavGroups.map((group) => (
+            <div key={group.label}>
+              <p className="px-3 mb-1.5 text-[11px] font-medium text-tm-ink-muted">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active =
+                    item.to === '/app/documents' ? isDocumentsActive : isActive(item.to);
+                  const Icon = item.icon;
+                  const badgeCount = Number(item.badge || 0);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={`flex items-center justify-between gap-2 rounded-[10px] px-3 py-2 text-sm font-medium transition-colors min-h-[40px] ${
+                        active
+                          ? 'bg-tm-emerald text-white shadow-xs'
+                          : 'text-[#4B5563] dark:text-[#D1D5DB] hover:bg-tm-secondary hover:text-tm-ink'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <Icon
+                          className={`w-4 h-4 shrink-0 ${
+                            active ? 'text-tm-mint' : 'text-tm-ink-muted'
+                          }`}
+                        />
+                        <span className="whitespace-nowrap truncate">{item.label}</span>
+                      </span>
+                      {badgeCount > 0 && (
+                        <span
+                          aria-label={`${badgeCount} pending payment reports`}
+                          className={`font-mono-num text-[11px] font-semibold rounded-full px-2 py-0.5 leading-none ${
+                            active
+                              ? 'bg-tm-mint text-[#052E23]'
+                              : 'bg-[#FEF2F2] text-[#B91C1C] dark:bg-red-950/60 dark:text-red-300'
+                          }`}
+                        >
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-[#E5DEC9] dark:border-[#242D28] space-y-2.5">
+        <div className="p-4 border-t border-tm-border-subtle space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#D8CEB8] dark:border-[#2C3731] bg-white dark:bg-[#1B231F] px-3 py-2 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#232D28] min-h-[40px]"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-tm-secondary px-3 py-2 text-xs font-medium text-tm-ink hover:bg-tm-mint-soft hover:text-tm-emerald dark:hover:text-tm-mint transition-colors min-h-[38px]"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
             </button>
             <PWAInstallButton compact />
           </div>
-          <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-[11px] text-tm-ink-muted">
             Built by Emmanuel Eleweke | Emmanuel of ZedTech
           </p>
         </div>
@@ -312,12 +403,12 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
 
       {/* Main Content Area */}
       <div className="md:pl-64 print:pl-0 flex flex-col min-h-screen print:min-h-0">
-        <header className="no-print sticky top-0 z-30 h-14 border-b border-[#E5DEC9] dark:border-[#242D28] bg-[#FAF8F3]/90 dark:bg-[#0D110F]/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4">
+        <header className="no-print sticky top-0 z-30 h-14 sm:h-16 border-b border-tm-border bg-tm-primary/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link to="/app" className="md:hidden shrink-0">
               <TallymarkWordmark size="sm" />
             </Link>
-            <span className="hidden md:inline text-sm font-semibold text-[#121513] dark:text-[#F4F1EA] truncate">
+            <span className="hidden md:inline text-base font-semibold text-tm-ink truncate">
               {title}
             </span>
           </div>
@@ -329,25 +420,25 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
                 type="button"
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
-                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18]"
+                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] bg-tm-secondary text-tm-ink"
               >
                 {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
             </div>
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2.5">
               <Link
                 to="/app/quick-sale"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-xs font-semibold text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1B231F] transition-colors whitespace-nowrap min-h-[40px]"
+                className="inline-flex items-center gap-1.5 rounded-[10px] bg-tm-secondary px-3.5 py-2 text-xs font-semibold text-tm-ink hover:bg-tm-mint-soft hover:text-tm-emerald dark:hover:text-tm-mint transition-colors whitespace-nowrap min-h-[40px]"
               >
-                <Zap className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#10B981]" />
+                <Zap className="w-3.5 h-3.5 text-tm-emerald-bright dark:text-tm-mint" />
                 <span>Quick Sale</span>
               </Link>
               {pathname !== '/app/new' && (
                 <Link
                   to="/app/new"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#04392B] transition-colors whitespace-nowrap min-h-[40px]"
+                  className="inline-flex items-center gap-1.5 rounded-[10px] bg-tm-emerald px-4 py-2 text-xs font-semibold text-white hover:bg-tm-emerald-hover active:scale-[0.98] transition-all whitespace-nowrap min-h-[40px]"
                 >
-                  <PlusCircle className="w-3.5 h-3.5" />
+                  <PlusCircle className="w-3.5 h-3.5 text-tm-mint" />
                   <span>New Receipt</span>
                 </Link>
               )}
@@ -355,23 +446,23 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 pb-24 md:pb-10 max-w-6xl w-full mx-auto print:p-0 print:max-w-none">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-12 max-w-6xl w-full mx-auto print:p-0 print:max-w-none">
           {children}
         </main>
       </div>
 
-      {/* Mobile Bottom Tab Bar (5 slots: Home, Cash Book, + New, Receipts, More) */}
+      {/* Mobile Bottom Tab Bar (5 slots: Home, Cash Book, + New, Docs/Receipts, More) */}
       <nav
         aria-label="Mobile navigation"
-        className="no-print md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#E5DEC9] dark:border-[#242D28] bg-[#FAF8F3]/95 dark:bg-[#111714]/95 backdrop-blur-md pb-safe"
+        className="no-print md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-tm-border bg-tm-primary/95 backdrop-blur-md pb-safe"
       >
-        <div className="grid grid-cols-5 h-14 items-center">
+        <div className="grid grid-cols-5 h-15 items-center">
           <Link
             to="/app"
             className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
               isActive('/app')
-                ? 'text-[#064E3B] dark:text-[#10B981]'
-                : 'text-[#5C635D] dark:text-[#9BA39D]'
+                ? 'text-tm-emerald dark:text-tm-mint'
+                : 'text-tm-ink-muted'
             }`}
           >
             <Home className="w-5 h-5" />
@@ -382,8 +473,8 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
             to="/app/cashbook"
             className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
               isActive('/app/cashbook')
-                ? 'text-[#064E3B] dark:text-[#10B981]'
-                : 'text-[#5C635D] dark:text-[#9BA39D]'
+                ? 'text-tm-emerald dark:text-tm-mint'
+                : 'text-tm-ink-muted'
             }`}
           >
             <BookOpen className="w-5 h-5" />
@@ -398,9 +489,9 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
                 setNewSheetOpen((v) => !v);
               }}
               aria-label="New entry"
-              className="inline-flex items-center justify-center gap-1 rounded-2xl bg-[#064E3B] text-white px-3.5 h-10 text-xs font-semibold shadow-sm active:scale-95 transition-transform"
+              className="inline-flex items-center justify-center gap-1 rounded-[12px] bg-tm-emerald hover:bg-tm-emerald-hover text-white px-3.5 h-10 text-xs font-semibold shadow-sm active:scale-95 transition-transform"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-tm-mint" />
               <span>New</span>
             </button>
           </div>
@@ -410,8 +501,8 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
               to="/app/documents"
               className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
                 isDocumentsActive
-                  ? 'text-[#064E3B] dark:text-[#10B981]'
-                  : 'text-[#5C635D] dark:text-[#9BA39D]'
+                  ? 'text-tm-emerald dark:text-tm-mint'
+                  : 'text-tm-ink-muted'
               }`}
             >
               <FileText className="w-5 h-5" />
@@ -422,8 +513,8 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
               to="/app/receipts"
               className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
                 isActive('/app/receipts')
-                  ? 'text-[#064E3B] dark:text-[#10B981]'
-                  : 'text-[#5C635D] dark:text-[#9BA39D]'
+                  ? 'text-tm-emerald dark:text-tm-mint'
+                  : 'text-tm-ink-muted'
               }`}
             >
               <ReceiptText className="w-5 h-5" />
@@ -439,8 +530,8 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
             }}
             className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium h-full ${
               isMoreActive || moreSheetOpen
-                ? 'text-[#064E3B] dark:text-[#10B981]'
-                : 'text-[#5C635D] dark:text-[#9BA39D]'
+                ? 'text-tm-emerald dark:text-tm-mint'
+                : 'text-tm-ink-muted'
             }`}
           >
             <span className="relative">
@@ -448,7 +539,7 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
               {v2Enabled && pendingClaimsCount > 0 && (
                 <span
                   aria-label={`${pendingClaimsCount} pending payment reports`}
-                  className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-md bg-[#B91C1C] text-white font-mono text-[10px] font-bold flex items-center justify-center leading-none"
+                  className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#B91C1C] text-white font-mono-num text-[10px] font-bold flex items-center justify-center leading-none"
                 >
                   {pendingClaimsCount > 9 ? '9+' : pendingClaimsCount}
                 </span>
@@ -469,21 +560,24 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
           aria-label="Create new entry"
         >
           <div
-            className="w-full rounded-t-3xl border-t border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-5 pb-safe space-y-3"
+            className="w-full rounded-t-[28px] bg-tm-primary p-5 pb-safe space-y-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="w-10 h-1.5 rounded-full bg-tm-border mx-auto" />
             <div className="flex items-center justify-between">
-              <p className="font-display text-2xl">Record Entry</p>
+              <p className="text-xl font-semibold tracking-[-0.02em] text-tm-ink">
+                Record Entry
+              </p>
               <button
                 type="button"
                 onClick={() => setNewSheetOpen(false)}
                 aria-label="Close"
-                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] bg-tm-secondary text-tm-ink-muted"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-2.5">
+            <div className="grid grid-cols-1 gap-2">
               {newChoices.map((c) => {
                 const Icon = c.icon;
                 return (
@@ -491,14 +585,16 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
                     key={c.to}
                     type="button"
                     onClick={() => go(c.to)}
-                    className="w-full text-left rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-white dark:bg-[#111714] p-4 flex items-center gap-3.5 min-h-[60px] active:scale-[0.99]"
+                    className="w-full text-left rounded-2xl bg-tm-secondary hover:bg-tm-mint-soft p-4 flex items-center gap-3.5 min-h-[60px] active:scale-[0.99] transition-all"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-[#064E3B]/10 dark:bg-[#10B981]/15 text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-[12px] bg-tm-mint-soft text-tm-emerald dark:text-tm-mint flex items-center justify-center shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#121513] dark:text-[#F4F1EA]">{c.title}</p>
-                      <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">{c.subtitle}</p>
+                      <p className="text-sm font-semibold text-tm-ink">
+                        {c.title}
+                      </p>
+                      <p className="text-xs text-tm-ink-muted">{c.subtitle}</p>
                     </div>
                   </button>
                 );
@@ -518,24 +614,29 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
           aria-label="More options"
         >
           <div
-            className="w-full rounded-t-3xl border-t border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-5 pb-safe space-y-3"
+            className="w-full rounded-t-[28px] bg-tm-primary p-5 pb-safe space-y-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="w-10 h-1.5 rounded-full bg-tm-border mx-auto" />
             <div className="flex items-center justify-between">
               <div>
-                <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">{business.name}</p>
-                <p className="font-display text-2xl">More</p>
+                <p className="text-xs font-medium text-tm-ink-muted">
+                  {business.name}
+                </p>
+                <p className="text-xl font-semibold tracking-[-0.02em] text-tm-ink">
+                  More
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setMoreSheetOpen(false)}
                 aria-label="Close"
-                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] bg-tm-secondary text-tm-ink-muted"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-2.5">
+            <div className="grid grid-cols-1 gap-2">
               {moreLinks.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -543,20 +644,22 @@ export function AppShell({ business, user, title, children }: AppShellProps) {
                     key={item.to}
                     type="button"
                     onClick={() => go(item.to)}
-                    className="w-full text-left rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-white dark:bg-[#111714] p-4 flex items-center gap-3.5 min-h-[60px]"
+                    className="w-full text-left rounded-2xl bg-tm-secondary hover:bg-tm-mint-soft p-4 flex items-center gap-3.5 min-h-[60px] transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-[#F3EFE6] dark:bg-[#1B231F] text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-[12px] bg-tm-primary text-tm-emerald dark:text-tm-mint flex items-center justify-center shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#121513] dark:text-[#F4F1EA]">{item.label}</p>
-                      <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">{item.subtitle}</p>
+                      <p className="text-sm font-semibold text-tm-ink">
+                        {item.label}
+                      </p>
+                      <p className="text-xs text-tm-ink-muted">{item.subtitle}</p>
                     </div>
                   </button>
                 );
               })}
             </div>
-            <p className="pt-2 text-center text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="pt-1 text-center text-[11px] text-tm-ink-muted">
               Built by Emmanuel Eleweke | Emmanuel of ZedTech
             </p>
           </div>

@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import {
   Check,
   Copy,
   Download,
+  ExternalLink,
   MessageCircle,
   Printer,
+  QrCode,
   Share2,
+  ShieldCheck,
   X,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { downloadReceiptPdf } from '../lib/pdf';
+import { Link } from '../lib/router';
 import {
   formatKobo,
   formatKoboPlainInput,
   parseAmountToKobo,
 } from '../shared/money';
-import type { PaymentMethod, ReceiptTemplate } from '../shared/schemas';
+import { sanitizeRasterImageDataUrl, type PaymentMethod, type ReceiptTemplate } from '../shared/schemas';
 import type { BusinessProfile, PublicReceiptRecord, ReceiptRecord } from '../shared/types';
 import { NumericKeypad } from './NumericKeypad';
 import { SpeechInput } from './SpeechInput';
@@ -57,6 +62,154 @@ export function buildWhatsAppShareUrl(receipt: PublicReceiptRecord): string {
   return `https://wa.me/?text=${text}`;
 }
 
+export function ReceiptQrModal({
+  receipt,
+  onClose,
+}: {
+  receipt: PublicReceiptRecord;
+  onClose: () => void;
+}) {
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [copied, setCopied] = useState(false);
+  const publicUrl = buildPublicReceiptUrl(receipt.publicId);
+  const hasSignature = Boolean(sanitizeRasterImageDataUrl(receipt.businessSignatureDataUrl));
+
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL(publicUrl, {
+      width: 480,
+      margin: 2,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#111827', light: '#FFFFFF' },
+    })
+      .then((url) => {
+        if (active) setQrDataUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [publicUrl]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  const handleDownloadQr = () => {
+    if (!qrDataUrl) return;
+    const a = document.createElement('a');
+    a.href = qrDataUrl;
+    a.download = `${receipt.receiptNumber.replace(/[^A-Za-z0-9_-]/g, '_')}-verify-qr.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-xs p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Verification QR code for ${receipt.receiptNumber}`}
+    >
+      <div className="w-full max-w-sm rounded-[24px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-6 shadow-2xl space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">Receipt Verification QR</p>
+            <h3 className="mt-1 font-display text-2xl font-semibold text-[#111827] dark:text-[#F3F4F6]">
+              {receipt.receiptNumber}
+            </h3>
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
+              {receipt.businessName} ·{' '}
+              {receipt.status === 'VOID'
+                ? 'Voided'
+                : receipt.status === 'PART_PAID'
+                ? 'Part Paid'
+                : 'Paid in Full'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#232D29] bg-white p-5 flex flex-col items-center gap-3">
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt={`Scan to verify receipt ${receipt.receiptNumber}`}
+              className="w-56 h-56 rounded-lg"
+            />
+          ) : (
+            <div className="w-56 h-56 rounded-lg bg-[#F4F6F8] animate-pulse" />
+          )}
+          <p className="text-xs text-center text-[#6B7280]">
+            Scan with any phone camera to open the live verification page for this receipt.
+          </p>
+          {hasSignature && receipt.status !== 'VOID' && (
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#064E3B]">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Authenticated with issuer signature</span>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-[10px] border border-gray-200/70 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 flex items-center justify-between gap-2">
+          <span className="font-mono-num text-[11px] text-[#6B7280] dark:text-[#9CA3AF] truncate">
+            {publicUrl}
+          </span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="shrink-0 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadQr}
+            disabled={!qrDataUrl}
+            className="inline-flex items-center justify-center gap-1.5 rounded-[10px] bg-[#064E3B] px-3.5 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[44px] disabled:opacity-60"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download QR</span>
+          </button>
+          <Link
+            to={`/r/${receipt.publicId}`}
+            onClick={onClose}
+            className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-xs font-semibold text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[44px]"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span>Open Page</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ReceiptShareBar({
   receipt,
   activeTemplate,
@@ -66,6 +219,7 @@ export function ReceiptShareBar({
 }) {
   const [pdfBusy, setPdfBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
 
   const publicUrl = buildPublicReceiptUrl(receipt.publicId);
@@ -115,7 +269,7 @@ export function ReceiptShareBar({
           href={buildWhatsAppShareUrl(receipt)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#04392B] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
         >
           <MessageCircle className="w-4 h-4" />
           <span>Share on WhatsApp</span>
@@ -125,7 +279,7 @@ export function ReceiptShareBar({
           <button
             type="button"
             onClick={handleWebShare}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1D2621] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
           >
             <Share2 className="w-4 h-4" />
             <span>Share</span>
@@ -136,7 +290,7 @@ export function ReceiptShareBar({
           type="button"
           onClick={handleDownloadPdf}
           disabled={pdfBusy}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1D2621] transition-colors min-h-[44px] whitespace-nowrap shrink-0 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] transition-colors min-h-[44px] whitespace-nowrap shrink-0 disabled:opacity-60"
         >
           <Download className="w-4 h-4" />
           <span>{pdfBusy ? 'Preparing PDF…' : 'Download PDF'}</span>
@@ -145,7 +299,7 @@ export function ReceiptShareBar({
         <button
           type="button"
           onClick={() => window.print()}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1D2621] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
         >
           <Printer className="w-4 h-4" />
           <span>Print</span>
@@ -153,14 +307,24 @@ export function ReceiptShareBar({
 
         <button
           type="button"
-          onClick={handleCopy}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2.5 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1D2621] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+          onClick={() => setQrOpen(true)}
+          className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
         >
-          {copied ? <Check className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" /> : <Copy className="w-4 h-4" />}
+          <QrCode className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
+          <span>Verify QR</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2.5 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+        >
+          {copied ? <Check className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" /> : <Copy className="w-4 h-4" />}
           <span>{copied ? 'Link copied' : 'Copy link'}</span>
         </button>
       </div>
       {shareError && <p className="text-xs text-[#B91C1C] dark:text-red-400">{shareError}</p>}
+      {qrOpen && <ReceiptQrModal receipt={receipt} onClose={() => setQrOpen(false)} />}
     </div>
   );
 }
@@ -209,12 +373,12 @@ export function VoidReceiptModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-xs p-4" role="dialog" aria-modal="true">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-6 shadow-2xl space-y-4"
+        className="w-full max-w-md rounded-[24px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-6 shadow-2xl space-y-4"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="label-caps text-[#B91C1C]">Void Receipt</p>
-            <h3 className="mt-1 font-display text-2xl text-[#121513] dark:text-[#F4F1EA]">
+            <p className="text-xs font-semibold text-[#B91C1C]">Void Receipt</p>
+            <h3 className="mt-1 font-display text-2xl font-semibold text-[#111827] dark:text-[#F3F4F6]">
               Mark {receipt.receiptNumber} as VOID
             </h3>
           </div>
@@ -222,19 +386,19 @@ export function VoidReceiptModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
           Financial records are never deleted. Voiding keeps {receipt.receiptNumber} visibly stamped{' '}
-          <strong className="text-[#121513] dark:text-[#F4F1EA]">VOID</strong> and posts an offsetting adjustment to your ledger.
+          <strong className="text-[#111827] dark:text-[#F3F4F6]">VOID</strong> and posts an offsetting adjustment to your ledger.
         </p>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Reason for voiding
           </label>
           <SpeechInput
@@ -251,14 +415,14 @@ export function VoidReceiptModal({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2 text-sm font-medium text-[#5C635D] dark:text-[#9BA39D]"
+            className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2 text-sm font-medium text-[#6B7280] dark:text-[#9CA3AF]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="min-h-[44px] rounded-xl bg-[#B91C1C] px-5 py-2 text-sm font-semibold text-white hover:bg-[#991B1B] disabled:opacity-60"
+            className="min-h-[44px] rounded-[10px] bg-[#B91C1C] px-5 py-2 text-sm font-semibold text-white hover:bg-[#991B1B] disabled:opacity-60"
           >
             {submitting ? 'Voiding…' : 'Confirm Void'}
           </button>
@@ -331,17 +495,17 @@ export function ReceiveBalanceModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-xs p-4" role="dialog" aria-modal="true">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-6 shadow-2xl space-y-4"
+        className="w-full max-w-md rounded-[24px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-6 shadow-2xl space-y-4"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Receive Balance</p>
-            <h3 className="mt-1 font-display text-2xl text-[#121513] dark:text-[#F4F1EA]">
+            <p className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">Receive Balance</p>
+            <h3 className="mt-1 font-display text-2xl font-semibold text-[#111827] dark:text-[#F3F4F6]">
               Payment for {receipt.receiptNumber}
             </h3>
-            <p className="mt-0.5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="mt-0.5 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               Balance due:{' '}
-              <span className="font-mono-num font-semibold text-[#121513] dark:text-[#F4F1EA]">
+              <span className="font-mono-num font-semibold text-[#111827] dark:text-[#F3F4F6]">
                 {formatKobo(receipt.balanceDueKobo, business.currency)}
               </span>
             </p>
@@ -350,7 +514,7 @@ export function ReceiveBalanceModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -358,11 +522,11 @@ export function ReceiveBalanceModal({
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Amount received</label>
+            <label className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Amount received</label>
             <button
               type="button"
               onClick={() => setAmountInput(formatKoboPlainInput(receipt.balanceDueKobo))}
-              className="text-xs font-medium text-[#064E3B] dark:text-[#10B981] hover:underline"
+              className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
             >
               Full balance
             </button>
@@ -373,12 +537,12 @@ export function ReceiveBalanceModal({
               inputMode="decimal"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-base font-semibold text-[#121513] dark:text-[#F4F1EA] min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-base font-semibold text-[#111827] dark:text-[#F3F4F6] min-h-[44px]"
             />
             <button
               type="button"
               onClick={() => setKeypadOpen(true)}
-              className="shrink-0 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] min-h-[44px]"
+              className="shrink-0 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] min-h-[44px]"
             >
               Keypad
             </button>
@@ -386,7 +550,7 @@ export function ReceiveBalanceModal({
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Payment Method
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -395,10 +559,10 @@ export function ReceiveBalanceModal({
                 key={method}
                 type="button"
                 onClick={() => setPaymentMethod(method)}
-                className={`min-h-[40px] rounded-xl border text-xs font-medium transition-colors ${
+                className={`min-h-[40px] rounded-[10px] border text-xs font-medium transition-colors ${
                   paymentMethod === method
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] text-[#111827] dark:text-[#F3F4F6]'
                 }`}
               >
                 {method}
@@ -409,13 +573,13 @@ export function ReceiveBalanceModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Received by
             </label>
             <SpeechInput value={soldBy} onChangeValue={setSoldBy} placeholder="Staff name (optional)" />
           </div>
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Note
             </label>
             <SpeechInput value={note} onChangeValue={setNote} placeholder="Optional note" />
@@ -428,14 +592,14 @@ export function ReceiveBalanceModal({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2 text-sm font-medium text-[#5C635D] dark:text-[#9BA39D]"
+            className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2 text-sm font-medium text-[#6B7280] dark:text-[#9CA3AF]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="min-h-[44px] rounded-xl bg-[#064E3B] px-5 py-2 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
+            className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-5 py-2 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
           >
             {submitting ? 'Issuing receipt…' : 'Issue Balance Receipt'}
           </button>

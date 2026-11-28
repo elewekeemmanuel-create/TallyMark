@@ -299,6 +299,8 @@ function ensureColumn(table: string, column: string, definition: string) {
 }
 
 ensureColumn('users', 'password_hash', 'TEXT');
+ensureColumn('businesses', 'signature_data_url', 'TEXT');
+ensureColumn('public_receipts', 'business_signature_data_url', 'TEXT');
 ensureColumn('businesses', 'close_day_reminder_time', "TEXT NOT NULL DEFAULT '19:00'");
 ensureColumn('businesses', 'tin_rc', "TEXT NOT NULL DEFAULT ''");
 ensureColumn('businesses', 'bank_accounts_json', "TEXT NOT NULL DEFAULT '[]'");
@@ -640,6 +642,20 @@ db.exec(`
   )
   BEGIN
     SELECT RAISE(ABORT, 'CLOSED_DAY_MUTATION_BLOCKED');
+  END;
+
+  CREATE TRIGGER IF NOT EXISTS trg_sqlite_public_receipt_signature_snapshot
+  AFTER INSERT ON public_receipts
+  WHEN NEW.business_signature_data_url IS NULL
+  BEGIN
+    UPDATE public_receipts
+    SET business_signature_data_url = (
+      SELECT b.signature_data_url
+      FROM receipts r
+      JOIN businesses b ON b.id = r.business_id
+      WHERE r.id = NEW.receipt_id
+    )
+    WHERE public_id = NEW.public_id;
   END;
 `);
 

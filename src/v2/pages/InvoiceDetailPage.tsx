@@ -78,6 +78,7 @@ export function InvoiceDetailPage({
   const [reasonText, setReasonText] = useState('');
   const [busyAction, setBusyAction] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [thermalPrintMode, setThermalPrintMode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -110,6 +111,34 @@ export function InvoiceDetailPage({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!thermalPrintMode) return;
+    let active = true;
+    const reset = () => {
+      if (active) setThermalPrintMode(false);
+    };
+    const mql =
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia('print')
+        : null;
+    const onMediaChange = (e: MediaQueryListEvent) => {
+      if (!e.matches) reset();
+    };
+    window.addEventListener('afterprint', reset, { once: true });
+    mql?.addEventListener?.('change', onMediaChange);
+
+    const rafId = window.requestAnimationFrame(() => {
+      window.print();
+    });
+
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener('afterprint', reset);
+      mql?.removeEventListener?.('change', onMediaChange);
+    };
+  }, [thermalPrintMode]);
 
   const showNotice = (msg: string) => {
     setNotice(msg);
@@ -241,7 +270,7 @@ export function InvoiceDetailPage({
   };
 
   if (loading) {
-    return <div className="py-16 text-center text-xs text-[#5C635D]">Loading invoice…</div>;
+    return <div className="py-16 text-center text-xs text-[#6B7280]">Loading invoice…</div>;
   }
 
   if (!invoice) {
@@ -310,7 +339,7 @@ export function InvoiceDetailPage({
         <div className="flex items-center gap-3">
           <Link
             to="/app/documents"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] hover:text-[#121513] dark:hover:text-white"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#111827] dark:hover:text-white"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Documents</span>
@@ -318,7 +347,7 @@ export function InvoiceDetailPage({
           {invoice.sourceQuoteId && (
             <Link
               to={`/app/quotes/${invoice.sourceQuoteId}`}
-              className="text-xs font-medium text-[#064E3B] dark:text-[#10B981] hover:underline"
+              className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
             >
               View source quote
             </Link>
@@ -330,7 +359,7 @@ export function InvoiceDetailPage({
             <>
               <Link
                 to={`/app/invoices/${invoice.id}/edit`}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-semibold min-h-[40px] inline-flex items-center"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-semibold min-h-[40px] inline-flex items-center"
               >
                 Edit draft
               </Link>
@@ -338,7 +367,7 @@ export function InvoiceDetailPage({
                 type="button"
                 disabled={busyAction}
                 onClick={handleSendDraft}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
+                className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px]"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Send invoice</span>
@@ -350,7 +379,7 @@ export function InvoiceDetailPage({
             <button
               type="button"
               onClick={openPaymentModal}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[42px]"
+              className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B] min-h-[42px]"
             >
               <Banknote className="w-4 h-4" />
               <span>Record payment</span>
@@ -361,7 +390,7 @@ export function InvoiceDetailPage({
             type="button"
             disabled={pdfBusy}
             onClick={handleDownloadPdf}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[42px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] disabled:opacity-60 min-h-[42px]"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{pdfBusy ? 'Preparing PDF…' : 'Download PDF'}</span>
@@ -373,9 +402,9 @@ export function InvoiceDetailPage({
                 href={`https://wa.me/?text=${whatsappText}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-semibold min-h-[42px]"
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-semibold min-h-[42px]"
               >
-                <Share2 className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#10B981]" />
+                <Share2 className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#6EE7B7]" />
                 <span>WhatsApp</span>
               </a>
 
@@ -384,20 +413,20 @@ export function InvoiceDetailPage({
                   type="button"
                   onClick={() => setMoreOpen((v) => !v)}
                   aria-label="More invoice actions"
-                  className="inline-flex items-center gap-1 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-xs font-semibold min-h-[42px]"
+                  className="inline-flex items-center gap-1 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-xs font-semibold min-h-[42px]"
                 >
                   <MoreHorizontal className="w-4 h-4" />
                   <span>More</span>
                 </button>
                 {moreOpen && (
-                  <div className="absolute right-0 mt-1.5 w-56 rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] shadow-lg py-1.5 z-30 text-xs">
+                  <div className="absolute right-0 mt-1.5 w-56 rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] shadow-lg py-1.5 z-30 text-xs">
                     <button
                       type="button"
                       onClick={() => {
                         setMoreOpen(false);
                         window.print();
                       }}
-                      className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center gap-2"
+                      className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center gap-2"
                     >
                       <Printer className="w-3.5 h-3.5" />
                       <span>Print invoice</span>
@@ -408,7 +437,7 @@ export function InvoiceDetailPage({
                         setMoreOpen(false);
                         handleCopyLink();
                       }}
-                      className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center gap-2"
+                      className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center gap-2"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>Copy public link</span>
@@ -419,7 +448,7 @@ export function InvoiceDetailPage({
                         setMoreOpen(false);
                         handleWebShare();
                       }}
-                      className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center gap-2"
+                      className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center gap-2"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       <span>Share via device</span>
@@ -429,7 +458,7 @@ export function InvoiceDetailPage({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setMoreOpen(false)}
-                      className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center gap-2"
+                      className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center gap-2"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       <span>Open public page</span>
@@ -437,7 +466,7 @@ export function InvoiceDetailPage({
                     <button
                       type="button"
                       onClick={handleRegenerateLink}
-                      className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center gap-2"
+                      className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center gap-2"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>Regenerate public link</span>
@@ -446,7 +475,7 @@ export function InvoiceDetailPage({
                       <button
                         type="button"
                         onClick={handleReissue}
-                        className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+                        className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
                       >
                         Reissue invoice (void + copy)
                       </button>
@@ -463,7 +492,7 @@ export function InvoiceDetailPage({
                             actionLabel: 'Write off & settle',
                           });
                         }}
-                        className="w-full px-3.5 py-2 text-left hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] text-[#B45309]"
+                        className="w-full px-3.5 py-2 text-left hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] text-[#B45309]"
                       >
                         Write off balance
                       </button>
@@ -494,20 +523,20 @@ export function InvoiceDetailPage({
       </div>
 
       {notice && (
-        <div className="no-print rounded-xl border border-[#064E3B]/30 bg-[#ECFDF5] dark:bg-emerald-950/30 p-3 text-xs font-medium text-[#064E3B] dark:text-emerald-300">
+        <div className="no-print rounded-[10px] border border-[#064E3B]/30 bg-[#ECFDF5] dark:bg-emerald-950/30 p-3 text-xs font-medium text-[#064E3B] dark:text-emerald-300">
           {notice}
         </div>
       )}
 
       {error && (
-        <div className="no-print rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3 text-xs text-[#B91C1C] dark:text-red-300">
+        <div className="no-print rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3 text-xs text-[#B91C1C] dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Pending Customer Payment Reports for this Invoice */}
       {pendingClaims.length > 0 && (
-        <section className="no-print rounded-2xl border border-[#B45309]/40 bg-[#FEF9EC] dark:bg-amber-950/25 p-4 sm:p-5 space-y-3">
+        <section className="no-print rounded-[20px] border border-[#B45309]/40 bg-amber-50 dark:bg-amber-950/25 p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="label-caps text-[#92400E] dark:text-amber-300">
@@ -519,7 +548,7 @@ export function InvoiceDetailPage({
             </div>
             <Link
               to="/app/claims"
-              className="text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:underline shrink-0"
+              className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline shrink-0"
             >
               All reports
             </Link>
@@ -529,15 +558,15 @@ export function InvoiceDetailPage({
             {pendingClaims.map((claim) => (
               <div
                 key={claim.id}
-                className="rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-3.5 space-y-3"
+                className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-3.5 space-y-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 text-xs">
                   <div>
                     <p className="font-semibold text-sm">
                       {claim.payerName}{' '}
-                      <span className="font-mono text-xs text-[#5C635D]">({claim.claimRef})</span>
+                      <span className="font-mono text-xs text-[#6B7280]">({claim.claimRef})</span>
                     </p>
-                    <p className="text-[#5C635D] dark:text-[#9BA39D]">
+                    <p className="text-[#6B7280] dark:text-[#9CA3AF]">
                       Reported {formatKobo(claim.amountKobo, invoice.currency)}
                       {claim.reference ? ` · Ref: ${claim.reference}` : ''}
                     </p>
@@ -554,16 +583,16 @@ export function InvoiceDetailPage({
                           setError(err?.message || 'Unable to open proof');
                         }
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] px-3 py-1.5 text-xs font-semibold"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-[#232D29] px-3 py-1.5 text-xs font-semibold"
                     >
-                      <Eye className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#10B981]" />
+                      <Eye className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#6EE7B7]" />
                       <span>View proof</span>
                     </button>
                   )}
                 </div>
 
                 {claim.duplicateWarning && (
-                  <div className="rounded-lg border border-[#B45309]/40 bg-[#FEF9EC] dark:bg-amber-950/30 p-2.5 flex items-start gap-2 text-xs text-[#92400E] dark:text-amber-300">
+                  <div className="rounded-lg border border-[#B45309]/40 bg-amber-50 dark:bg-amber-950/30 p-2.5 flex items-start gap-2 text-xs text-[#92400E] dark:text-amber-300">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>{claim.duplicateWarning.reason}</span>
                   </div>
@@ -571,7 +600,7 @@ export function InvoiceDetailPage({
 
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="block text-xs space-y-1 flex-1 min-w-[140px]">
-                    <span className="font-medium text-[#5C635D]">Confirmed amount (₦)</span>
+                    <span className="font-medium text-[#6B7280]">Confirmed amount (₦)</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -579,7 +608,7 @@ export function InvoiceDetailPage({
                       onChange={(e) =>
                         setClaimAmounts((prev) => ({ ...prev, [claim.id]: e.target.value }))
                       }
-                      className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs font-mono min-h-[40px]"
+                      className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs font-mono min-h-[40px]"
                     />
                   </label>
 
@@ -617,7 +646,7 @@ export function InvoiceDetailPage({
                         setClaimBusyId(null);
                       }
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white min-h-[40px] disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white min-h-[40px] disabled:opacity-60"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>{claimBusyId === claim.id ? 'Confirming…' : 'Confirm & issue receipt'}</span>
@@ -630,7 +659,7 @@ export function InvoiceDetailPage({
                       setRejectClaimReason('');
                       setRejectClaimTarget(claim);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#B91C1C]/35 px-3 py-2 text-xs font-semibold text-[#B91C1C] min-h-[40px]"
+                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#B91C1C]/35 px-3 py-2 text-xs font-semibold text-[#B91C1C] min-h-[40px]"
                   >
                     <XCircle className="w-3.5 h-3.5" />
                     <span>Reject</span>
@@ -643,18 +672,18 @@ export function InvoiceDetailPage({
       )}
 
       {/* Paper Invoice Snapshot */}
-      <InvoiceDocument invoice={previewDoc} />
+      <InvoiceDocument invoice={previewDoc} thermalPrint={thermalPrintMode} />
 
       {/* Payments Recorded on this Invoice */}
       {invoice.status !== 'DRAFT' && (
-        <section className="no-print rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+        <section className="no-print rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Payments recorded</h2>
             {isOpen && invoice.debtId && (
               <button
                 type="button"
                 onClick={openPaymentModal}
-                className="text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:underline"
+                className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
               >
                 + Record payment
               </button>
@@ -662,11 +691,11 @@ export function InvoiceDetailPage({
           </div>
 
           {payments.length === 0 ? (
-            <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               No payment recorded yet. Money will appear in your Cash Book once you record a payment.
             </p>
           ) : (
-            <div className="divide-y divide-[#EFEAD9] dark:divide-[#242D28]">
+            <div className="divide-y divide-gray-100 dark:divide-[#1F2925]">
               {payments.map((p) => (
                 <div key={p.id} className="py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
@@ -674,12 +703,12 @@ export function InvoiceDetailPage({
                       <span className="font-mono font-semibold">
                         {formatKobo(p.amountKobo, invoice.currency)}
                       </span>
-                      <span className="text-[#5C635D]">· {p.paymentMethod}</span>
+                      <span className="text-[#6B7280]">· {p.paymentMethod}</span>
                       {p.isVoided && (
                         <span className="font-semibold text-[#B91C1C]">VOID</span>
                       )}
                     </div>
-                    <p className="text-[#5C635D] dark:text-[#9BA39D]">
+                    <p className="text-[#6B7280] dark:text-[#9CA3AF]">
                       {formatLagosDateOnly(p.paymentDate)}
                       {p.receiptNumber ? ` · Receipt ${p.receiptNumber}` : ''}
                       {p.reference ? ` · Ref: ${p.reference}` : ''}
@@ -690,7 +719,7 @@ export function InvoiceDetailPage({
                     {p.receiptId && (
                       <Link
                         to={`/app/receipts/${p.receiptId}`}
-                        className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] px-2.5 py-1.5 text-xs font-medium"
+                        className="rounded-lg border border-gray-200 dark:border-[#232D29] px-2.5 py-1.5 text-xs font-medium"
                       >
                         View receipt
                       </Link>
@@ -729,12 +758,12 @@ export function InvoiceDetailPage({
         >
           <form
             onSubmit={handleRecordPayment}
-            className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"
+            className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4"
           >
             <div>
-              <p className="label-caps text-[#5C635D]">Record payment</p>
+              <p className="label-caps text-[#6B7280]">Record payment</p>
               <h2 className="font-display text-2xl mt-0.5">{invoice.invoiceNumber}</h2>
-              <p className="text-xs text-[#5C635D]">
+              <p className="text-xs text-[#6B7280]">
                 What&apos;s left: <strong className="font-mono">{formatKobo(invoice.balanceDueKobo, invoice.currency)}</strong>
               </p>
             </div>
@@ -747,7 +776,7 @@ export function InvoiceDetailPage({
                 required
                 value={payAmountText}
                 onChange={(e) => setPayAmountText(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-2.5 text-sm font-mono min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-2.5 text-sm font-mono min-h-[44px]"
               />
             </label>
 
@@ -757,7 +786,7 @@ export function InvoiceDetailPage({
                 <select
                   value={payMethod}
                   onChange={(e) => setPayMethod(e.target.value as PaymentMethod)}
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2.5 text-xs min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2.5 text-xs min-h-[44px]"
                 >
                   <option value="Transfer">Transfer</option>
                   <option value="Cash">Cash</option>
@@ -775,7 +804,7 @@ export function InvoiceDetailPage({
                   min={invoice.issueDate}
                   max={getLagosDateString()}
                   onChange={(e) => setPayDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2.5 text-xs font-mono min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2.5 text-xs font-mono min-h-[44px]"
                 />
               </label>
             </div>
@@ -788,7 +817,7 @@ export function InvoiceDetailPage({
                 onChange={(e) => setPayRef(e.target.value)}
                 placeholder="e.g. GTBank transfer ref"
                 maxLength={80}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2.5 text-xs min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2.5 text-xs min-h-[44px]"
               />
             </label>
 
@@ -796,14 +825,14 @@ export function InvoiceDetailPage({
               <button
                 type="submit"
                 disabled={paySaving}
-                className="flex-1 rounded-xl bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white min-h-[44px] disabled:opacity-60"
+                className="flex-1 rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-xs font-semibold text-white min-h-[44px] disabled:opacity-60"
               >
                 {paySaving ? 'Saving…' : 'Save payment & issue receipt'}
               </button>
               <button
                 type="button"
                 onClick={() => setPayOpen(false)}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2.5 text-xs font-medium min-h-[44px]"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2.5 text-xs font-medium min-h-[44px]"
               >
                 Cancel
               </button>
@@ -821,7 +850,7 @@ export function InvoiceDetailPage({
         >
           <form
             onSubmit={handleReasonConfirm}
-            className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"
+            className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4"
           >
             <h2 className="font-display text-2xl">{reasonModal.title}</h2>
             <label className="block text-xs space-y-1">
@@ -833,21 +862,21 @@ export function InvoiceDetailPage({
                 value={reasonText}
                 onChange={(e) => setReasonText(e.target.value)}
                 placeholder="Enter clear reason…"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs"
               />
             </label>
             <div className="flex items-center gap-2">
               <button
                 type="submit"
                 disabled={busyAction}
-                className="flex-1 rounded-xl bg-[#B91C1C] px-4 py-2.5 text-xs font-semibold text-white min-h-[44px] disabled:opacity-60"
+                className="flex-1 rounded-[10px] bg-[#B91C1C] px-4 py-2.5 text-xs font-semibold text-white min-h-[44px] disabled:opacity-60"
               >
                 {busyAction ? 'Processing…' : reasonModal.actionLabel}
               </button>
               <button
                 type="button"
                 onClick={() => setReasonModal(null)}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2.5 text-xs font-medium min-h-[44px]"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2.5 text-xs font-medium min-h-[44px]"
               >
                 Cancel
               </button>
@@ -865,7 +894,7 @@ export function InvoiceDetailPage({
           onClick={() => setProofModal(null)}
         >
           <div
-            className="w-full max-w-2xl rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 space-y-3 max-h-[90vh] flex flex-col"
+            className="w-full max-w-2xl rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 space-y-3 max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-2">
@@ -874,12 +903,12 @@ export function InvoiceDetailPage({
                 type="button"
                 onClick={() => setProofModal(null)}
                 aria-label="Close proof"
-                className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+                className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-auto rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-[#FAF8F3] dark:bg-[#111714] p-2 flex items-center justify-center min-h-[240px]">
+            <div className="flex-1 overflow-auto rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#111715] p-2 flex items-center justify-center min-h-[240px]">
               {proofModal.mime === 'application/pdf' ? (
                 <iframe
                   title={`Proof ${proofModal.claimRef}`}
@@ -929,12 +958,12 @@ export function InvoiceDetailPage({
                 setClaimBusyId(null);
               }
             }}
-            className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"
+            className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4"
           >
             <div>
-              <p className="label-caps text-[#5C635D]">Reject payment report</p>
+              <p className="label-caps text-[#6B7280]">Reject payment report</p>
               <h2 className="font-display text-2xl mt-0.5">{rejectClaimTarget.claimRef}</h2>
-              <p className="text-xs text-[#5C635D] mt-1">
+              <p className="text-xs text-[#6B7280] mt-1">
                 Kept private for your records only. The customer sees a neutral message.
               </p>
             </div>
@@ -948,21 +977,21 @@ export function InvoiceDetailPage({
                 value={rejectClaimReason}
                 onChange={(e) => setRejectClaimReason(e.target.value)}
                 placeholder="e.g. No transfer received matching this reference"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs"
               />
             </label>
             <div className="flex items-center gap-2">
               <button
                 type="submit"
                 disabled={claimBusyId === rejectClaimTarget.id}
-                className="flex-1 rounded-xl bg-[#B91C1C] px-4 py-2.5 text-xs font-semibold text-white min-h-[44px] disabled:opacity-60"
+                className="flex-1 rounded-[10px] bg-[#B91C1C] px-4 py-2.5 text-xs font-semibold text-white min-h-[44px] disabled:opacity-60"
               >
                 {claimBusyId === rejectClaimTarget.id ? 'Rejecting…' : 'Reject report'}
               </button>
               <button
                 type="button"
                 onClick={() => setRejectClaimTarget(null)}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2.5 text-xs font-medium min-h-[44px]"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2.5 text-xs font-medium min-h-[44px]"
               >
                 Cancel
               </button>
@@ -970,6 +999,18 @@ export function InvoiceDetailPage({
           </form>
         </div>
       )}
+
+      {/* Floating 80mm Thermal Print Button */}
+      <button
+        type="button"
+        onClick={() => setThermalPrintMode(true)}
+        aria-label="Print invoice (80mm thermal layout)"
+        title="Print 80mm thermal invoice"
+        className="no-print fixed bottom-24 md:bottom-6 right-4 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-[#064E3B] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:bg-[#04392B] active:scale-95 transition-all min-h-[48px]"
+      >
+        <Printer className="w-4 h-4 shrink-0" />
+        <span>Print</span>
+      </button>
     </div>
   );
 }

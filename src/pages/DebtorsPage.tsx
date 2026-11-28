@@ -136,15 +136,15 @@ function RecordDebtPaymentModal({
     >
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-6 shadow-2xl space-y-4"
+        className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#131917] p-6 shadow-2xl space-y-4"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Record Debt Payment</p>
+            <p className="label-caps text-[#064E3B] dark:text-[#6EE7B7]">Record Debt Payment</p>
             <h3 className="mt-1 font-display text-2xl">{group.customerName}</h3>
-            <p className="mt-0.5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="mt-0.5 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               {debt.referenceLabel} · Remaining:{' '}
-              <span className="font-mono-num font-semibold text-[#121513] dark:text-[#F4F1EA]">
+              <span className="font-mono-num font-semibold text-[#111827] dark:text-[#F3F4F6]">
                 {formatKobo(debt.balanceDueKobo, business.currency)}
               </span>
             </p>
@@ -153,7 +153,7 @@ function RecordDebtPaymentModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+            className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -161,11 +161,11 @@ function RecordDebtPaymentModal({
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Amount Paid</label>
+            <label className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Amount Paid</label>
             <button
               type="button"
               onClick={() => setAmountInput(formatKoboPlainInput(debt.balanceDueKobo))}
-              className="text-xs font-medium text-[#064E3B] dark:text-[#10B981] hover:underline"
+              className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
             >
               Full balance
             </button>
@@ -176,13 +176,13 @@ function RecordDebtPaymentModal({
               inputMode="decimal"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-base font-semibold min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-base font-semibold min-h-[44px]"
               required
             />
             <button
               type="button"
               onClick={() => setKeypadOpen(true)}
-              className="shrink-0 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 text-xs font-medium min-h-[44px]"
+              className="shrink-0 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 text-xs font-medium min-h-[44px]"
             >
               Keypad
             </button>
@@ -190,7 +190,7 @@ function RecordDebtPaymentModal({
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Payment Method
           </label>
           <div className="grid grid-cols-5 gap-1.5">
@@ -199,10 +199,10 @@ function RecordDebtPaymentModal({
                 key={method}
                 type="button"
                 onClick={() => setPaymentMethod(method)}
-                className={`min-h-[38px] rounded-xl border text-xs font-medium ${
+                className={`min-h-[38px] rounded-[10px] border text-xs font-medium ${
                   paymentMethod === method
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715]'
                 }`}
               >
                 {method}
@@ -213,18 +213,18 @@ function RecordDebtPaymentModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Payment Date
             </label>
             <input
               type="date"
               value={issuedDateLagos}
               onChange={(e) => setIssuedDateLagos(e.target.value)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-sm min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-sm min-h-[44px]"
             />
           </div>
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Received by
             </label>
             <SpeechInput value={soldBy} onChangeValue={setSoldBy} placeholder="Staff (optional)" />
@@ -232,7 +232,7 @@ function RecordDebtPaymentModal({
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Note (optional)
           </label>
           <SpeechInput value={note} onChangeValue={setNote} placeholder="Optional payment note" />
@@ -244,14 +244,14 @@ function RecordDebtPaymentModal({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2 text-sm font-medium text-[#5C635D] dark:text-[#9BA39D]"
+            className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2 text-sm font-medium text-[#6B7280] dark:text-[#9CA3AF]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="min-h-[44px] rounded-xl bg-[#064E3B] px-5 py-2 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
+            className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-5 py-2 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
           >
             {submitting ? 'Recording…' : 'Record & Issue Receipt'}
           </button>
@@ -403,15 +403,15 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Receivables &amp; Payables</p>
-          <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Receivables &amp; Payables</p>
+          <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
             Debtors &amp; Creditors
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
             to="/app/credit-sale"
-            className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
+            className="min-h-[44px] inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
           >
             <Plus className="w-4 h-4" />
             <span>New Credit Sale</span>
@@ -420,14 +420,14 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
       </div>
 
       {/* Tabs */}
-      <div className="inline-flex rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#F5F1E7] dark:bg-[#111714] p-1">
+      <div className="inline-flex rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F4F6F8] dark:bg-[#111715] p-1">
         <button
           type="button"
           onClick={() => setTab('debtors')}
           className={`min-h-[40px] rounded-lg px-4 text-xs font-semibold transition-colors ${
             tab === 'debtors'
               ? 'bg-[#064E3B] text-white'
-              : 'text-[#5C635D] dark:text-[#9BA39D]'
+              : 'text-[#6B7280] dark:text-[#9CA3AF]'
           }`}
         >
           Customers Owing ({debtors.length})
@@ -438,7 +438,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           className={`min-h-[40px] rounded-lg px-4 text-xs font-semibold transition-colors ${
             tab === 'creditors'
               ? 'bg-[#064E3B] text-white'
-              : 'text-[#5C635D] dark:text-[#9BA39D]'
+              : 'text-[#6B7280] dark:text-[#9CA3AF]'
           }`}
         >
           Suppliers We Owe ({creditors.filter((c) => c.status === 'UNPAID').length})
@@ -446,9 +446,9 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
       </div>
 
       {lastIssuedReceipt && (
-        <div className="rounded-xl border border-[#064E3B]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-[10px] border border-[#064E3B]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 text-sm">
-            <CheckCircle2 className="w-5 h-5 text-[#064E3B] dark:text-[#10B981] shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-[#064E3B] dark:text-[#6EE7B7] shrink-0" />
             <span>
               Payment recorded — Receipt{' '}
               <strong className="font-mono-num">{lastIssuedReceipt.receiptNumber}</strong> (
@@ -457,7 +457,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           </div>
           <Link
             to={`/app/receipts/${lastIssuedReceipt.id}`}
-            className="text-xs font-semibold text-[#064E3B] dark:text-[#10B981] underline"
+            className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] underline"
           >
             View / Share Receipt
           </Link>
@@ -465,7 +465,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
       )}
 
       {error && (
-        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300">
+        <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300">
           {error}
         </div>
       )}
@@ -475,7 +475,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           <div className="space-y-5">
             <Suspense
               fallback={
-                <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                   Loading unpaid balances…
                 </div>
               }
@@ -515,27 +515,27 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
             </Suspense>
 
             {recentPayments.length > 0 && (
-              <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-[#ECE6D8] dark:border-[#242D28]">
+              <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-gray-100 dark:border-[#1F2925]">
                   <h2 className="text-sm font-semibold">Recent Debt Payments Received</h2>
                 </div>
-                <div className="divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+                <div className="divide-y divide-gray-100 dark:divide-[#1F2925]">
                   {recentPayments.map((r) => (
                     <Link
                       key={r.id}
                       to={`/app/receipts/${r.id}`}
-                      className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+                      className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">
                           <span className="font-mono-num font-semibold">{r.receiptNumber}</span> ·{' '}
                           {r.customerName || 'Customer'}
                         </p>
-                        <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                        <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                           {formatLagosDateOnly(r.issuedDateLagos)} · {r.paymentMethod}
                         </p>
                       </div>
-                      <span className="font-mono-num text-sm font-semibold text-[#064E3B] dark:text-[#10B981]">
+                      <span className="font-mono-num text-sm font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
                         +{formatKobo(r.totalKobo, business.currency)}
                       </span>
                     </Link>
@@ -547,21 +547,21 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
         ) : (
         <div className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5">
-              <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Total Owed to Business</p>
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5">
+              <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Total Owed to Business</p>
               <p className="mt-2 font-mono-num text-3xl font-semibold text-[#B45309] dark:text-amber-400">
                 {loading ? '—' : formatKobo(totalOwedKobo, business.currency)}
               </p>
             </div>
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 flex items-center">
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 flex items-center">
               <div className="relative w-full">
-                <Search className="w-4 h-4 text-[#8B918B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search debtor by name, phone, or item…"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] pl-10 pr-3.5 py-2.5 text-sm min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] pl-10 pr-3.5 py-2.5 text-sm min-h-[44px]"
                 />
               </div>
             </div>
@@ -570,16 +570,16 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-24 rounded-2xl bg-[#F3EFE6] dark:bg-[#1B231F] animate-pulse" />
+                <div key={i} className="h-24 rounded-[20px] bg-[#F4F6F8] dark:bg-[#1A221F] animate-pulse" />
               ))}
             </div>
           ) : filteredDebtors.length === 0 ? (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-2">
-              <div className="mx-auto w-11 h-11 rounded-2xl bg-[#F3EFE6] dark:bg-[#1B231F] flex items-center justify-center text-[#064E3B] dark:text-[#10B981]">
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-2">
+              <div className="mx-auto w-11 h-11 rounded-[20px] bg-[#F4F6F8] dark:bg-[#1A221F] flex items-center justify-center text-[#064E3B] dark:text-[#6EE7B7]">
                 <Users className="w-5 h-5" />
               </div>
               <p className="font-display text-2xl">No customers owe right now</p>
-              <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
                 Part-paid receipts and credit sales automatically appear here until settled.
               </p>
             </div>
@@ -588,19 +588,19 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
               {filteredDebtors.map((group) => (
                 <div
                   key={group.customerKey}
-                  className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden"
+                  className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] overflow-hidden"
                 >
-                  <div className="px-5 py-4 border-b border-[#ECE6D8] dark:border-[#242D28] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="px-5 py-4 border-b border-gray-100 dark:border-[#1F2925] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="text-base font-semibold">{group.customerName}</h2>
                         {group.customerPhone && (
-                          <span className="font-mono-num text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                          <span className="font-mono-num text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                             {group.customerPhone}
                           </span>
                         )}
                       </div>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                         <Clock className="w-3.5 h-3.5" />
                         <span>
                           Oldest debt:{' '}
@@ -613,7 +613,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-left sm:text-right">
-                        <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Total Owed</p>
+                        <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Total Owed</p>
                         <p className="font-mono-num text-lg font-semibold text-[#B45309] dark:text-amber-400">
                           {formatKobo(group.totalOwedKobo, business.currency)}
                         </p>
@@ -622,7 +622,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                         href={buildDebtorReminderUrl(business, group)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border border-[#064E3B] dark:border-[#10B981] px-3 py-2 text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:bg-[#064E3B] hover:text-white transition-colors whitespace-nowrap"
+                        className="min-h-[40px] inline-flex items-center gap-1.5 rounded-[10px] border border-[#064E3B] dark:border-[#10B981] px-3 py-2 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:bg-[#064E3B] hover:text-white transition-colors whitespace-nowrap"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
                         <span>Remind</span>
@@ -630,7 +630,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                     </div>
                   </div>
 
-                  <div className="divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+                  <div className="divide-y divide-gray-100 dark:divide-[#1F2925]">
                     {group.debts.map((debt) => (
                       <div
                         key={`${debt.debtKind}-${debt.debtId}`}
@@ -638,15 +638,15 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="font-mono-num font-semibold text-xs text-[#064E3B] dark:text-[#10B981]">
+                            <span className="font-mono-num font-semibold text-xs text-[#064E3B] dark:text-[#6EE7B7]">
                               {debt.referenceLabel}
                             </span>
                             <span className="truncate font-medium">{debt.description}</span>
                           </div>
-                          <p className="mt-0.5 text-xs text-[#5C635D] dark:text-[#9BA39D] font-mono-num">
+                          <p className="mt-0.5 text-xs text-[#6B7280] dark:text-[#9CA3AF] font-mono-num">
                             Total {formatKobo(debt.totalKobo, business.currency)} · Paid{' '}
                             {formatKobo(debt.amountPaidKobo, business.currency)} · Owing{' '}
-                            <strong className="text-[#121513] dark:text-[#F4F1EA]">
+                            <strong className="text-[#111827] dark:text-[#F3F4F6]">
                               {formatKobo(debt.balanceDueKobo, business.currency)}
                             </strong>
                             {debt.dueDate ? ` · Due ${debt.dueDate}` : ''}
@@ -655,7 +655,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                         <button
                           type="button"
                           onClick={() => setPayModal({ group, debt })}
-                          className="shrink-0 min-h-[40px] rounded-xl bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#04392B] whitespace-nowrap"
+                          className="shrink-0 min-h-[40px] rounded-[10px] bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#04392B] whitespace-nowrap"
                         >
                           Record Payment
                         </button>
@@ -668,27 +668,27 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           )}
 
           {recentPayments.length > 0 && (
-            <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-[#ECE6D8] dark:border-[#242D28]">
+            <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-gray-100 dark:border-[#1F2925]">
                 <h2 className="text-sm font-semibold">Recent Debt Payments Received</h2>
               </div>
-              <div className="divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+              <div className="divide-y divide-gray-100 dark:divide-[#1F2925]">
                 {recentPayments.map((r) => (
                   <Link
                     key={r.id}
                     to={`/app/receipts/${r.id}`}
-                    className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+                    className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">
                         <span className="font-mono-num font-semibold">{r.receiptNumber}</span> ·{' '}
                         {r.customerName || 'Customer'}
                       </p>
-                      <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                      <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                         {formatLagosDateOnly(r.issuedDateLagos)} · {r.paymentMethod}
                       </p>
                     </div>
-                    <span className="font-mono-num text-sm font-semibold text-[#064E3B] dark:text-[#10B981]">
+                    <span className="font-mono-num text-sm font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
                       +{formatKobo(r.totalKobo, business.currency)}
                     </span>
                   </Link>
@@ -700,9 +700,9 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
         )
       ) : (
         <div className="space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5">
             <div>
-              <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Unpaid Supplier Bills</p>
+              <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Unpaid Supplier Bills</p>
               <p className="mt-1 font-mono-num text-3xl font-semibold">
                 {formatKobo(unpaidCreditorsTotal, business.currency)}
               </p>
@@ -710,7 +710,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
             <button
               type="button"
               onClick={() => setShowAddCreditor((v) => !v)}
-              className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
+              className="min-h-[44px] inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
             >
               <Plus className="w-4 h-4" />
               <span>Add Supplier Bill</span>
@@ -720,12 +720,12 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           {showAddCreditor && (
             <form
               onSubmit={handleAddCreditor}
-              className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4"
+              className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4"
             >
               <h2 className="font-display text-2xl">Add Creditor / Supplier Bill</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                  <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                     Supplier Name *
                   </label>
                   <SpeechInput
@@ -736,7 +736,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                   />
                 </div>
                 <div>
-                  <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                  <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                     Phone (optional)
                   </label>
                   <input
@@ -744,11 +744,11 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                     value={supPhone}
                     onChange={(e) => setSupPhone(e.target.value)}
                     placeholder="0803 000 0000"
-                    className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+                    className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
                   />
                 </div>
                 <div>
-                  <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                  <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                     Amount Owed *
                   </label>
                   <div className="flex gap-2">
@@ -758,31 +758,31 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                       value={supAmtInput}
                       onChange={(e) => setSupAmtInput(e.target.value)}
                       placeholder="0.00"
-                      className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm font-semibold min-h-[44px]"
+                      className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm font-semibold min-h-[44px]"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setSupKeypadOpen(true)}
-                      className="shrink-0 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 text-xs font-medium min-h-[44px]"
+                      className="shrink-0 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 text-xs font-medium min-h-[44px]"
                     >
                       Keypad
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                  <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                     Due Date (optional)
                   </label>
                   <input
                     type="date"
                     value={supDue}
                     onChange={(e) => setSupDue(e.target.value)}
-                    className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+                    className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                  <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                     What we owe for
                   </label>
                   <SpeechInput
@@ -796,14 +796,14 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                 <button
                   type="button"
                   onClick={() => setShowAddCreditor(false)}
-                  className="min-h-[42px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 text-xs font-medium"
+                  className="min-h-[42px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 text-xs font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={savingSup}
-                  className="min-h-[42px] rounded-xl bg-[#064E3B] px-5 text-xs font-semibold text-white"
+                  className="min-h-[42px] rounded-[10px] bg-[#064E3B] px-5 text-xs font-semibold text-white"
                 >
                   {savingSup ? 'Saving…' : 'Save Supplier Bill'}
                 </button>
@@ -812,11 +812,11 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
           )}
 
           {creditors.length === 0 ? (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center text-sm text-[#5C635D] dark:text-[#9BA39D]">
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center text-sm text-[#6B7280] dark:text-[#9CA3AF]">
               No supplier bills logged yet. Track what your business owes suppliers here.
             </div>
           ) : (
-            <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+            <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
               {creditors.map((c) => (
                 <div
                   key={c.id}
@@ -828,14 +828,14 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                       <span
                         className={`text-[11px] font-semibold uppercase ${
                           c.status === 'PAID'
-                            ? 'text-[#064E3B] dark:text-[#10B981]'
+                            ? 'text-[#064E3B] dark:text-[#6EE7B7]'
                             : 'text-[#B45309] dark:text-amber-400'
                         }`}
                       >
                         {c.status}
                       </span>
                     </div>
-                    <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                    <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                       {c.description || 'Supplier invoice'}
                       {c.dueDate ? ` · Due ${c.dueDate}` : ''}
                       {c.phone ? ` · ${c.phone}` : ''}
@@ -849,7 +849,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                       <button
                         type="button"
                         onClick={() => setMarkPaidTarget(c)}
-                        className="min-h-[38px] rounded-xl bg-[#064E3B] px-3 text-xs font-semibold text-white hover:bg-[#04392B]"
+                        className="min-h-[38px] rounded-[10px] bg-[#064E3B] px-3 text-xs font-semibold text-white hover:bg-[#04392B]"
                       >
                         Mark Paid
                       </button>
@@ -858,7 +858,7 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                       type="button"
                       onClick={() => handleDeleteCreditor(c.id)}
                       aria-label="Delete creditor"
-                      className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] hover:text-[#B91C1C]"
+                      className="min-w-[38px] min-h-[38px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] text-[#6B7280] hover:text-[#B91C1C]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -895,11 +895,11 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
         >
           <form
             onSubmit={handleConfirmMarkPaid}
-            className="w-full max-w-md rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-6 shadow-2xl space-y-4"
+            className="w-full max-w-md rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#131917] p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Settle Supplier Bill</p>
+                <p className="label-caps text-[#064E3B] dark:text-[#6EE7B7]">Settle Supplier Bill</p>
                 <h3 className="mt-1 font-display text-2xl">{markPaidTarget.supplierName}</h3>
                 <p className="text-sm font-mono-num font-semibold mt-1">
                   {formatKobo(markPaidTarget.amountKobo, business.currency)}
@@ -908,14 +908,14 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
               <button
                 type="button"
                 onClick={() => setMarkPaidTarget(null)}
-                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F]"
+                className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div>
-              <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+              <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                 Paid With
               </label>
               <div className="grid grid-cols-5 gap-1.5">
@@ -924,10 +924,10 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
                     key={m}
                     type="button"
                     onClick={() => setPaidMethod(m)}
-                    className={`min-h-[38px] rounded-xl border text-xs font-medium ${
+                    className={`min-h-[38px] rounded-[10px] border text-xs font-medium ${
                       paidMethod === m
                         ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                        : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714]'
+                        : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715]'
                     }`}
                   >
                     {m}
@@ -950,14 +950,14 @@ export function DebtorsPage({ business }: { business: BusinessProfile }) {
               <button
                 type="button"
                 onClick={() => setMarkPaidTarget(null)}
-                className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 text-sm font-medium"
+                className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 text-sm font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={markingPaid}
-                className="min-h-[44px] rounded-xl bg-[#064E3B] px-5 text-sm font-semibold text-white"
+                className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-5 text-sm font-semibold text-white"
               >
                 {markingPaid ? 'Saving…' : 'Confirm Paid'}
               </button>

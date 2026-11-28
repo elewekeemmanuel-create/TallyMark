@@ -4,7 +4,7 @@ import type { ReceiptStatus } from '../shared/schemas';
 export function TallymarkEmblem({
   className = 'w-6 h-6',
   strokeColor = '#064E3B',
-  slashColor = '#B89B6A',
+  slashColor = '#10B981',
 }: {
   className?: string;
   strokeColor?: string;
@@ -38,21 +38,21 @@ export function TallymarkWordmark({
   const iconCls = size === 'lg' ? 'w-7 h-7' : size === 'sm' ? 'w-5 h-5' : 'w-6 h-6';
   const textCls =
     size === 'lg'
-      ? 'text-[28px] leading-none'
+      ? 'text-[24px] leading-none'
       : size === 'sm'
-      ? 'text-[20px] leading-none'
-      : 'text-[24px] leading-none';
+      ? 'text-[17px] leading-none'
+      : 'text-[20px] leading-none';
 
   return (
     <span className="inline-flex items-center gap-2 whitespace-nowrap shrink-0 select-none">
       <TallymarkEmblem
         className={iconCls}
-        strokeColor={inverted ? '#FAF8F3' : 'currentColor'}
-        slashColor={inverted ? '#D6B982' : '#B89B6A'}
+        strokeColor={inverted ? '#FFFFFF' : '#064E3B'}
+        slashColor={inverted ? '#6EE7B7' : '#059669'}
       />
       <span
-        className={`font-display font-normal tracking-[-0.02em] ${textCls} ${
-          inverted ? 'text-[#FAF8F3]' : 'text-[#121513] dark:text-[#F4F1EA]'
+        className={`font-semibold tracking-[-0.025em] ${textCls} ${
+          inverted ? 'text-white' : 'text-[#111827] dark:text-[#F3F4F6]'
         }`}
       >
         Tallymark

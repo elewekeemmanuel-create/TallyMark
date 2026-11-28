@@ -6,8 +6,9 @@ import {
   formatLagosDateTime,
   koboToWords,
 } from '../shared/money';
-import type { ReceiptTemplate } from '../shared/schemas';
+import { sanitizeRasterImageDataUrl, type ReceiptTemplate } from '../shared/schemas';
 import type { BusinessProfile, PublicReceiptRecord, ReceiptRecord } from '../shared/types';
+import { Link } from '../lib/router';
 import { RubberStamp, TallymarkEmblem } from './TallymarkLogo';
 
 export function receiptToPublicPreview(
@@ -21,6 +22,7 @@ export function receiptToPublicPreview(
     parentReceiptNumber: receipt.parentReceiptNumber,
     businessName: business.name,
     businessLogoDataUrl: business.logoDataUrl,
+    businessSignatureDataUrl: business.signatureDataUrl ?? null,
     businessAddress: business.address,
     businessPhone: business.phone,
     businessEmail: business.email,
@@ -85,6 +87,12 @@ export function ReceiptTemplateView({
   const qrUrl = useQrDataUrl(receipt.publicId);
   const brandColor = receipt.brandColor || '#064E3B';
   const words = koboToWords(receipt.totalKobo, receipt.currency);
+  const safeSignatureUrl = sanitizeRasterImageDataUrl(receipt.businessSignatureDataUrl);
+  const hasRealPublicLink =
+    Boolean(receipt.publicId) &&
+    receipt.publicId !== 'live-preview' &&
+    receipt.publicId !== 'demo-lekki-0042';
+  const verifyPath = hasRealPublicLink ? `/r/${receipt.publicId}` : null;
 
   if (template === 'compact') {
     return (
@@ -151,14 +159,14 @@ export function ReceiptTemplateView({
           {receipt.items.map((item, idx) => (
             <div key={`${item.description}-${idx}`} className="text-[12.5px]">
               <div className="font-medium text-[#121513]">{item.description}</div>
-              <div className="flex justify-between font-mono-num text-[12px] text-[#5C635D]">
-                <span>
+              <div className="flex items-baseline justify-between gap-3 font-mono-num text-[12px] text-[#5C635D]">
+                <span className="min-w-0">
                   {item.qty} × {formatKobo(item.unitPriceKobo, receipt.currency)}
                   {item.discountKobo > 0
                     ? ` (−${formatKobo(item.discountKobo, receipt.currency)})`
                     : ''}
                 </span>
-                <span className="font-semibold text-[#121513]">
+                <span className="font-semibold text-[#121513] shrink-0 whitespace-nowrap">
                   {formatKobo(item.lineTotalKobo, receipt.currency)}
                 </span>
               </div>
@@ -219,14 +227,57 @@ export function ReceiptTemplateView({
           </div>
         )}
 
-        <div className="mt-4 flex flex-col items-center gap-3">
+        {/* Issuer & Customer Signatures (80mm compact) */}
+        <div className="mt-4 pt-3 border-t border-dashed border-[#C9B99A] grid grid-cols-2 gap-3 text-center">
+          <div>
+            <div className="h-9 flex items-end justify-center pb-1">
+              {safeSignatureUrl ? (
+                <img
+                  src={safeSignatureUrl}
+                  alt={`${receipt.businessName} authorized signature`}
+                  className="max-h-8 max-w-[115px] object-contain mix-blend-multiply"
+                />
+              ) : null}
+            </div>
+            <div className="border-t border-[#9C927E] pt-1 text-[10px] font-medium text-[#5C635D]">
+              Issuer Sign
+            </div>
+          </div>
+          <div>
+            <div className="h-9 pb-1" aria-label="Customer signature space" />
+            <div className="border-t border-[#9C927E] pt-1 text-[10px] font-medium text-[#5C635D]">
+              Customer Sign
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col items-center gap-2.5">
           <RubberStamp status={receipt.status} compact />
           {qrUrl && (
-            <img
-              src={qrUrl}
-              alt="Receipt verification QR code"
-              className="h-20 w-20 rounded border border-[#E5DEC9] bg-white p-1"
-            />
+            <div className="flex flex-col items-center gap-1">
+              {verifyPath ? (
+                <Link
+                  to={verifyPath}
+                  aria-label="Open public receipt verification page"
+                  className="inline-block rounded border border-[#E5DEC9] bg-white p-1 hover:border-[#064E3B] transition-colors"
+                >
+                  <img
+                    src={qrUrl}
+                    alt="Receipt verification QR code"
+                    className="h-20 w-20"
+                  />
+                </Link>
+              ) : (
+                <img
+                  src={qrUrl}
+                  alt="Receipt verification QR code"
+                  className="h-20 w-20 rounded border border-[#E5DEC9] bg-white p-1"
+                />
+              )}
+              <span className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: brandColor }}>
+                Scan QR to verify
+              </span>
+            </div>
           )}
           <div className="flex items-center gap-1.5 text-[11px] text-[#5C635D]">
             <TallymarkEmblem className="w-3.5 h-3.5" strokeColor={brandColor} />
@@ -323,11 +374,11 @@ export function ReceiptTemplateView({
                         </div>
                       )}
                     </td>
-                    <td className="py-2.5 px-2 text-right font-mono-num">{item.qty}</td>
-                    <td className="py-2.5 px-2 text-right font-mono-num">
+                    <td className="py-2.5 px-2 text-right font-mono-num whitespace-nowrap">{item.qty}</td>
+                    <td className="py-2.5 px-3 text-right font-mono-num whitespace-nowrap">
                       {formatKobo(item.unitPriceKobo, receipt.currency)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono-num font-semibold">
+                    <td className="py-2.5 pl-4 pr-3 text-right font-mono-num font-semibold whitespace-nowrap">
                       {formatKobo(item.lineTotalKobo, receipt.currency)}
                     </td>
                   </tr>
@@ -399,21 +450,75 @@ export function ReceiptTemplateView({
             </div>
           )}
 
-          {/* Footer with QR + Tallymark signature */}
+          {/* Issuer & Customer Signatures */}
+          <div className="mt-6 pt-5 border-t border-[#E5DEC9] grid grid-cols-2 gap-6 sm:gap-10">
+            <div>
+              <div className="h-14 flex items-end justify-start pb-1.5">
+                {safeSignatureUrl ? (
+                  <img
+                    src={safeSignatureUrl}
+                    alt={`${receipt.businessName} authorized signature`}
+                    className="max-h-12 max-w-[190px] object-contain object-left mix-blend-multiply"
+                  />
+                ) : null}
+              </div>
+              <div className="border-t border-[#C9B99A] pt-1.5">
+                <p className="label-caps text-[#5C635D]">Authorized Signature</p>
+                <p className="text-[11px] font-medium text-[#121513] truncate">
+                  {receipt.businessName}
+                </p>
+              </div>
+            </div>
+            <div>
+              <div className="h-14 pb-1.5" aria-label="Customer signature space" />
+              <div className="border-t border-[#C9B99A] pt-1.5">
+                <p className="label-caps text-[#5C635D]">Customer Signature</p>
+                <p className="text-[11px] font-medium text-[#121513] truncate">
+                  {receipt.customerName || 'Customer'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer with Verification QR + Tallymark signature */}
           <div className="mt-6 pt-4 border-t border-[#D8CEB8] flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs text-[#5C635D]">
-              <TallymarkEmblem className="w-4 h-4" strokeColor={brandColor} />
+              <TallymarkEmblem className="w-4 h-4 shrink-0" strokeColor={brandColor} />
               <span>
                 Issued with <strong className="text-[#121513]">Tallymark</strong> ·{' '}
                 {formatLagosDateTime(receipt.issuedAt)}
               </span>
             </div>
             {qrUrl && (
-              <img
-                src={qrUrl}
-                alt="Receipt QR code"
-                className="h-14 w-14 rounded border border-[#E5DEC9] bg-white p-0.5 shrink-0"
-              />
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div className="text-right">
+                  <p className="label-caps text-[10px]" style={{ color: brandColor }}>
+                    Scan to verify
+                  </p>
+                  <p className="text-[10.5px] text-[#5C635D]">
+                    Authenticate online
+                  </p>
+                </div>
+                {verifyPath ? (
+                  <Link
+                    to={verifyPath}
+                    aria-label="Open public receipt verification page"
+                    className="inline-block rounded border border-[#E5DEC9] bg-white p-0.5 hover:border-[#064E3B] transition-colors shrink-0"
+                  >
+                    <img
+                      src={qrUrl}
+                      alt="Receipt verification QR code"
+                      className="h-15 w-15"
+                    />
+                  </Link>
+                ) : (
+                  <img
+                    src={qrUrl}
+                    alt="Receipt verification QR code"
+                    className="h-15 w-15 rounded border border-[#E5DEC9] bg-white p-0.5 shrink-0"
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -516,11 +621,11 @@ export function ReceiptTemplateView({
                       </div>
                     )}
                   </td>
-                  <td className="py-3 px-2 text-right font-mono-num text-[#5C635D]">{item.qty}</td>
-                  <td className="py-3 px-2 text-right font-mono-num text-[#5C635D]">
+                  <td className="py-3 px-2 text-right font-mono-num text-[#5C635D] whitespace-nowrap">{item.qty}</td>
+                  <td className="py-3 px-3 text-right font-mono-num text-[#5C635D] whitespace-nowrap">
                     {formatKobo(item.unitPriceKobo, receipt.currency)}
                   </td>
-                  <td className="py-3 pl-2 text-right font-mono-num font-semibold text-[#121513]">
+                  <td className="py-3 pl-4 text-right font-mono-num font-semibold text-[#121513] whitespace-nowrap">
                     {formatKobo(item.lineTotalKobo, receipt.currency)}
                   </td>
                 </tr>
@@ -592,21 +697,75 @@ export function ReceiptTemplateView({
           </div>
         )}
 
-        {/* Footer */}
+        {/* Issuer & Customer Signatures */}
+        <div className="mt-6 pt-5 border-t border-[#ECE6D8] grid grid-cols-2 gap-6 sm:gap-10">
+          <div>
+            <div className="h-14 flex items-end justify-start pb-1.5">
+              {safeSignatureUrl ? (
+                <img
+                  src={safeSignatureUrl}
+                  alt={`${receipt.businessName} authorized signature`}
+                  className="max-h-12 max-w-[190px] object-contain object-left mix-blend-multiply"
+                />
+              ) : null}
+            </div>
+            <div className="border-t border-[#D4CCB8] pt-1.5">
+              <p className="label-caps text-[#5C635D]">Authorized Signature</p>
+              <p className="text-[11px] font-medium text-[#121513] truncate">
+                {receipt.businessName}
+              </p>
+            </div>
+          </div>
+          <div>
+            <div className="h-14 pb-1.5" aria-label="Customer signature space" />
+            <div className="border-t border-[#D4CCB8] pt-1.5">
+              <p className="label-caps text-[#5C635D]">Customer Signature</p>
+              <p className="text-[11px] font-medium text-[#121513] truncate">
+                {receipt.customerName || 'Customer'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer with Verification QR */}
         <div className="mt-6 pt-4 border-t border-[#ECE6D8] flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-[#5C635D]">
-            <TallymarkEmblem className="w-4 h-4" strokeColor={brandColor} />
+            <TallymarkEmblem className="w-4 h-4 shrink-0" strokeColor={brandColor} />
             <span>
               Issued via <strong className="text-[#121513]">Tallymark</strong> ·{' '}
               {formatLagosDateTime(receipt.issuedAt)}
             </span>
           </div>
           {qrUrl && (
-            <img
-              src={qrUrl}
-              alt="Verify receipt QR code"
-              className="h-14 w-14 rounded-lg border border-[#ECE6D8] bg-white p-0.5 shrink-0"
-            />
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="text-right">
+                <p className="label-caps text-[10px]" style={{ color: brandColor }}>
+                  Scan to verify
+                </p>
+                <p className="text-[10.5px] text-[#5C635D]">
+                  Authenticate online
+                </p>
+              </div>
+              {verifyPath ? (
+                <Link
+                  to={verifyPath}
+                  aria-label="Open public receipt verification page"
+                  className="inline-block rounded-lg border border-[#ECE6D8] bg-white p-0.5 hover:border-[#064E3B] transition-colors shrink-0"
+                >
+                  <img
+                    src={qrUrl}
+                    alt="Verify receipt QR code"
+                    className="h-15 w-15"
+                  />
+                </Link>
+              ) : (
+                <img
+                  src={qrUrl}
+                  alt="Verify receipt QR code"
+                  className="h-15 w-15 rounded-lg border border-[#ECE6D8] bg-white p-0.5 shrink-0"
+                />
+              )}
+            </div>
           )}
         </div>
       </div>

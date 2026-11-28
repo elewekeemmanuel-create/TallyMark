@@ -68,9 +68,9 @@ export function PWAInstallButton({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         onClick={install}
-        className="inline-flex items-center gap-2 rounded-lg border border-[#D8CEB8] dark:border-[#2C3731] bg-white dark:bg-[#1B231F] px-3 py-2 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#232D28] transition-colors whitespace-nowrap shrink-0 min-h-[40px]"
+        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#1A221F] px-3 py-2 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#232D29] transition-colors whitespace-nowrap shrink-0 min-h-[40px]"
       >
-        <Download className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+        <Download className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
         <span>{compact ? 'Install' : 'Install App'}</span>
       </button>
     );
@@ -82,24 +82,24 @@ export function PWAInstallButton({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           onClick={() => setShowIOSGuide(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-[#D8CEB8] dark:border-[#2C3731] bg-white dark:bg-[#1B231F] px-3 py-2 text-xs font-medium text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#232D28] transition-colors whitespace-nowrap shrink-0 min-h-[40px]"
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#1A221F] px-3 py-2 text-xs font-medium text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#232D29] transition-colors whitespace-nowrap shrink-0 min-h-[40px]"
         >
-          <Download className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+          <Download className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
           <span>Install on iOS</span>
         </button>
 
         {showIOSGuide && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="w-full max-w-sm rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#151B18] p-6 shadow-xl">
-              <h3 className="font-display text-2xl text-[#121513] dark:text-[#F4F1EA]">
+            <div className="w-full max-w-sm rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#131917] p-6 shadow-xl">
+              <h3 className="font-display text-2xl text-[#111827] dark:text-[#F3F4F6]">
                 Add Tallymark to Home Screen
               </h3>
-              <ol className="mt-3 space-y-2 text-sm text-[#5C635D] dark:text-[#9BA39D] list-decimal list-inside">
+              <ol className="mt-3 space-y-2 text-sm text-[#6B7280] dark:text-[#9CA3AF] list-decimal list-inside">
                 <li>
-                  Tap the <strong className="text-[#121513] dark:text-[#F4F1EA]">Share</strong> icon in Safari.
+                  Tap the <strong className="text-[#111827] dark:text-[#F3F4F6]">Share</strong> icon in Safari.
                 </li>
                 <li>
-                  Scroll down and tap <strong className="text-[#121513] dark:text-[#F4F1EA]">Add to Home Screen</strong>.
+                  Scroll down and tap <strong className="text-[#111827] dark:text-[#F3F4F6]">Add to Home Screen</strong>.
                 </li>
               </ol>
               <button

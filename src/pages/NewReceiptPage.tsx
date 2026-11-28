@@ -233,6 +233,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
       parentReceiptNumber: null,
       businessName: business.name,
       businessLogoDataUrl: business.logoDataUrl,
+      businessSignatureDataUrl: business.signatureDataUrl ?? null,
       businessAddress: business.address,
       businessPhone: business.phone,
       businessEmail: business.email,
@@ -348,15 +349,15 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
     const publicPreview = receiptToPublicPreview(issuedReceipt, business);
     return (
       <div className="space-y-6">
-        <div className="no-print rounded-2xl border border-[#064E3B]/30 bg-white dark:bg-[#151B18] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="no-print rounded-[20px] border border-[#064E3B]/30 bg-white dark:bg-[#131917] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-6 h-6 text-[#064E3B] dark:text-[#10B981] shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-6 h-6 text-[#064E3B] dark:text-[#6EE7B7] shrink-0 mt-0.5" />
             <div>
-              <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Receipt Issued</p>
-              <h1 className="mt-0.5 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+              <p className="label-caps text-[#064E3B] dark:text-[#6EE7B7]">Receipt Issued</p>
+              <h1 className="mt-0.5 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
                 {issuedReceipt.receiptNumber} · {formatKobo(issuedReceipt.totalKobo, business.currency)}
               </h1>
-              <p className="mt-1 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="mt-1 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                 Saved to your ledger. Share with your customer on WhatsApp or download PDF.
               </p>
             </div>
@@ -366,13 +367,13 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
             <button
               type="button"
               onClick={() => setIssuedReceipt(null)}
-              className="min-h-[44px] rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
+              className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B]"
             >
               Issue Another
             </button>
             <Link
               to={`/app/receipts/${issuedReceipt.id}`}
-              className="min-h-[44px] inline-flex items-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2 text-xs font-medium"
+              className="min-h-[44px] inline-flex items-center rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2 text-xs font-medium"
             >
               Details
             </Link>
@@ -383,7 +384,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
           <ReceiptShareBar receipt={publicPreview} />
         </div>
 
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-[#F3EFE6]/60 dark:bg-[#111714] p-4 sm:p-6">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F4F6F8]/60 dark:bg-[#111715] p-4 sm:p-6">
           <ReceiptTemplateView receipt={publicPreview} />
         </div>
       </div>
@@ -394,10 +395,10 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
             Next number · <span className="font-mono-num">{business.receiptPrefix}{String(business.nextSequence).padStart(4, '0')}</span>
           </p>
-          <h1 className="mt-1 font-display text-3xl sm:text-4xl text-[#121513] dark:text-[#F4F1EA]">
+          <h1 className="mt-1 font-display text-3xl sm:text-4xl text-[#111827] dark:text-[#F3F4F6]">
             New Receipt
           </h1>
         </div>
@@ -405,7 +406,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
           <button
             type="button"
             onClick={() => setMobilePreviewOpen(true)}
-            className="lg:hidden inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3.5 py-2 text-xs font-medium min-h-[44px]"
+            className="lg:hidden inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3.5 py-2 text-xs font-medium min-h-[44px]"
           >
             <Eye className="w-4 h-4" />
             <span>Preview</span>
@@ -414,7 +415,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
             type="button"
             onClick={resetDraft}
             title="Clear draft"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-xs font-medium text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513] min-h-[44px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] min-h-[44px]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Clear</span>
@@ -426,8 +427,8 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
         {/* Form Column */}
         <form onSubmit={handleIssue} className="lg:col-span-7 space-y-5">
           {/* Customer */}
-          <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+          <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
               Customer (optional for walk-ins)
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -445,7 +446,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                   micLabel="Dictate customer name"
                 />
                 {customerDropdownOpen && filteredCustomers.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] shadow-lg overflow-hidden">
+                  <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] shadow-lg overflow-hidden">
                     {filteredCustomers.map((c) => (
                       <button
                         key={c.id}
@@ -458,10 +459,10 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                           }));
                           setCustomerDropdownOpen(false);
                         }}
-                        className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center justify-between gap-2 min-h-[40px]"
+                        className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center justify-between gap-2 min-h-[40px]"
                       >
                         <span className="font-medium">{c.name}</span>
-                        <span className="font-mono-num text-[#5C635D]">{c.phone}</span>
+                        <span className="font-mono-num text-[#6B7280]">{c.phone}</span>
                       </button>
                     ))}
                   </div>
@@ -473,21 +474,21 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                 value={draft.customerPhone}
                 onChange={(e) => setDraft((d) => ({ ...d, customerPhone: e.target.value }))}
                 placeholder="WhatsApp / phone (optional)"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
               />
             </div>
           </section>
 
           {/* Line Items */}
-          <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-4">
+          <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Items Sold</p>
+              <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Items Sold</p>
               <button
                 type="button"
                 onClick={() =>
                   setDraft((d) => ({ ...d, items: [...d.items, createEmptyItem()] }))
                 }
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:underline min-h-[36px]"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline min-h-[36px]"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add item</span>
@@ -507,7 +508,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                 return (
                   <div
                     key={item.id}
-                    className="rounded-xl border border-[#ECE6D8] dark:border-[#242D28] bg-[#FAF8F3]/70 dark:bg-[#111714] p-3.5 space-y-3"
+                    className="rounded-[10px] border border-gray-100 dark:border-[#1F2925] bg-[#F6F7F8]/70 dark:bg-[#111715] p-3.5 space-y-3"
                   >
                     <div className="flex items-start gap-2">
                       <div className="relative flex-1">
@@ -524,7 +525,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                           micLabel="Dictate item description"
                         />
                         {activeItemDropdown === item.id && matchingItems.length > 0 && (
-                          <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] shadow-lg overflow-hidden">
+                          <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] shadow-lg overflow-hidden">
                             {matchingItems.map((ci) => (
                               <button
                                 key={ci.id}
@@ -536,10 +537,10 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                                   });
                                   setActiveItemDropdown(null);
                                 }}
-                                className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] flex items-center justify-between gap-2 min-h-[40px]"
+                                className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] flex items-center justify-between gap-2 min-h-[40px]"
                               >
                                 <span className="font-medium truncate">{ci.description}</span>
-                                <span className="font-mono-num text-[#064E3B] dark:text-[#10B981] shrink-0">
+                                <span className="font-mono-num text-[#064E3B] dark:text-[#6EE7B7] shrink-0">
                                   {formatKobo(ci.unitPriceKobo, business.currency)}
                                 </span>
                               </button>
@@ -553,7 +554,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                           type="button"
                           onClick={() => removeItem(item.id)}
                           aria-label="Remove item"
-                          className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] hover:text-[#B91C1C]"
+                          className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] text-[#6B7280] hover:text-[#B91C1C]"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -562,7 +563,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       <div>
-                        <label className="block text-[11px] text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                        <label className="block text-[11px] text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                           Qty
                         </label>
                         <div className="flex gap-1.5">
@@ -571,7 +572,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                             inputMode="decimal"
                             value={item.qty}
                             onChange={(e) => updateItem(item.id, { qty: e.target.value })}
-                            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 font-mono-num text-sm min-h-[44px]"
+                            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 font-mono-num text-sm min-h-[44px]"
                           />
                           <button
                             type="button"
@@ -584,7 +585,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                                 onApply: (v) => updateItem(item.id, { qty: v }),
                               })
                             }
-                            className="px-2.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-[11px] font-medium min-h-[44px]"
+                            className="px-2.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-[11px] font-medium min-h-[44px]"
                           >
                             Pad
                           </button>
@@ -592,7 +593,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                       </div>
 
                       <div className="col-span-1 sm:col-span-2">
-                        <label className="block text-[11px] text-[#5C635D] dark:text-[#9BA39D] mb-1">
+                        <label className="block text-[11px] text-[#6B7280] dark:text-[#9CA3AF] mb-1">
                           Unit Price ({business.currency})
                         </label>
                         <div className="flex gap-1.5">
@@ -602,7 +603,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                             value={item.unitPrice}
                             onChange={(e) => updateItem(item.id, { unitPrice: e.target.value })}
                             placeholder="0.00"
-                            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 font-mono-num text-sm min-h-[44px]"
+                            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 font-mono-num text-sm min-h-[44px]"
                           />
                           <button
                             type="button"
@@ -615,7 +616,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                                 onApply: (v) => updateItem(item.id, { unitPrice: v }),
                               })
                             }
-                            className="px-3 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-xs font-medium min-h-[44px]"
+                            className="px-3 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-xs font-medium min-h-[44px]"
                           >
                             Keypad
                           </button>
@@ -628,20 +629,20 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                         <button
                           type="button"
                           onClick={() => updateItem(item.id, { showDiscount: true })}
-                          className="text-xs text-[#5C635D] dark:text-[#9BA39D] hover:text-[#064E3B] dark:hover:text-[#10B981]"
+                          className="text-xs text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#064E3B] dark:hover:text-[#10B981]"
                         >
                           + Add discount
                         </button>
                       ) : (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-[#5C635D]">Discount:</span>
+                          <span className="text-xs text-[#6B7280]">Discount:</span>
                           <input
                             type="text"
                             inputMode="decimal"
                             value={item.discount}
                             onChange={(e) => updateItem(item.id, { discount: e.target.value })}
                             placeholder="0"
-                            className="w-24 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-1.5 font-mono-num text-xs min-h-[36px]"
+                            className="w-24 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-1.5 font-mono-num text-xs min-h-[36px]"
                           />
                           <button
                             type="button"
@@ -654,7 +655,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                                 onApply: (v) => updateItem(item.id, { discount: v }),
                               })
                             }
-                            className="px-2.5 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-[11px] font-medium min-h-[36px]"
+                            className="px-2.5 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-[11px] font-medium min-h-[36px]"
                           >
                             Pad
                           </button>
@@ -671,9 +672,9 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
           </section>
 
           {/* Payment & Details */}
-          <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-4">
+          <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-4">
             <div>
-              <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-2">
+              <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-2">
                 Payment Method
               </label>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -682,10 +683,10 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                     key={method}
                     type="button"
                     onClick={() => setDraft((d) => ({ ...d, paymentMethod: method }))}
-                    className={`min-h-[44px] rounded-xl border text-xs font-semibold transition-colors ${
+                    className={`min-h-[44px] rounded-[10px] border text-xs font-semibold transition-colors ${
                       draft.paymentMethod === method
                         ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                        : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA]'
+                        : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] text-[#111827] dark:text-[#F3F4F6]'
                     }`}
                   >
                     {method}
@@ -694,10 +695,10 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#ECE6D8] dark:border-[#242D28]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100 dark:border-[#1F2925]">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+                  <label className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
                     Amount Paid
                   </label>
                   <button
@@ -709,7 +710,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                         amountPaid: formatKoboPlainInput(totals.totalKobo),
                       }))
                     }
-                    className="text-xs font-medium text-[#064E3B] dark:text-[#10B981] hover:underline"
+                    className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
                   >
                     Full ({formatKobo(totals.totalKobo, business.currency)})
                   </button>
@@ -730,7 +731,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                         amountPaid: e.target.value,
                       }))
                     }
-                    className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-base font-semibold min-h-[44px]"
+                    className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-base font-semibold min-h-[44px]"
                   />
                   <button
                     type="button"
@@ -750,7 +751,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                           })),
                       })
                     }
-                    className="px-3 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] text-xs font-medium min-h-[44px]"
+                    className="px-3 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] text-xs font-medium min-h-[44px]"
                   >
                     Keypad
                   </button>
@@ -763,7 +764,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
               </div>
 
               <div>
-                <label htmlFor="rct-date" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+                <label htmlFor="rct-date" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                   Date (Africa/Lagos)
                 </label>
                 <input
@@ -773,14 +774,14 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                   onChange={(e) =>
                     setDraft((d) => ({ ...d, issuedDateLagos: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+                <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                   Sold by (optional)
                 </label>
                 <SpeechInput
@@ -792,7 +793,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                 />
               </div>
               <div>
-                <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+                <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                   Template
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -801,10 +802,10 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
                       key={tpl}
                       type="button"
                       onClick={() => setDraft((d) => ({ ...d, template: tpl }))}
-                      className={`min-h-[44px] rounded-xl border text-xs font-medium capitalize ${
+                      className={`min-h-[44px] rounded-[10px] border text-xs font-medium capitalize ${
                         draft.template === tpl
                           ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                          : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714]'
+                          : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715]'
                       }`}
                     >
                       {tpl === 'compact' ? '80mm' : tpl}
@@ -815,7 +816,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
             </div>
 
             <div>
-              <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+              <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
                 Note (optional)
               </label>
               <SpeechTextarea
@@ -830,7 +831,7 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
           </section>
 
           {error && (
-            <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 text-sm text-[#B91C1C] dark:text-red-300 flex items-center justify-between gap-3">
+            <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 text-sm text-[#B91C1C] dark:text-red-300 flex items-center justify-between gap-3">
               <span>{error}</span>
               <button
                 type="submit"
@@ -843,34 +844,45 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
           )}
 
           {/* Summary & Submit Bar */}
-          <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
                 Total · {balanceDueKobo === 0 ? 'Paid in full' : 'Part payment'}
               </p>
-              <p className="mt-0.5 font-mono-num text-2xl font-semibold text-[#121513] dark:text-[#F4F1EA]">
+              <p className="mt-0.5 font-mono-num text-2xl font-semibold text-[#111827] dark:text-[#F3F4F6]">
                 {formatKobo(totals.totalKobo, business.currency)}
               </p>
             </div>
             <button
               type="submit"
               disabled={submitting}
-              className="w-full sm:w-auto min-h-[48px] rounded-xl bg-[#064E3B] px-7 py-3 text-sm font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
+              className="w-full sm:w-auto min-h-[48px] rounded-[10px] bg-[#064E3B] px-7 py-3 text-sm font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
             >
               {submitting ? 'Issuing Receipt…' : 'Issue Receipt'}
             </button>
           </div>
+          {!business.signatureDataUrl && (
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
+              Want your authorized signature on every receipt?{' '}
+              <Link
+                to="/app/settings"
+                className="font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
+              >
+                Upload your signature in Settings →
+              </Link>
+            </p>
+          )}
         </form>
 
         {/* Live Desktop Preview Column */}
         <aside className="hidden lg:block lg:col-span-5 sticky top-20 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Live Preview</p>
-            <span className="text-xs text-[#5C635D] dark:text-[#9BA39D] capitalize">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Live Preview</p>
+            <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF] capitalize">
               {draft.template === 'compact' ? 'Compact 80mm' : draft.template}
             </span>
           </div>
-          <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-[#F3EFE6]/70 dark:bg-[#111714] p-4 max-h-[calc(100vh-140px)] overflow-y-auto">
+          <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F4F6F8]/70 dark:bg-[#111715] p-4 max-h-[calc(100vh-140px)] overflow-y-auto">
             <ReceiptTemplateView receipt={previewRecord} />
           </div>
         </aside>
@@ -879,13 +891,13 @@ export function NewReceiptPage({ business }: { business: BusinessProfile }) {
       {/* Mobile Preview Drawer */}
       {mobilePreviewOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end lg:hidden">
-          <div className="max-h-[90vh] overflow-y-auto rounded-t-3xl bg-[#FAF8F3] dark:bg-[#151B18] p-4 pb-8">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#E5DEC9] dark:border-[#242D28]">
-              <span className="label-caps text-[#5C635D]">Live Receipt Preview</span>
+          <div className="max-h-[90vh] overflow-y-auto rounded-t-3xl bg-[#F6F7F8] dark:bg-[#131917] p-4 pb-8">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200/70 dark:border-[#1F2925]">
+              <span className="label-caps text-[#6B7280]">Live Receipt Preview</span>
               <button
                 type="button"
                 onClick={() => setMobilePreviewOpen(false)}
-                className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2]"
+                className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-[10px] border border-gray-200"
               >
                 <X className="w-4 h-4" />
               </button>

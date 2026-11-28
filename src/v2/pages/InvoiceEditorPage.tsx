@@ -307,7 +307,7 @@ export function InvoiceEditorPage({
   };
 
   if (loadingDraft) {
-    return <div className="py-16 text-center text-xs text-[#5C635D]">Loading draft…</div>;
+    return <div className="py-16 text-center text-xs text-[#6B7280]">Loading draft…</div>;
   }
 
   const banks = business.bankAccounts || [];
@@ -317,12 +317,12 @@ export function InvoiceEditorPage({
       <div className="flex items-center justify-between gap-3">
         <Link
           to="/app/documents"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] hover:text-[#121513] dark:hover:text-white"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#111827] dark:hover:text-white"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Documents</span>
         </Link>
-        <span className="font-mono text-xs text-[#5C635D]">
+        <span className="font-mono text-xs text-[#6B7280]">
           Next #{business.invoicePrefix || 'INV-'}
           {String(business.nextInvoiceSequence || 1).padStart(4, '0')}
         </span>
@@ -332,19 +332,19 @@ export function InvoiceEditorPage({
         <h1 className="font-display text-3xl sm:text-4xl">
           {invoiceId ? 'Edit Invoice Draft' : 'New Invoice'}
         </h1>
-        <p className="mt-1 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="mt-1 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
           Invoices track what is owed. Money enters your cash book only when a payment is recorded.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 text-xs text-[#B91C1C] dark:text-red-300">
+        <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 text-xs text-[#B91C1C] dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* 1. Customer */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-3">
         <label className="block text-xs font-semibold">1. Customer</label>
         {customers.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -353,10 +353,10 @@ export function InvoiceEditorPage({
                 key={c.id}
                 type="button"
                 onClick={() => pickCustomer(c)}
-                className={`rounded-xl border px-3 py-1.5 text-xs font-medium min-h-[36px] transition-colors ${
+                className={`rounded-[10px] border px-3 py-1.5 text-xs font-medium min-h-[36px] transition-colors ${
                   customerId === c.id
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715]'
                 }`}
               >
                 {c.name}
@@ -372,18 +372,18 @@ export function InvoiceEditorPage({
             setCustomerId(null);
           }}
           placeholder="Customer or company name"
-          className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+          className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
         />
       </section>
 
       {/* 2. Line Items */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold">2. Items</label>
           <button
             type="button"
             onClick={() => setLines((prev) => [...prev, makeEmptyLine()])}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#064E3B] dark:text-[#10B981]"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add item</span>
@@ -397,7 +397,7 @@ export function InvoiceEditorPage({
                 key={item.id}
                 type="button"
                 onClick={() => pickCatalogItem(item)}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-1.5 text-xs hover:border-[#064E3B] min-h-[34px]"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-1.5 text-xs hover:border-[#064E3B] min-h-[34px]"
               >
                 {item.description} ·{' '}
                 <span className="font-mono">{formatKobo(item.unitPriceKobo, business.currency)}</span>
@@ -410,7 +410,7 @@ export function InvoiceEditorPage({
           {lines.map((row, idx) => (
             <div
               key={row.key}
-              className="rounded-xl border border-[#EFEAD9] dark:border-[#242D28] bg-[#FAF8F3] dark:bg-[#111714] p-3 space-y-2"
+              className="rounded-[10px] border border-gray-100 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#111715] p-3 space-y-2"
             >
               <div className="flex items-center gap-2">
                 <input
@@ -422,21 +422,21 @@ export function InvoiceEditorPage({
                     )
                   }
                   placeholder="Item or service description"
-                  className="flex-1 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-sm min-h-[40px]"
+                  className="flex-1 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-sm min-h-[40px]"
                 />
                 {lines.length > 1 && (
                   <button
                     type="button"
                     onClick={() => setLines((prev) => prev.filter((_, i) => i !== idx))}
                     aria-label="Remove line"
-                    className="p-2 text-[#5C635D] hover:text-[#B91C1C]"
+                    className="p-2 text-[#6B7280] hover:text-[#B91C1C]"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <label className="text-[11px] text-[#5C635D] space-y-0.5">
+                <label className="text-[11px] text-[#6B7280] space-y-0.5">
                   <span>Qty (up to 3 decimals)</span>
                   <input
                     type="text"
@@ -447,10 +447,10 @@ export function InvoiceEditorPage({
                         prev.map((l, i) => (i === idx ? { ...l, qtyText: e.target.value } : l))
                       )
                     }
-                    className="w-full rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-2 text-xs font-mono text-[#121513] dark:text-[#F4F1EA] min-h-[38px]"
+                    className="w-full rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-2 text-xs font-mono text-[#111827] dark:text-[#F3F4F6] min-h-[38px]"
                   />
                 </label>
-                <label className="text-[11px] text-[#5C635D] space-y-0.5">
+                <label className="text-[11px] text-[#6B7280] space-y-0.5">
                   <span>Unit price (₦)</span>
                   <input
                     type="text"
@@ -464,11 +464,11 @@ export function InvoiceEditorPage({
                       )
                     }
                     placeholder="0.00"
-                    className="w-full rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-2 text-xs font-mono text-[#121513] dark:text-[#F4F1EA] min-h-[38px]"
+                    className="w-full rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-2 text-xs font-mono text-[#111827] dark:text-[#F3F4F6] min-h-[38px]"
                   />
                 </label>
                 {showMore && (
-                  <label className="text-[11px] text-[#5C635D] space-y-0.5 col-span-2 sm:col-span-1">
+                  <label className="text-[11px] text-[#6B7280] space-y-0.5 col-span-2 sm:col-span-1">
                     <span>Line discount (₦)</span>
                     <input
                       type="text"
@@ -482,7 +482,7 @@ export function InvoiceEditorPage({
                         )
                       }
                       placeholder="0.00"
-                      className="w-full rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-2 text-xs font-mono text-[#121513] dark:text-[#F4F1EA] min-h-[38px]"
+                      className="w-full rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-2 text-xs font-mono text-[#111827] dark:text-[#F3F4F6] min-h-[38px]"
                     />
                   </label>
                 )}
@@ -493,10 +493,10 @@ export function InvoiceEditorPage({
       </section>
 
       {/* 3. Payment Terms */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold">3. Payment terms</label>
-          <span className="font-mono text-xs text-[#5C635D]">Due {effectiveDueDate}</span>
+          <span className="font-mono text-xs text-[#6B7280]">Due {effectiveDueDate}</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {(
@@ -512,10 +512,10 @@ export function InvoiceEditorPage({
               key={t.id}
               type="button"
               onClick={() => setTermsKind(t.id)}
-              className={`rounded-xl border px-3 py-2 text-xs font-medium min-h-[38px] ${
+              className={`rounded-[10px] border px-3 py-2 text-xs font-medium min-h-[38px] ${
                 termsKind === t.id
                   ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                  : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714]'
+                  : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715]'
               }`}
             >
               {t.label}
@@ -528,26 +528,26 @@ export function InvoiceEditorPage({
             value={customDueDate}
             min={issueDate}
             onChange={(e) => setCustomDueDate(e.target.value)}
-            className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-sm font-mono min-h-[42px]"
+            className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-sm font-mono min-h-[42px]"
           />
         )}
       </section>
 
       {/* 4. Bank Accounts to Show (First-invoice setup prompt when empty) */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold">4. Bank details on invoice</label>
           <button
             type="button"
             onClick={() => setShowQuickBank((v) => !v)}
-            className="text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:underline"
+            className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
           >
             {showQuickBank ? 'Close' : '+ Add bank account'}
           </button>
         </div>
 
         {banks.length === 0 && !showQuickBank && (
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
             No bank account saved yet. Add one so your customer can copy your account number straight from the invoice.
           </p>
         )}
@@ -559,7 +559,7 @@ export function InvoiceEditorPage({
               return (
                 <label
                   key={b.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-2.5 text-xs cursor-pointer"
+                  className="flex items-center justify-between gap-3 rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-2.5 text-xs cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <input
@@ -573,7 +573,7 @@ export function InvoiceEditorPage({
                       className="w-4 h-4 accent-[#064E3B]"
                     />
                     <span className="font-semibold truncate">{b.bankName}</span>
-                    <span className="text-[#5C635D] truncate">{b.accountName}</span>
+                    <span className="text-[#6B7280] truncate">{b.accountName}</span>
                   </div>
                   <span className="font-mono font-semibold shrink-0">{b.accountNumber}</span>
                 </label>
@@ -583,35 +583,35 @@ export function InvoiceEditorPage({
         )}
 
         {showQuickBank && (
-          <div className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] p-3.5 space-y-2.5">
+          <div className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] p-3.5 space-y-2.5">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 type="text"
                 placeholder="Bank name"
                 value={qbBankName}
                 onChange={(e) => setQbBankName(e.target.value)}
-                className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-xs min-h-[40px]"
+                className="rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-xs min-h-[40px]"
               />
               <input
                 type="text"
                 placeholder="Account number"
                 value={qbAccountNumber}
                 onChange={(e) => setQbAccountNumber(e.target.value)}
-                className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-xs font-mono min-h-[40px]"
+                className="rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-xs font-mono min-h-[40px]"
               />
               <input
                 type="text"
                 placeholder="Account name"
                 value={qbAccountName}
                 onChange={(e) => setQbAccountName(e.target.value)}
-                className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-xs min-h-[40px]"
+                className="rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-xs min-h-[40px]"
               />
             </div>
             <button
               type="button"
               onClick={handleQuickAddBank}
               disabled={savingBank}
-              className="rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[38px]"
+              className="rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[38px]"
             >
               {savingBank ? 'Saving…' : 'Save bank account'}
             </button>
@@ -620,18 +620,18 @@ export function InvoiceEditorPage({
       </section>
 
       {/* Collapsible More Details */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] overflow-hidden">
         <button
           type="button"
           onClick={() => setShowMore((v) => !v)}
-          className="w-full px-5 py-3.5 flex items-center justify-between text-xs font-semibold text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513] dark:hover:text-white"
+          className="w-full px-5 py-3.5 flex items-center justify-between text-xs font-semibold text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white"
         >
           <span>More details (discount, deposit, address, notes)</span>
           {showMore ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
 
         {showMore && (
-          <div className="px-5 pb-5 pt-2 border-t border-[#EFEAD9] dark:border-[#242D28] space-y-4">
+          <div className="px-5 pb-5 pt-2 border-t border-gray-100 dark:border-[#1F2925] space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block text-xs space-y-1">
                 <span className="font-medium">Issue date</span>
@@ -639,7 +639,7 @@ export function InvoiceEditorPage({
                   type="date"
                   value={issueDate}
                   onChange={(e) => setIssueDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs font-mono min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs font-mono min-h-[42px]"
                 />
               </label>
               <label className="block text-xs space-y-1">
@@ -650,7 +650,7 @@ export function InvoiceEditorPage({
                   value={invoiceDiscountText}
                   onChange={(e) => setInvoiceDiscountText(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs font-mono min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs font-mono min-h-[42px]"
                 />
               </label>
               <label className="block text-xs space-y-1">
@@ -659,7 +659,7 @@ export function InvoiceEditorPage({
                   <select
                     value={depositType}
                     onChange={(e) => setDepositType(e.target.value as DepositType)}
-                    className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-2.5 py-2 text-xs min-h-[42px]"
+                    className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-2.5 py-2 text-xs min-h-[42px]"
                   >
                     <option value="none">Full amount</option>
                     <option value="percent">% Percent</option>
@@ -672,7 +672,7 @@ export function InvoiceEditorPage({
                       value={depositInputText}
                       onChange={(e) => setDepositInputText(e.target.value)}
                       placeholder={depositType === 'percent' ? 'e.g. 50' : '0.00'}
-                      className="flex-1 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs font-mono min-h-[42px]"
+                      className="flex-1 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs font-mono min-h-[42px]"
                     />
                   )}
                 </div>
@@ -684,7 +684,7 @@ export function InvoiceEditorPage({
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="0803…"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[42px]"
                 />
               </label>
               <label className="block text-xs space-y-1 sm:col-span-2">
@@ -694,7 +694,7 @@ export function InvoiceEditorPage({
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
                   placeholder="Optional street / city"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[42px]"
                 />
               </label>
               <label className="block text-xs space-y-1 sm:col-span-2">
@@ -704,7 +704,7 @@ export function InvoiceEditorPage({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Delivery note or payment instruction"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs"
                 />
               </label>
             </div>
@@ -713,16 +713,16 @@ export function InvoiceEditorPage({
       </div>
 
       {/* Live Totals Summary + Primary Action */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-[#F5F1E7] dark:bg-[#111714] p-5 space-y-4">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F4F6F8] dark:bg-[#111715] p-5 space-y-4">
         <div className="space-y-1 text-xs">
-          <div className="flex justify-between text-[#5C635D] dark:text-[#9BA39D]">
+          <div className="flex justify-between text-[#6B7280] dark:text-[#9CA3AF]">
             <span>Subtotal</span>
             <span className="font-mono tabular-nums">
               {formatKobo(totals.subtotalKobo, business.currency)}
             </span>
           </div>
           {totals.invoiceDiscountKobo > 0 && (
-            <div className="flex justify-between text-[#5C635D] dark:text-[#9BA39D]">
+            <div className="flex justify-between text-[#6B7280] dark:text-[#9CA3AF]">
               <span>Invoice discount</span>
               <span className="font-mono tabular-nums">
                 −{formatKobo(totals.invoiceDiscountKobo, business.currency)}
@@ -730,21 +730,21 @@ export function InvoiceEditorPage({
             </div>
           )}
           {business.vatEnabled && totals.vatKobo > 0 && (
-            <div className="flex justify-between text-[#5C635D] dark:text-[#9BA39D]">
+            <div className="flex justify-between text-[#6B7280] dark:text-[#9CA3AF]">
               <span>VAT ({(business.vatRateBps / 100).toFixed(1).replace(/\.0$/, '')}%)</span>
               <span className="font-mono tabular-nums">
                 {formatKobo(totals.vatKobo, business.currency)}
               </span>
             </div>
           )}
-          <div className="pt-2 border-t border-[#DED6C2] dark:border-[#242D28] flex justify-between text-base font-semibold">
+          <div className="pt-2 border-t border-gray-200 dark:border-[#1F2925] flex justify-between text-base font-semibold">
             <span>Invoice Total</span>
             <span className="font-mono tabular-nums">
               {formatKobo(totals.totalKobo, business.currency)}
             </span>
           </div>
           {totals.depositType !== 'none' && totals.amountDueNowKobo < totals.totalKobo && (
-            <div className="flex justify-between text-xs font-semibold text-[#064E3B] dark:text-[#10B981]">
+            <div className="flex justify-between text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
               <span>Amount due now</span>
               <span className="font-mono tabular-nums">
                 {formatKobo(totals.amountDueNowKobo, business.currency)}
@@ -758,7 +758,7 @@ export function InvoiceEditorPage({
             type="button"
             disabled={submitting !== null}
             onClick={() => handleSubmit(true)}
-            className="flex-1 min-w-[160px] rounded-xl bg-[#064E3B] px-5 py-3 text-sm font-semibold text-white hover:bg-[#04392B] min-h-[48px] disabled:opacity-60"
+            className="flex-1 min-w-[160px] rounded-[10px] bg-[#064E3B] px-5 py-3 text-sm font-semibold text-white hover:bg-[#04392B] min-h-[48px] disabled:opacity-60"
           >
             {submitting === 'send' ? 'Sending…' : 'Send invoice'}
           </button>
@@ -766,7 +766,7 @@ export function InvoiceEditorPage({
             type="button"
             disabled={submitting !== null}
             onClick={() => handleSubmit(false)}
-            className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 py-3 text-xs font-semibold min-h-[48px] disabled:opacity-60"
+            className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-4 py-3 text-xs font-semibold min-h-[48px] disabled:opacity-60"
           >
             {submitting === 'draft' ? 'Saving…' : 'Save draft'}
           </button>

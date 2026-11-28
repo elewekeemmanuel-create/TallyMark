@@ -384,32 +384,32 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0D110F] text-[#121513] dark:text-[#F4F1EA] flex flex-col justify-between px-4 py-8">
+    <div className="min-h-screen bg-[#F6F7F8] dark:bg-[#0B0F0E] text-[#111827] dark:text-[#F3F4F6] flex flex-col justify-between px-4 py-10">
       <div className="max-w-md w-full mx-auto">
         <Link to="/" className="inline-block">
           <TallymarkWordmark size="md" />
         </Link>
 
-        <div className="mt-8 rounded-2xl border border-[#E5DEC9] dark:border-[#26302B] bg-white dark:bg-[#151B18] p-6 sm:p-8 shadow-sm">
-          <p className="label-caps text-[#064E3B] dark:text-[#10B981]">
+        <div className="mt-8 rounded-[24px] bg-white dark:bg-[#131917] p-7 sm:p-8 shadow-[0_16px_48px_-24px_rgba(17,24,39,0.12)]">
+          <span className="inline-flex items-center rounded-full bg-[#ECFDF5] dark:bg-[#064E3B]/40 px-3 py-1 text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">
             {mode === 'signin' ? 'Owner Sign-In' : 'New Account'}
-          </p>
-          <h1 className="mt-2 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+          </span>
+          <h1 className="mt-3 text-2xl sm:text-[28px] font-semibold tracking-[-0.025em] text-[#111827] dark:text-[#F3F4F6]">
             {mode === 'signin' ? 'Open your receipt book' : 'Create your Tallymark account'}
           </h1>
-          <p className="mt-1.5 text-sm text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="mt-1.5 text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
             {mode === 'signin'
-              ? 'Sign in with Google or your email and password to access your receipts and cash book.'
+              ? 'Sign in with Google or your email to access your receipts and cash book.'
               : 'Get started in one click with Google or create an account with your email.'}
           </p>
 
           {googleAvailable && (
-            <div className="mt-5">
+            <div className="mt-6">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={busy || googleBusy}
-                className="w-full min-h-[48px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA] text-sm font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] transition-colors inline-flex items-center justify-center gap-2.5 disabled:opacity-60"
+                className="w-full min-h-[48px] rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#1A221F] text-[#111827] dark:text-[#F3F4F6] text-sm font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#232D29] transition-colors inline-flex items-center justify-center gap-2.5 disabled:opacity-60"
               >
                 {googleBusy ? (
                   <>
@@ -425,11 +425,9 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
               </button>
 
               <div className="mt-5 flex items-center gap-3">
-                <div className="h-px flex-1 bg-[#ECE6D8] dark:bg-[#26302B]" />
-                <span className="text-[11px] uppercase tracking-wider text-[#5C635D] dark:text-[#9BA39D]">
-                  or with email
-                </span>
-                <div className="h-px flex-1 bg-[#ECE6D8] dark:bg-[#26302B]" />
+                <div className="h-px flex-1 bg-gray-100 dark:bg-[#232D29]" />
+                <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">or with email</span>
+                <div className="h-px flex-1 bg-gray-100 dark:bg-[#232D29]" />
               </div>
             </div>
           )}
@@ -437,17 +435,17 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           <div
             role="tablist"
             aria-label="Authentication mode"
-            className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-[#F3EFE6] dark:bg-[#1B231F] p-1"
+            className="mt-5 grid grid-cols-2 gap-1 rounded-[10px] bg-[#F4F6F8] dark:bg-[#1A221F] p-1"
           >
             <button
               type="button"
               role="tab"
               aria-selected={mode === 'signin'}
               onClick={() => switchMode('signin')}
-              className={`rounded-lg py-2 text-xs font-semibold transition-colors min-h-[40px] ${
+              className={`rounded-[8px] py-2 text-xs font-semibold transition-colors min-h-[38px] ${
                 mode === 'signin'
-                  ? 'bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA] shadow-xs'
-                  : 'text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513] dark:hover:text-[#F4F1EA]'
+                  ? 'bg-white dark:bg-[#131917] text-[#111827] dark:text-[#F3F4F6] shadow-xs'
+                  : 'text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white'
               }`}
             >
               Sign In
@@ -457,10 +455,10 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
               role="tab"
               aria-selected={mode === 'signup'}
               onClick={() => switchMode('signup')}
-              className={`rounded-lg py-2 text-xs font-semibold transition-colors min-h-[40px] ${
+              className={`rounded-[8px] py-2 text-xs font-semibold transition-colors min-h-[38px] ${
                 mode === 'signup'
-                  ? 'bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA] shadow-xs'
-                  : 'text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513] dark:hover:text-[#F4F1EA]'
+                  ? 'bg-white dark:bg-[#131917] text-[#111827] dark:text-[#F3F4F6] shadow-xs'
+                  : 'text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white'
               }`}
             >
               Create Account
@@ -470,15 +468,15 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           {confirmationEmail && (
             <div
               role="status"
-              className="mt-5 rounded-xl border border-[#064E3B]/30 dark:border-[#10B981]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 space-y-2.5"
+              className="mt-5 rounded-[14px] bg-[#ECFDF5] dark:bg-[#064E3B]/30 p-4 space-y-2.5"
             >
               <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-[#064E3B] dark:text-[#10B981] mt-0.5 shrink-0" />
-                <div className="text-xs text-[#121513] dark:text-[#F4F1EA] space-y-1">
+                <CheckCircle2 className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7] mt-0.5 shrink-0" />
+                <div className="text-xs text-[#111827] dark:text-[#F3F4F6] space-y-1">
                   <p className="font-semibold">Check your email to confirm your account</p>
-                  <p className="text-[#5C635D] dark:text-[#9BA39D]">
+                  <p className="text-[#4B5563] dark:text-[#D1D5DB]">
                     We sent a confirmation link to{' '}
-                    <span className="font-semibold text-[#121513] dark:text-[#F4F1EA]">
+                    <span className="font-semibold text-[#111827] dark:text-white">
                       {confirmationEmail}
                     </span>
                     . Open your inbox and verify your email before signing in.
@@ -488,7 +486,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
               <button
                 type="button"
                 onClick={() => switchMode('signin')}
-                className="text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:underline"
+                className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
               >
                 Back to Sign In
               </button>
@@ -500,7 +498,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
               <div>
                 <label
                   htmlFor="auth-full-name"
-                  className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5"
+                  className="block text-xs font-medium text-[#4B5563] dark:text-[#D1D5DB] mb-1.5"
                 >
                   Full Name
                 </label>
@@ -512,7 +510,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Chinedu Okafor"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F9FAFB] dark:bg-[#1A221F] px-3.5 py-2.5 text-sm text-[#111827] dark:text-[#F3F4F6] focus:bg-white dark:focus:bg-[#131917] focus:outline-none focus:ring-2 focus:ring-[#064E3B]/20 focus:border-[#064E3B] min-h-[44px]"
                 />
               </div>
             )}
@@ -520,7 +518,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
             <div>
               <label
                 htmlFor="auth-email"
-                className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5"
+                className="block text-xs font-medium text-[#4B5563] dark:text-[#D1D5DB] mb-1.5"
               >
                 Email
               </label>
@@ -532,14 +530,14 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="owner@yourbusiness.ng"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F9FAFB] dark:bg-[#1A221F] px-3.5 py-2.5 text-sm text-[#111827] dark:text-[#F3F4F6] focus:bg-white dark:focus:bg-[#131917] focus:outline-none focus:ring-2 focus:ring-[#064E3B]/20 focus:border-[#064E3B] min-h-[44px]"
               />
             </div>
 
             <div>
               <label
                 htmlFor="auth-password"
-                className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5"
+                className="block text-xs font-medium text-[#4B5563] dark:text-[#D1D5DB] mb-1.5"
               >
                 Password
               </label>
@@ -553,19 +551,19 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === 'signup' ? 'At least 6 characters' : 'Enter your password'}
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] pl-3.5 pr-11 py-2.5 text-sm min-h-[44px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F9FAFB] dark:bg-[#1A221F] pl-3.5 pr-11 py-2.5 text-sm text-[#111827] dark:text-[#F3F4F6] focus:bg-white dark:focus:bg-[#131917] focus:outline-none focus:ring-2 focus:ring-[#064E3B]/20 focus:border-[#064E3B] min-h-[44px]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 inline-flex items-center justify-center rounded-lg text-[#5C635D] dark:text-[#9BA39D] hover:bg-[#F3EFE6] dark:hover:bg-[#1B231F]"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 inline-flex items-center justify-center rounded-[8px] text-[#6B7280] dark:text-[#9CA3AF] hover:bg-gray-200/60 dark:hover:bg-[#232D29]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {mode === 'signup' && (
-                <p className="mt-1 text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+                <p className="mt-1 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                   Minimum 6 characters.
                 </p>
               )}
@@ -574,7 +572,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
             {error && (
               <div
                 role="alert"
-                className="rounded-xl border border-[#B91C1C]/30 bg-[#B91C1C]/5 dark:bg-red-950/30 px-3.5 py-2.5 text-xs text-[#B91C1C] dark:text-red-300"
+                className="rounded-[10px] bg-[#FEF2F2] dark:bg-red-950/30 border border-red-200/80 dark:border-red-900/50 px-3.5 py-2.5 text-xs text-[#B91C1C] dark:text-red-300"
               >
                 {error}
               </div>
@@ -583,7 +581,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
             <button
               type="submit"
               disabled={busy}
-              className="w-full min-h-[48px] rounded-xl bg-[#064E3B] text-white text-sm font-semibold hover:bg-[#04392B] transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full min-h-[48px] rounded-[10px] bg-[#064E3B] text-white text-sm font-semibold hover:bg-[#04392B] active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {busy ? (
                 <>
@@ -599,15 +597,15 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
             </button>
           </form>
 
-          <div className="mt-5 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+          <div className="mt-5 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
             {mode === 'signin' ? (
               <button
                 type="button"
                 onClick={() => switchMode('signup')}
-                className="hover:text-[#121513] dark:hover:text-[#F4F1EA]"
+                className="hover:text-[#111827] dark:hover:text-white"
               >
                 Don&apos;t have an account?{' '}
-                <span className="font-semibold text-[#064E3B] dark:text-[#10B981] underline underline-offset-2">
+                <span className="font-semibold text-[#047857] dark:text-[#6EE7B7] underline underline-offset-2">
                   Create one
                 </span>
               </button>
@@ -615,24 +613,24 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
               <button
                 type="button"
                 onClick={() => switchMode('signin')}
-                className="hover:text-[#121513] dark:hover:text-[#F4F1EA]"
+                className="hover:text-[#111827] dark:hover:text-white"
               >
                 Already have an account?{' '}
-                <span className="font-semibold text-[#064E3B] dark:text-[#10B981] underline underline-offset-2">
+                <span className="font-semibold text-[#047857] dark:text-[#6EE7B7] underline underline-offset-2">
                   Sign in
                 </span>
               </button>
             )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-[#ECE6D8] dark:border-[#26302B] flex items-center gap-2 text-xs text-[#5C635D] dark:text-[#9BA39D]">
-            <ShieldCheck className="w-4 h-4 text-[#064E3B] dark:text-[#10B981] shrink-0" />
+          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-[#1F2925] flex items-center gap-2 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
+            <ShieldCheck className="w-4 h-4 text-[#047857] dark:text-[#6EE7B7] shrink-0" />
             <span>Each business account is strictly isolated to its owner.</span>
           </div>
         </div>
       </div>
 
-      <footer className="max-w-md w-full mx-auto pt-8 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+      <footer className="max-w-md w-full mx-auto pt-8 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
         Built by Emmanuel Eleweke | Emmanuel of ZedTech
       </footer>
     </div>

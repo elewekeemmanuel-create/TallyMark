@@ -51,7 +51,7 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
         Loading invoices and quotes breakdown…
       </div>
     );
@@ -59,7 +59,7 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
 
   if (error || !report) {
     return (
-      <div className="rounded-2xl border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] p-4 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
+      <div className="rounded-[20px] border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] p-4 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
         {error || 'Unable to load invoices and quotes report'}
       </div>
     );
@@ -71,32 +71,32 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
   return (
     <div className="space-y-4">
       {/* Sold vs Received (strictly separate, reconciled with Cash Book) */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Sold vs Received</p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Sold vs Received</p>
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
             Unpaid invoices count in Sold by issue date. Only confirmed money enters Received.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-xl border border-[#EFE9DA] dark:border-[#202924] bg-[#FAF8F3] dark:bg-[#111714] p-4">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Sold (Total billed)</p>
-            <p className="mt-1 font-mono-num text-2xl font-bold text-[#121513] dark:text-[#F4F1EA]">
+          <div className="rounded-[10px] border border-gray-100 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#111715] p-4">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Sold (Total billed)</p>
+            <p className="mt-1 font-mono-num text-2xl font-bold text-[#111827] dark:text-[#F3F4F6]">
               {formatKobo(report.soldTotalKobo, cur)}
             </p>
-            <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-1">
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-1">
               Invoiced: {formatKobo(report.invoicedSalesKobo, cur)} · Direct &amp; credit:{' '}
               {formatKobo(report.directSalesKobo, cur)}
             </p>
           </div>
 
-          <div className="rounded-xl border border-[#064E3B]/25 bg-[#FAF8F3] dark:bg-[#111714] p-4">
-            <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Received (Actual money in)</p>
-            <p className="mt-1 font-mono-num text-2xl font-bold text-[#064E3B] dark:text-[#10B981]">
+          <div className="rounded-[10px] border border-[#064E3B]/25 bg-[#F6F7F8] dark:bg-[#111715] p-4">
+            <p className="label-caps text-[#064E3B] dark:text-[#6EE7B7]">Received (Actual money in)</p>
+            <p className="mt-1 font-mono-num text-2xl font-bold text-[#064E3B] dark:text-[#6EE7B7]">
               {formatKobo(report.receivedTotalKobo, cur)}
             </p>
-            <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-1">
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-1">
               Matches Cash Book money in · Net after expenses:{' '}
               {formatKobo(report.netCashFlowKobo, cur)}
             </p>
@@ -107,11 +107,11 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
       {/* Invoice Ageing & Quote-to-Invoice Conversion */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Invoice Ageing */}
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Invoice ageing</p>
-              <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+              <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Invoice ageing</p>
+              <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
                 Unpaid invoices as of today (Lagos time)
               </p>
             </div>
@@ -120,7 +120,7 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
             </p>
           </div>
 
-          <div className="divide-y divide-[#EFE9DA] dark:divide-[#202924] text-xs">
+          <div className="divide-y divide-gray-100 dark:divide-[#1F2925] text-xs">
             {[
               {
                 label: 'Not yet due',
@@ -150,7 +150,7 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
               <div key={row.label} className="py-2.5 flex items-center justify-between gap-2">
                 <span>
                   {row.label}{' '}
-                  <span className="text-[#5C635D] dark:text-[#9BA39D]">({row.count})</span>
+                  <span className="text-[#6B7280] dark:text-[#9CA3AF]">({row.count})</span>
                 </span>
                 <span
                   className={`font-mono-num font-semibold ${
@@ -165,43 +165,43 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
         </div>
 
         {/* Quote-to-Invoice Conversion */}
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
                 Quote-to-invoice conversion
               </p>
-              <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+              <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
                 Quotes issued in selected period
               </p>
             </div>
-            <p className="font-mono-num text-lg font-bold text-[#064E3B] dark:text-[#10B981]">
+            <p className="font-mono-num text-lg font-bold text-[#064E3B] dark:text-[#6EE7B7]">
               {quoteConversion.conversionRatePct}%
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 text-xs">
-            <div className="rounded-xl bg-[#FAF8F3] dark:bg-[#111714] border border-[#EFE9DA] dark:border-[#202924] p-3">
-              <p className="text-[#5C635D] dark:text-[#9BA39D]">Quotes sent</p>
+            <div className="rounded-[10px] bg-[#F6F7F8] dark:bg-[#111715] border border-gray-100 dark:border-[#1F2925] p-3">
+              <p className="text-[#6B7280] dark:text-[#9CA3AF]">Quotes sent</p>
               <p className="font-mono-num text-base font-bold mt-0.5">
                 {quoteConversion.quotesSent}
               </p>
-              <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+              <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
                 {formatKobo(quoteConversion.quotedTotalKobo, cur)}
               </p>
             </div>
-            <div className="rounded-xl bg-[#FAF8F3] dark:bg-[#111714] border border-[#EFE9DA] dark:border-[#202924] p-3">
-              <p className="text-[#5C635D] dark:text-[#9BA39D]">Converted to invoice</p>
-              <p className="font-mono-num text-base font-bold text-[#064E3B] dark:text-[#10B981] mt-0.5">
+            <div className="rounded-[10px] bg-[#F6F7F8] dark:bg-[#111715] border border-gray-100 dark:border-[#1F2925] p-3">
+              <p className="text-[#6B7280] dark:text-[#9CA3AF]">Converted to invoice</p>
+              <p className="font-mono-num text-base font-bold text-[#064E3B] dark:text-[#6EE7B7] mt-0.5">
                 {quoteConversion.quotesConverted}
               </p>
-              <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+              <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
                 {formatKobo(quoteConversion.convertedTotalKobo, cur)}
               </p>
             </div>
           </div>
 
-          <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
             Accepted (awaiting invoice): {quoteConversion.quotesAccepted} · Declined:{' '}
             {quoteConversion.quotesDeclined} · Expired: {quoteConversion.quotesExpired}
           </p>
@@ -209,12 +209,12 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
       </div>
 
       {/* V2 CSV Exports */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3">
         <div>
-          <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
             Export Invoices, Quotes &amp; Payments (CSV)
           </p>
-          <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-0.5">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
             Spreadsheets open cleanly in Excel and Google Sheets with ₦ formatting.
           </p>
         </div>
@@ -231,9 +231,9 @@ export function V2ReportsSection({ business, dateFrom, dateTo }: V2ReportsSectio
               type="button"
               disabled={exporting !== null}
               onClick={() => handleExport(btn.type)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-2 text-xs font-semibold text-[#121513] dark:text-[#F4F1EA] hover:bg-[#F3EFE6] dark:hover:bg-[#1B231F] min-h-[40px] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-2 text-xs font-semibold text-[#111827] dark:text-[#F3F4F6] hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[40px] disabled:opacity-50"
             >
-              <Download className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#10B981]" />
+              <Download className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#6EE7B7]" />
               <span>{exporting === btn.type ? 'Exporting…' : btn.label}</span>
             </button>
           ))}

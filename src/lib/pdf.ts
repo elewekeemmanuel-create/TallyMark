@@ -5,7 +5,7 @@ import {
   formatLagosDateTime,
   koboToWords,
 } from '../shared/money';
-import type { ReceiptTemplate } from '../shared/schemas';
+import { sanitizeRasterImageDataUrl, type ReceiptTemplate } from '../shared/schemas';
 import type {
   BusinessProfile,
   CashBookDayView,
@@ -13,7 +13,7 @@ import type {
   ReportsSummary,
 } from '../shared/types';
 
-interface LoadedFontBytes {
+export interface LoadedFontBytes {
   sansRegular: ArrayBuffer;
   sansSemiBold: ArrayBuffer;
   monoRegular: ArrayBuffer;
@@ -204,12 +204,13 @@ async function embedLogo(pdfDoc: import('pdf-lib').PDFDocument, dataUrl: string 
 
 export async function generateReceiptPdfBytes(
   receipt: PublicReceiptRecord,
-  templateOverride?: ReceiptTemplate
+  templateOverride?: ReceiptTemplate,
+  options?: { origin?: string; fontBytes?: LoadedFontBytes }
 ): Promise<Uint8Array> {
   const template = templateOverride || receipt.template || 'modern';
   const [{ PDFDocument, rgb, fontkit, QRCode }, fonts] = await Promise.all([
     loadPdfDeps(),
-    getFontBytes(),
+    options?.fontBytes ? Promise.resolve(options.fontBytes) : getFontBytes(),
   ]);
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
@@ -220,15 +221,25 @@ export async function generateReceiptPdfBytes(
   const monoBold = await pdfDoc.embedFont(fonts.monoSemiBold, { subset: true });
   const serif = await pdfDoc.embedFont(fonts.serifRegular, { subset: true });
 
-  const publicUrl = `${window.location.origin}/r/${receipt.publicId}`;
+  const origin =
+    options?.origin ||
+    (typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://tallymark.app');
+  const publicUrl = `${origin.replace(/\/+$/, '')}/r/${receipt.publicId}`;
   const qrDataUrl = await QRCode.toDataURL(publicUrl, {
-    width: 180,
+    width: 220,
     margin: 1,
-    color: { dark: '#121513', light: '#FFFDF9' },
+    errorCorrectionLevel: 'M',
+    color: { dark: '#121513', light: '#FFFFFF' },
   });
   const qrBytes = Uint8Array.from(atob(qrDataUrl.split(',')[1]), (c) => c.charCodeAt(0));
   const qrImage = await pdfDoc.embedPng(qrBytes);
   const logoImage = await embedLogo(pdfDoc, receipt.businessLogoDataUrl);
+  const signatureImage = await embedLogo(
+    pdfDoc,
+    sanitizeRasterImageDataUrl(receipt.businessSignatureDataUrl)
+  );
 
   const brandColor = hexToRgb(receipt.brandColor || '#064E3B');
   const ink = rgb(0.07, 0.08, 0.075);
@@ -273,9 +284,13 @@ export async function generateReceiptPdfBytes(
       wordsLines.length * 10 +
       (noteLines.length ? 4 + noteLines.length * 10 : 0) +
       (voidLines.length ? 4 + voidLines.length * 10 : 0);
-    const footerHeight = 8 + 14 + 58 + 20;
+    const signatureHeight = 52;
+    const footerHeight = 8 + 14 + 66 + 26;
 
-    const height = Math.max(430, headerHeight + itemBlockHeight + totalsHeight + footerHeight);
+    const height = Math.max(
+      490,
+      headerHeight + itemBlockHeight + totalsHeight + signatureHeight + footerHeight
+    );
     const page = pdfDoc.addPage([width, height]);
     page.drawRectangle({ x: 0, y: 0, width, height, color: ivoryBg });
 
@@ -385,14 +400,88 @@ export async function generateReceiptPdfBytes(
       }
     }
 
+    // Issuer & Customer signature strip (compact 80mm)
     y -= 8;
-    const stampLabel = receipt.status === 'VOID' ? '[ VOID ]' : receipt.status === 'PART_PAID' ? '[ PART PAID ]' : '[ PAID ]';
-    const sw = monoBold.widthOfTextAtSize(stampLabel, 9);
-    page.drawText(stampLabel, { x: (width - sw) / 2, y, size: 9, font: monoBold, color: brandColor });
-    y -= 58;
+    page.drawLine({
+      start: { x: margin, y },
+      end: { x: width - margin, y },
+      thickness: 0.75,
+      color: hairline,
+      dashArray: [2, 2],
+    });
+    const compactSigColW = (innerWidth - 10) / 2;
+    const compactSigLineY = y - 28;
+    if (signatureImage) {
+      const dims = signatureImage.scaleToFit(compactSigColW - 8, 22);
+      page.drawImage(signatureImage, {
+        x: margin + (compactSigColW - dims.width) / 2,
+        y: compactSigLineY + 3,
+        width: dims.width,
+        height: dims.height,
+      });
+    }
+    page.drawLine({
+      start: { x: margin, y: compactSigLineY },
+      end: { x: margin + compactSigColW, y: compactSigLineY },
+      thickness: 0.65,
+      color: muted,
+    });
+    const issuerLbl = 'Issuer Sign';
+    const issuerLblW = sans.widthOfTextAtSize(issuerLbl, 6.8);
+    page.drawText(issuerLbl, {
+      x: margin + (compactSigColW - issuerLblW) / 2,
+      y: compactSigLineY - 9,
+      size: 6.8,
+      font: sans,
+      color: muted,
+    });
 
-    page.drawImage(qrImage, { x: (width - 52) / 2, y, width: 52, height: 52 });
-    y -= 14;
+    const custColX = margin + compactSigColW + 10;
+    page.drawLine({
+      start: { x: custColX, y: compactSigLineY },
+      end: { x: custColX + compactSigColW, y: compactSigLineY },
+      thickness: 0.65,
+      color: muted,
+    });
+    const custLbl = 'Customer Sign';
+    const custLblW = sans.widthOfTextAtSize(custLbl, 6.8);
+    page.drawText(custLbl, {
+      x: custColX + (compactSigColW - custLblW) / 2,
+      y: compactSigLineY - 9,
+      size: 6.8,
+      font: sans,
+      color: muted,
+    });
+    y = compactSigLineY - 22;
+
+    const stampLabel =
+      receipt.status === 'VOID'
+        ? '[ VOID ]'
+        : receipt.status === 'PART_PAID'
+        ? '[ PART PAID ]'
+        : '[ PAID ]';
+    const sw = monoBold.widthOfTextAtSize(stampLabel, 9);
+    page.drawText(stampLabel, {
+      x: (width - sw) / 2,
+      y,
+      size: 9,
+      font: monoBold,
+      color: brandColor,
+    });
+    y -= 62;
+
+    page.drawImage(qrImage, { x: (width - 56) / 2, y, width: 56, height: 56 });
+    y -= 11;
+    const scanText = 'SCAN QR TO VERIFY';
+    const scanW = sansBold.widthOfTextAtSize(scanText, 6.8);
+    page.drawText(scanText, {
+      x: (width - scanW) / 2,
+      y,
+      size: 6.8,
+      font: sansBold,
+      color: brandColor,
+    });
+    y -= 11;
     const footer = 'Verified via Tallymark';
     const fw = sans.widthOfTextAtSize(footer, 7);
     page.drawText(footer, { x: (width - fw) / 2, y, size: 7, font: sans, color: muted });
@@ -624,18 +713,112 @@ export async function generateReceiptPdfBytes(
     }
   }
 
-  // QR + Tallymark signature footer
-  const footerY = 56;
-  page.drawLine({ start: { x: margin, y: footerY + 62 }, end: { x: width - margin, y: footerY + 62 }, thickness: 0.75, color: hairline });
-  page.drawImage(qrImage, { x: width - margin - 54, y: footerY, width: 54, height: 54 });
+  // Issuer & Customer Signature Block (A4)
+  const footerY = 52;
+  const footerTopY = footerY + 64;
+  const sigColWidth = 205;
+  const sigLineY = Math.max(footerTopY + 34, Math.min(y - 48, 174));
 
-  drawTallyIcon(page, margin, footerY + 26, 16, brandColor);
-  page.drawText('Issued with Tallymark', { x: margin + 24, y: footerY + 32, size: 9.5, font: sansBold, color: ink });
-  page.drawText(`Verify online: ${publicUrl}`, { x: margin, y: footerY + 12, size: 8, font: mono, color: muted });
+  // Left: Authorized Issuer Signature
+  if (signatureImage) {
+    const dims = signatureImage.scaleToFit(155, 36);
+    page.drawImage(signatureImage, {
+      x: margin,
+      y: sigLineY + 4,
+      width: dims.width,
+      height: dims.height,
+    });
+  }
+  page.drawLine({
+    start: { x: margin, y: sigLineY },
+    end: { x: margin + sigColWidth, y: sigLineY },
+    thickness: 0.75,
+    color: hairline,
+  });
+  page.drawText('AUTHORIZED SIGNATURE', {
+    x: margin,
+    y: sigLineY - 12,
+    size: 7.5,
+    font: sansBold,
+    color: muted,
+  });
+  page.drawText(safeText(receipt.businessName).slice(0, 36), {
+    x: margin,
+    y: sigLineY - 23,
+    size: 8.5,
+    font: sans,
+    color: ink,
+  });
+
+  // Right: Customer Signature Space
+  const rightSigX = width - margin - sigColWidth;
+  page.drawLine({
+    start: { x: rightSigX, y: sigLineY },
+    end: { x: width - margin, y: sigLineY },
+    thickness: 0.75,
+    color: hairline,
+  });
+  page.drawText('CUSTOMER SIGNATURE', {
+    x: rightSigX,
+    y: sigLineY - 12,
+    size: 7.5,
+    font: sansBold,
+    color: muted,
+  });
+  page.drawText(safeText(receipt.customerName || 'Customer').slice(0, 36), {
+    x: rightSigX,
+    y: sigLineY - 23,
+    size: 8.5,
+    font: sans,
+    color: ink,
+  });
+
+  // QR + Tallymark verification footer
+  page.drawLine({
+    start: { x: margin, y: footerTopY },
+    end: { x: width - margin, y: footerTopY },
+    thickness: 0.75,
+    color: hairline,
+  });
+  page.drawImage(qrImage, { x: width - margin - 56, y: footerY, width: 56, height: 56 });
+  const scanCaption = 'SCAN TO VERIFY';
+  const scanCaptionW = sansBold.widthOfTextAtSize(scanCaption, 7);
+  page.drawText(scanCaption, {
+    x: width - margin - 64 - scanCaptionW,
+    y: footerY + 34,
+    size: 7,
+    font: sansBold,
+    color: brandColor,
+  });
+  const authSub = 'Authenticate receipt';
+  const authSubW = sans.widthOfTextAtSize(authSub, 7);
+  page.drawText(authSub, {
+    x: width - margin - 64 - authSubW,
+    y: footerY + 22,
+    size: 7,
+    font: sans,
+    color: muted,
+  });
+
+  drawTallyIcon(page, margin, footerY + 28, 16, brandColor);
+  page.drawText('Issued with Tallymark', {
+    x: margin + 24,
+    y: footerY + 34,
+    size: 9.5,
+    font: sansBold,
+    color: ink,
+  });
+  page.drawText(`Verify online: ${publicUrl}`, {
+    x: margin,
+    y: footerY + 13,
+    size: 7.5,
+    font: mono,
+    color: muted,
+  });
   page.drawText(`Issued ${formatLagosDateTime(receipt.issuedAt)} (WAT)`, {
     x: margin,
-    y: footerY,
-    size: 8,
+    y: footerY + 1,
+    size: 7.5,
     font: mono,
     color: muted,
   });

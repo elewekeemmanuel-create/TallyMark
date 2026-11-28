@@ -129,15 +129,15 @@ export function PushNotificationsCard() {
   };
 
   return (
-    <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-6 space-y-3">
+    <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 sm:p-6 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#F3EFE6] dark:bg-[#1B231F] text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-[10px] bg-[#F4F6F8] dark:bg-[#1A221F] text-[#064E3B] dark:text-[#6EE7B7] flex items-center justify-center shrink-0">
             {isSubscribedThisDevice ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           </div>
           <div className="max-w-lg">
             <h2 className="text-base font-semibold">Payment Report Alerts (Opt-in)</h2>
-            <p className="mt-0.5 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="mt-0.5 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               Receive a short alert on this phone when a customer taps &ldquo;I&apos;ve paid&rdquo;. Alerts never include customer names or amounts. Even when off, pending reports show a badge inside Tallymark.
             </p>
           </div>
@@ -148,7 +148,7 @@ export function PushNotificationsCard() {
             type="button"
             disabled={busy}
             onClick={handleDisable}
-            className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2 text-xs font-semibold hover:bg-[#F5F1E7] dark:hover:bg-[#1B231F] disabled:opacity-60"
+            className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2 text-xs font-semibold hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] disabled:opacity-60"
           >
             {busy ? 'Updating…' : 'Turn off alerts'}
           </button>
@@ -157,7 +157,7 @@ export function PushNotificationsCard() {
             type="button"
             disabled={busy || !browserSupported || !status?.vapidConfigured}
             onClick={handleEnable}
-            className="min-h-[44px] rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B] disabled:opacity-50"
+            className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#04392B] disabled:opacity-50"
           >
             {busy ? 'Enabling…' : 'Turn on alerts'}
           </button>
@@ -165,17 +165,17 @@ export function PushNotificationsCard() {
       </div>
 
       {!browserSupported && (
-        <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
           Your browser does not support Web Push alerts. Pending payment reports will still show as a badge in navigation.
         </p>
       )}
       {browserSupported && status && !status.vapidConfigured && (
-        <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
           Phone push keys are not configured on this server yet. In-app badge alerts remain active.
         </p>
       )}
       {notice && (
-        <p className="text-xs font-medium text-[#064E3B] dark:text-[#10B981]">{notice}</p>
+        <p className="text-xs font-medium text-[#064E3B] dark:text-[#6EE7B7]">{notice}</p>
       )}
       {error && <p className="text-xs text-[#B91C1C] dark:text-red-400">{error}</p>}
     </section>

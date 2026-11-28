@@ -344,7 +344,7 @@ export function QuoteEditorPage({
   };
 
   if (loadingDraft) {
-    return <div className="py-16 text-center text-xs text-[#5C635D]">Loading quote draft…</div>;
+    return <div className="py-16 text-center text-xs text-[#6B7280]">Loading quote draft…</div>;
   }
 
   return (
@@ -353,7 +353,7 @@ export function QuoteEditorPage({
         <div>
           <Link
             to="/app/documents"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] hover:text-[#121513] dark:text-[#9BA39D]"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#111827] dark:text-[#9CA3AF]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Documents</span>
@@ -365,13 +365,13 @@ export function QuoteEditorPage({
       </div>
 
       {error && (
-        <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] p-3.5 text-xs text-[#B91C1C]">
+        <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] p-3.5 text-xs text-[#B91C1C]">
           {error}
         </div>
       )}
 
       {/* 1. Customer */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-3">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-3">
         <label className="block text-xs font-semibold" htmlFor="quote-customer-name">
           Customer
         </label>
@@ -384,7 +384,7 @@ export function QuoteEditorPage({
             setCustomerId(null);
           }}
           placeholder="Customer or company name"
-          className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3.5 py-2.5 text-sm min-h-[44px]"
+          className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3.5 py-2.5 text-sm min-h-[44px]"
         />
         {customers.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -400,7 +400,7 @@ export function QuoteEditorPage({
                 className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                   customerId === c.id
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] text-[#121513] dark:text-[#F4F1EA]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] text-[#111827] dark:text-[#F3F4F6]'
                 }`}
               >
                 {c.name}
@@ -411,13 +411,13 @@ export function QuoteEditorPage({
       </section>
 
       {/* 2. Line Items */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold">Items</p>
           <button
             type="button"
             onClick={() => setLines((prev) => [...prev, makeEmptyLine()])}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] px-2.5 py-1.5 text-xs font-medium hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-[#232D29] px-2.5 py-1.5 text-xs font-medium hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add line</span>
@@ -431,7 +431,7 @@ export function QuoteEditorPage({
                 key={item.id}
                 type="button"
                 onClick={() => applyCatalogSuggestion(item)}
-                className="rounded-lg border border-[#E5DEC9] dark:border-[#242D28] bg-[#FAF8F3] dark:bg-[#101512] px-2.5 py-1 text-[11px] font-medium text-[#5C635D] dark:text-[#9BA39D] hover:border-[#064E3B]"
+                className="rounded-lg border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-2.5 py-1 text-[11px] font-medium text-[#6B7280] dark:text-[#9CA3AF] hover:border-[#064E3B]"
               >
                 + {item.description} ({formatKobo(item.unitPriceKobo, business.currency)})
               </button>
@@ -443,7 +443,7 @@ export function QuoteEditorPage({
           {lines.map((row, idx) => (
             <div
               key={row.key}
-              className="rounded-xl border border-[#EFEAD9] dark:border-[#242D28] bg-[#FAF8F3] dark:bg-[#101512] p-3 space-y-2.5"
+              className="rounded-[10px] border border-gray-100 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#0B0F0E] p-3 space-y-2.5"
             >
               <div className="flex items-center gap-2">
                 <input
@@ -451,14 +451,14 @@ export function QuoteEditorPage({
                   value={row.description}
                   onChange={(e) => updateLine(idx, { description: e.target.value })}
                   placeholder="Item or service description"
-                  className="flex-1 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-3 py-2 text-sm min-h-[42px]"
+                  className="flex-1 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-3 py-2 text-sm min-h-[42px]"
                 />
                 {lines.length > 1 && (
                   <button
                     type="button"
                     aria-label="Remove line"
                     onClick={() => setLines((prev) => prev.filter((_, i) => i !== idx))}
-                    className="p-2 rounded-lg text-[#5C635D] hover:text-[#B91C1C]"
+                    className="p-2 rounded-lg text-[#6B7280] hover:text-[#B91C1C]"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -466,17 +466,17 @@ export function QuoteEditorPage({
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-[11px] text-[#5C635D] mb-1">Qty</label>
+                  <label className="block text-[11px] text-[#6B7280] mb-1">Qty</label>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={row.qtyText}
                     onChange={(e) => updateLine(idx, { qtyText: e.target.value })}
-                    className="w-full rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-2 text-sm font-mono min-h-[40px]"
+                    className="w-full rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-2 text-sm font-mono min-h-[40px]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-[#5C635D] mb-1">
+                  <label className="block text-[11px] text-[#6B7280] mb-1">
                     Unit price ({business.currency})
                   </label>
                   <input
@@ -485,18 +485,18 @@ export function QuoteEditorPage({
                     value={row.unitPriceText}
                     onChange={(e) => updateLine(idx, { unitPriceText: e.target.value })}
                     placeholder="0.00"
-                    className="w-full rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-2 text-sm font-mono min-h-[40px]"
+                    className="w-full rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-2 text-sm font-mono min-h-[40px]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-[#5C635D] mb-1">Line discount</label>
+                  <label className="block text-[11px] text-[#6B7280] mb-1">Line discount</label>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={row.discountText}
                     onChange={(e) => updateLine(idx, { discountText: e.target.value })}
                     placeholder="0"
-                    className="w-full rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-2.5 py-2 text-sm font-mono min-h-[40px]"
+                    className="w-full rounded-lg border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-2.5 py-2 text-sm font-mono min-h-[40px]"
                   />
                 </div>
               </div>
@@ -506,7 +506,7 @@ export function QuoteEditorPage({
       </section>
 
       {/* 3. Valid Until & Payment Terms */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="block text-xs font-semibold" htmlFor="quote-valid-until">
@@ -518,7 +518,7 @@ export function QuoteEditorPage({
               value={validUntil}
               min={issueDate}
               onChange={(e) => setValidUntil(e.target.value)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2.5 text-sm font-mono min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2.5 text-sm font-mono min-h-[44px]"
             />
             <div className="flex flex-wrap gap-1.5">
               {[7, 14, 30].map((d) => (
@@ -526,7 +526,7 @@ export function QuoteEditorPage({
                   key={d}
                   type="button"
                   onClick={() => applyValidityPreset(d)}
-                  className="rounded-lg border border-[#DED6C2] dark:border-[#2B352F] px-2.5 py-1 text-[11px] font-medium text-[#5C635D] hover:border-[#064E3B]"
+                  className="rounded-lg border border-gray-200 dark:border-[#232D29] px-2.5 py-1 text-[11px] font-medium text-[#6B7280] hover:border-[#064E3B]"
                 >
                   {d} days
                 </button>
@@ -542,7 +542,7 @@ export function QuoteEditorPage({
               id="quote-terms"
               value={termsKind}
               onChange={(e) => setTermsKind(e.target.value as PaymentTermsKind)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2.5 text-sm min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2.5 text-sm min-h-[44px]"
             >
               <option value="due_on_receipt">Due on receipt</option>
               <option value="net_7">7 days</option>
@@ -554,64 +554,64 @@ export function QuoteEditorPage({
       </section>
 
       {/* More details (collapsed by default to obey <= 5 primary fields) */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] overflow-hidden">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] overflow-hidden">
         <button
           type="button"
           onClick={() => setShowMore((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-3.5 text-xs font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+          className="w-full flex items-center justify-between px-5 py-3.5 text-xs font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
         >
           <span>More details (customer contact, discount, deposit, notes)</span>
           {showMore ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
 
         {showMore && (
-          <div className="px-5 pb-5 pt-2 space-y-4 border-t border-[#EFEAD9] dark:border-[#242D28]">
+          <div className="px-5 pb-5 pt-2 space-y-4 border-t border-gray-100 dark:border-[#1F2925]">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-[#5C635D] mb-1">Issue date</label>
+                <label className="block text-xs text-[#6B7280] mb-1">Issue date</label>
                 <input
                   type="date"
                   value={issueDate}
                   onChange={(e) => setIssueDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm font-mono min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm font-mono min-h-[42px]"
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#5C635D] mb-1">Customer phone</label>
+                <label className="block text-xs text-[#6B7280] mb-1">Customer phone</label>
                 <input
                   type="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="080..."
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm min-h-[42px]"
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#5C635D] mb-1">Customer email</label>
+                <label className="block text-xs text-[#6B7280] mb-1">Customer email</label>
                 <input
                   type="email"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm min-h-[42px]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-[#5C635D] mb-1">Customer address</label>
+              <label className="block text-xs text-[#6B7280] mb-1">Customer address</label>
               <input
                 type="text"
                 value={customerAddress}
                 onChange={(e) => setCustomerAddress(e.target.value)}
                 placeholder="Shop or delivery address"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm min-h-[42px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm min-h-[42px]"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-[#5C635D] mb-1">
+                <label className="block text-xs text-[#6B7280] mb-1">
                   Quote discount ({business.currency})
                 </label>
                 <input
@@ -620,15 +620,15 @@ export function QuoteEditorPage({
                   value={quoteDiscountText}
                   onChange={(e) => setQuoteDiscountText(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm font-mono min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm font-mono min-h-[42px]"
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#5C635D] mb-1">Deposit if accepted</label>
+                <label className="block text-xs text-[#6B7280] mb-1">Deposit if accepted</label>
                 <select
                   value={depositType}
                   onChange={(e) => setDepositType(e.target.value as DepositType)}
-                  className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm min-h-[42px]"
+                  className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm min-h-[42px]"
                 >
                   <option value="none">No deposit</option>
                   <option value="percent">Percentage (%)</option>
@@ -637,7 +637,7 @@ export function QuoteEditorPage({
               </div>
               {depositType !== 'none' && (
                 <div>
-                  <label className="block text-xs text-[#5C635D] mb-1">
+                  <label className="block text-xs text-[#6B7280] mb-1">
                     {depositType === 'percent' ? 'Deposit (%)' : `Deposit (${business.currency})`}
                   </label>
                   <input
@@ -646,7 +646,7 @@ export function QuoteEditorPage({
                     value={depositInputText}
                     onChange={(e) => setDepositInputText(e.target.value)}
                     placeholder={depositType === 'percent' ? '50' : '0.00'}
-                    className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm font-mono min-h-[42px]"
+                    className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm font-mono min-h-[42px]"
                   />
                 </div>
               )}
@@ -654,7 +654,7 @@ export function QuoteEditorPage({
 
             {(business.bankAccounts || []).length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs text-[#5C635D]">Bank accounts to copy if converted to invoice</p>
+                <p className="text-xs text-[#6B7280]">Bank accounts to copy if converted to invoice</p>
                 <div className="space-y-1.5">
                   {(business.bankAccounts || []).map((bank) => {
                     const checked = selectedBankIds.includes(bank.id);
@@ -673,10 +673,10 @@ export function QuoteEditorPage({
                                 : prev.filter((id) => id !== bank.id)
                             )
                           }
-                          className="rounded border-[#DED6C2] text-[#064E3B]"
+                          className="rounded border-gray-200 text-[#064E3B]"
                         />
                         <span className="font-medium">{bank.bankName}</span>
-                        <span className="font-mono text-[#5C635D]">{bank.accountNumber}</span>
+                        <span className="font-mono text-[#6B7280]">{bank.accountNumber}</span>
                       </label>
                     );
                   })}
@@ -685,22 +685,22 @@ export function QuoteEditorPage({
             )}
 
             <div>
-              <label className="block text-xs text-[#5C635D] mb-1">Notes &amp; terms</label>
+              <label className="block text-xs text-[#6B7280] mb-1">Notes &amp; terms</label>
               <textarea
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Delivery timeline, warranty, or validity terms"
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-[#5C635D] mb-1">Template style</label>
+              <label className="block text-xs text-[#6B7280] mb-1">Template style</label>
               <select
                 value={template}
                 onChange={(e) => setTemplate(e.target.value as 'modern' | 'classic' | 'compact')}
-                className="w-full sm:w-56 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#101512] px-3 py-2 text-sm min-h-[42px]"
+                className="w-full sm:w-56 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#0B0F0E] px-3 py-2 text-sm min-h-[42px]"
               >
                 <option value="modern">Modern</option>
                 <option value="classic">Classic</option>
@@ -712,14 +712,14 @@ export function QuoteEditorPage({
       </section>
 
       {/* Live Totals + Primary Action */}
-      <section className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4">
+      <section className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4">
         <div className="space-y-1.5 text-xs">
-          <div className="flex justify-between text-[#5C635D]">
+          <div className="flex justify-between text-[#6B7280]">
             <span>Subtotal</span>
             <span className="font-mono tabular-nums">{formatKobo(totals.subtotalKobo, business.currency)}</span>
           </div>
           {totals.lineDiscountTotalKobo > 0 && (
-            <div className="flex justify-between text-[#5C635D]">
+            <div className="flex justify-between text-[#6B7280]">
               <span>Line discounts</span>
               <span className="font-mono tabular-nums">
                 −{formatKobo(totals.lineDiscountTotalKobo, business.currency)}
@@ -727,7 +727,7 @@ export function QuoteEditorPage({
             </div>
           )}
           {totals.invoiceDiscountKobo > 0 && (
-            <div className="flex justify-between text-[#5C635D]">
+            <div className="flex justify-between text-[#6B7280]">
               <span>Quote discount</span>
               <span className="font-mono tabular-nums">
                 −{formatKobo(totals.invoiceDiscountKobo, business.currency)}
@@ -735,7 +735,7 @@ export function QuoteEditorPage({
             </div>
           )}
           {business.vatEnabled && totals.vatKobo > 0 && (
-            <div className="flex justify-between text-[#5C635D]">
+            <div className="flex justify-between text-[#6B7280]">
               <span>
                 VAT ({(business.vatRateBps / 100).toFixed(1).replace(/\.0$/, '')}%
                 {business.vatMode === 'inclusive' ? ' incl.' : ''})
@@ -743,9 +743,9 @@ export function QuoteEditorPage({
               <span className="font-mono tabular-nums">{formatKobo(totals.vatKobo, business.currency)}</span>
             </div>
           )}
-          <div className="pt-2 border-t border-[#EFEAD9] dark:border-[#242D28] flex justify-between text-base font-bold">
+          <div className="pt-2 border-t border-gray-100 dark:border-[#1F2925] flex justify-between text-base font-bold">
             <span>Quote Total</span>
-            <span className="font-mono tabular-nums text-[#064E3B] dark:text-[#10B981]">
+            <span className="font-mono tabular-nums text-[#064E3B] dark:text-[#6EE7B7]">
               {formatKobo(totals.totalKobo, business.currency)}
             </span>
           </div>
@@ -756,7 +756,7 @@ export function QuoteEditorPage({
             type="button"
             disabled={submitting !== null || pdfBusy}
             onClick={() => handleSubmit(true)}
-            className="flex-1 rounded-xl bg-[#064E3B] px-5 py-3 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60 min-h-[46px]"
+            className="flex-1 rounded-[10px] bg-[#064E3B] px-5 py-3 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60 min-h-[46px]"
           >
             {submitting === 'send' ? 'Issuing quote…' : 'Send quote'}
           </button>
@@ -764,7 +764,7 @@ export function QuoteEditorPage({
             type="button"
             disabled={submitting !== null || pdfBusy}
             onClick={() => handleSubmit(false)}
-            className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-5 py-3 text-sm font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[46px]"
+            className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-5 py-3 text-sm font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] disabled:opacity-60 min-h-[46px]"
           >
             {submitting === 'draft' ? 'Saving…' : 'Save draft'}
           </button>
@@ -772,7 +772,7 @@ export function QuoteEditorPage({
             type="button"
             disabled={submitting !== null || pdfBusy}
             onClick={handleDownloadPdf}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 py-3 text-sm font-semibold hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F] disabled:opacity-60 min-h-[46px]"
+            className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-4 py-3 text-sm font-semibold hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F] disabled:opacity-60 min-h-[46px]"
           >
             <Download className="w-4 h-4" />
             <span>{pdfBusy ? 'Preparing PDF…' : 'Download PDF'}</span>

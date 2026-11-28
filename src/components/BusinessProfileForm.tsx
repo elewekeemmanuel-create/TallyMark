@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { PenLine, Upload, X } from 'lucide-react';
 import {
   SUPPORTED_CURRENCIES,
   formatKoboPlainInput,
@@ -46,6 +46,43 @@ async function resizeImageToDataUrl(file: File): Promise<string> {
   });
 }
 
+async function resizeSignatureToDataUrl(file: File): Promise<string> {
+  if (!/^image\/(png|jpeg|jpg|webp)$/i.test(file.type)) {
+    throw new Error('Upload a PNG, JPG, or WEBP signature image');
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Signature file must be under 5 MB');
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read signature file'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Invalid signature image file'));
+      img.onload = () => {
+        const maxW = 480;
+        const maxH = 160;
+        const scale = Math.min(1, maxW / img.width, maxH / img.height);
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas unavailable'));
+          return;
+        }
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/png', 0.92));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 interface BusinessProfileFormProps {
   initial?: BusinessProfile | null;
   defaultEmail?: string;
@@ -61,6 +98,9 @@ export function BusinessProfileForm({
 }: BusinessProfileFormProps) {
   const [name, setName] = useState(initial?.name || '');
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(initial?.logoDataUrl || null);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(
+    initial?.signatureDataUrl || null
+  );
   const [address, setAddress] = useState(initial?.address || '');
   const [phone, setPhone] = useState(initial?.phone || '');
   const [email, setEmail] = useState(initial?.email || defaultEmail);
@@ -93,6 +133,20 @@ export function BusinessProfileForm({
     }
   };
 
+  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    try {
+      const dataUrl = await resizeSignatureToDataUrl(file);
+      setSignatureDataUrl(dataUrl);
+    } catch (err: any) {
+      setError(err?.message || 'Could not process signature image');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -105,6 +159,7 @@ export function BusinessProfileForm({
       await onSubmit({
         name: name.trim(),
         logoDataUrl,
+        signatureDataUrl,
         address: address.trim(),
         phone: phone.trim(),
         email: email.trim(),
@@ -128,7 +183,7 @@ export function BusinessProfileForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label htmlFor="biz-name" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-name" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Business Name *
           </label>
           <input
@@ -138,12 +193,12 @@ export function BusinessProfileForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Kemi Textiles & Lace"
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
           />
         </div>
 
         <div className="sm:col-span-2">
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Business Logo (optional)
           </label>
           <div className="flex items-center gap-4">
@@ -152,20 +207,20 @@ export function BusinessProfileForm({
                 <img
                   src={logoDataUrl}
                   alt="Business logo preview"
-                  className="w-16 h-16 rounded-xl object-contain border border-[#DED6C2] dark:border-[#2B352F] bg-white p-1"
+                  className="w-16 h-16 rounded-[10px] object-contain border border-gray-200 dark:border-[#232D29] bg-white p-1"
                 />
                 <button
                   type="button"
                   onClick={() => setLogoDataUrl(null)}
                   aria-label="Remove logo"
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#121513] text-white flex items-center justify-center"
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#111827] text-white flex items-center justify-center"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
-              <label className="inline-flex items-center gap-2 rounded-xl border border-dashed border-[#C9B99A] dark:border-[#36423B] bg-[#FAF8F3] dark:bg-[#111714] px-4 py-2.5 text-xs font-medium cursor-pointer hover:bg-[#F3EFE6] dark:hover:bg-[#1B231F] min-h-[44px]">
-                <Upload className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+              <label className="inline-flex items-center gap-2 rounded-[10px] border border-dashed border-gray-200 dark:border-[#36423B] bg-[#F6F7F8] dark:bg-[#111715] px-4 py-2.5 text-xs font-medium cursor-pointer hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[44px]">
+                <Upload className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
                 <span>Upload PNG or JPG</span>
                 <input
                   type="file"
@@ -179,7 +234,63 @@ export function BusinessProfileForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="biz-address" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
+            Authorized Issuer Signature (for receipts)
+          </label>
+          <div className="space-y-2">
+            {signatureDataUrl ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] px-4 py-2.5 min-w-[200px] max-w-[280px]">
+                  <div className="h-12 flex items-end justify-center pb-1">
+                    <img
+                      src={signatureDataUrl}
+                      alt="Authorized issuer signature preview"
+                      className="max-h-11 max-w-[220px] object-contain mix-blend-multiply"
+                    />
+                  </div>
+                  <div className="border-t border-gray-200 pt-1 text-center text-[10px] uppercase tracking-[0.12em] text-[#6B7280]">
+                    Authorized Signature
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSignatureDataUrl(null)}
+                    aria-label="Remove signature"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#111827] text-white flex items-center justify-center"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <label className="inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2 text-xs font-medium cursor-pointer hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[40px]">
+                  <Upload className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#6EE7B7]" />
+                  <span>Replace signature</span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleSignatureUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            ) : (
+              <label className="inline-flex items-center gap-2 rounded-[10px] border border-dashed border-gray-200 dark:border-[#36423B] bg-[#F6F7F8] dark:bg-[#111715] px-4 py-2.5 text-xs font-medium cursor-pointer hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[44px]">
+                <PenLine className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
+                <span>Upload Signature (PNG or JPG)</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleSignatureUpload}
+                  className="hidden"
+                />
+              </label>
+            )}
+            <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
+              Authenticates every receipt you issue alongside a signing space for your customer. Transparent PNG or dark ink on white paper works best.
+            </p>
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="biz-address" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Shop / Office Address
           </label>
           <input
@@ -188,12 +299,12 @@ export function BusinessProfileForm({
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Suite 12, Balogun Plaza, Lagos Island"
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
           />
         </div>
 
         <div>
-          <label htmlFor="biz-phone" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-phone" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Business Phone
           </label>
           <input
@@ -202,12 +313,12 @@ export function BusinessProfileForm({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="0803 000 0000"
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm font-mono-num min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm font-mono-num min-h-[44px]"
           />
         </div>
 
         <div>
-          <label htmlFor="biz-email" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-email" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Business Email
           </label>
           <input
@@ -216,14 +327,14 @@ export function BusinessProfileForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="sales@yourbusiness.ng"
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
           />
         </div>
       </div>
 
-      <div className="pt-4 border-t border-[#ECE6D8] dark:border-[#26302B] grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="pt-4 border-t border-gray-100 dark:border-[#1F2925] grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label htmlFor="biz-prefix" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-prefix" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Receipt Prefix
           </label>
           <input
@@ -233,19 +344,19 @@ export function BusinessProfileForm({
             onChange={(e) => setReceiptPrefix(e.target.value.toUpperCase())}
             placeholder="RCT-"
             maxLength={12}
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
           />
         </div>
 
         <div>
-          <label htmlFor="biz-currency" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-currency" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Currency
           </label>
           <select
             id="biz-currency"
             value={currency}
             onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
           >
             {Object.values(SUPPORTED_CURRENCIES).map((c) => (
               <option key={c.code} value={c.code}>
@@ -256,7 +367,7 @@ export function BusinessProfileForm({
         </div>
 
         <div>
-          <label htmlFor="biz-opening" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-opening" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Opening Cash Balance
           </label>
           <input
@@ -266,12 +377,12 @@ export function BusinessProfileForm({
             value={openingCashInput}
             onChange={(e) => setOpeningCashInput(e.target.value)}
             placeholder="0.00"
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
           />
         </div>
 
         <div className="sm:col-span-3">
-          <label htmlFor="biz-reminder" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="biz-reminder" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Close-Day Reminder Time (WAT)
           </label>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -280,18 +391,18 @@ export function BusinessProfileForm({
               type="time"
               value={closeDayReminderTime}
               onChange={(e) => setCloseDayReminderTime(e.target.value)}
-              className="w-full sm:w-44 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+              className="w-full sm:w-44 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
             />
-            <span className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               Used for your daily close-the-day reminder and unclosed previous-day alert.
             </span>
           </div>
         </div>
       </div>
 
-      <div className="pt-4 border-t border-[#ECE6D8] dark:border-[#26302B] space-y-4">
+      <div className="pt-4 border-t border-gray-100 dark:border-[#1F2925] space-y-4">
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-2">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-2">
             Receipt Brand Color
           </label>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -301,10 +412,10 @@ export function BusinessProfileForm({
                 type="button"
                 onClick={() => setBrandColor(swatch.hex)}
                 aria-label={swatch.label}
-                className={`h-10 px-3 rounded-xl border text-xs font-medium inline-flex items-center gap-2 ${
+                className={`h-10 px-3 rounded-[10px] border text-xs font-medium inline-flex items-center gap-2 ${
                   brandColor.toLowerCase() === swatch.hex.toLowerCase()
-                    ? 'border-[#121513] dark:border-white bg-[#F3EFE6] dark:bg-[#1F2923]'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714]'
+                    ? 'border-[#111827] dark:border-white bg-[#F4F6F8] dark:bg-[#1F2925]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715]'
                 }`}
               >
                 <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: swatch.hex }} />
@@ -316,13 +427,13 @@ export function BusinessProfileForm({
               aria-label="Custom brand color"
               value={brandColor}
               onChange={(e) => setBrandColor(e.target.value)}
-              className="h-10 w-12 rounded-lg border border-[#DED6C2] dark:border-[#2B352F] bg-white p-1 cursor-pointer"
+              className="h-10 w-12 rounded-lg border border-gray-200 dark:border-[#232D29] bg-white p-1 cursor-pointer"
             />
           </div>
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-2">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-2">
             Default Receipt Template
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -331,10 +442,10 @@ export function BusinessProfileForm({
                 key={tpl}
                 type="button"
                 onClick={() => setDefaultTemplate(tpl)}
-                className={`min-h-[44px] rounded-xl border px-3 text-xs font-semibold capitalize transition-colors ${
+                className={`min-h-[44px] rounded-[10px] border px-3 text-xs font-semibold capitalize transition-colors ${
                   defaultTemplate === tpl
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] text-[#111827] dark:text-[#F3F4F6]'
                 }`}
               >
                 {tpl === 'compact' ? 'Compact 80mm' : tpl}
@@ -343,11 +454,11 @@ export function BusinessProfileForm({
           </div>
         </div>
 
-        <div className="rounded-xl border border-[#E5DEC9] dark:border-[#26302B] bg-[#FAF8F3] dark:bg-[#111714] p-4 space-y-3">
+        <div className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-[#F6F7F8] dark:bg-[#111715] p-4 space-y-3">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold">Apply Nigerian VAT (7.5%)</p>
-              <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                 Off by default. Turn on if your business charges 7.5% VAT on receipts.
               </p>
             </div>
@@ -369,7 +480,7 @@ export function BusinessProfileForm({
           </div>
 
           {vatEnabled && (
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E5DEC9] dark:border-[#26302B]">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200/70 dark:border-[#1F2925]">
               {(['exclusive', 'inclusive'] as VatMode[]).map((m) => (
                 <button
                   key={m}
@@ -378,7 +489,7 @@ export function BusinessProfileForm({
                   className={`min-h-[40px] rounded-lg border text-xs font-medium capitalize ${
                     vatMode === m
                       ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                      : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18]'
+                      : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917]'
                   }`}
                 >
                   {m === 'exclusive' ? 'Exclusive (+7.5% added)' : 'Inclusive (7.5% inside price)'}
@@ -394,7 +505,7 @@ export function BusinessProfileForm({
       <button
         type="submit"
         disabled={busy}
-        className="w-full sm:w-auto min-h-[48px] rounded-xl bg-[#064E3B] px-6 py-3 text-sm font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
+        className="w-full sm:w-auto min-h-[48px] rounded-[10px] bg-[#064E3B] px-6 py-3 text-sm font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
       >
         {busy ? 'Saving…' : submitLabel}
       </button>

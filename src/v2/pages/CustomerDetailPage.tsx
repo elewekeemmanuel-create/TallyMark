@@ -144,7 +144,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
 
   if (loading) {
     return (
-      <div className="py-16 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+      <div className="py-16 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
         Loading customer profile…
       </div>
     );
@@ -152,11 +152,11 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
 
   if (!detail) {
     return (
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-3">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-3">
         <p className="text-sm font-semibold">{error || 'Customer not found'}</p>
         <Link
           to="/app/customers"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white"
+          className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Customers</span>
@@ -185,7 +185,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
       <div>
         <Link
           to="/app/customers"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513] dark:hover:text-[#F4F1EA]"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F3F4F6]"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>All Customers</span>
@@ -193,28 +193,28 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
       </div>
 
       {/* Customer Header Card */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 space-y-4">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+            <h1 className="font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
               {customer.name}
             </h1>
-            <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-1">
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-1">
               {[customer.phone, customer.email, customer.address].filter(Boolean).join(' · ') ||
                 'No contact details saved yet'}
             </p>
             {customer.notes && (
-              <p className="text-xs text-[#5C635D] dark:text-[#9BA39D] mt-1">{customer.notes}</p>
+              <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-1">{customer.notes}</p>
             )}
           </div>
 
           <div className="text-right">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Current balance owed</p>
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Current balance owed</p>
             <p
               className={`font-mono-num text-2xl font-bold mt-0.5 ${
                 customer.balanceOwedKobo > 0
                   ? 'text-[#B91C1C] dark:text-[#FCA5A5]'
-                  : 'text-[#064E3B] dark:text-[#10B981]'
+                  : 'text-[#064E3B] dark:text-[#6EE7B7]'
               }`}
             >
               {formatKobo(customer.balanceOwedKobo, business.currency)}
@@ -222,24 +222,24 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#EFE9DA] dark:border-[#202924]">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-[#1F2925]">
           <Link
             to="/app/invoices/new"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white min-h-[38px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white min-h-[38px]"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>New Invoice</span>
           </Link>
           <Link
             to="/app/quotes/new"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3.5 py-2 text-xs font-semibold min-h-[38px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3.5 py-2 text-xs font-semibold min-h-[38px]"
           >
             <span>New Quote</span>
           </Link>
           <button
             type="button"
             onClick={() => setEditing((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3.5 py-2 text-xs font-medium text-[#5C635D] dark:text-[#9BA39D] min-h-[38px]"
+            className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3.5 py-2 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] min-h-[38px]"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>{editing ? 'Cancel edit' : 'Edit details'}</span>
@@ -247,7 +247,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
         </div>
 
         {editing && (
-          <form onSubmit={handleSaveCustomer} className="pt-3 border-t border-[#EFE9DA] dark:border-[#202924] grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form onSubmit={handleSaveCustomer} className="pt-3 border-t border-gray-100 dark:border-[#1F2925] grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold block mb-1">Name</label>
               <input
@@ -255,7 +255,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 required
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[40px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[40px]"
               />
             </div>
             <div>
@@ -264,7 +264,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 type="tel"
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[40px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[40px]"
               />
             </div>
             <div>
@@ -273,7 +273,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 type="email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[40px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[40px]"
               />
             </div>
             <div>
@@ -282,7 +282,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 type="text"
                 value={editAddress}
                 onChange={(e) => setEditAddress(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[40px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[40px]"
               />
             </div>
             <div className="sm:col-span-2">
@@ -291,14 +291,14 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 type="text"
                 value={editNotes}
                 onChange={(e) => setEditNotes(e.target.value)}
-                className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[40px]"
+                className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[40px]"
               />
             </div>
             <div className="sm:col-span-2 flex justify-end">
               <button
                 type="submit"
                 disabled={savingEdit}
-                className="rounded-xl bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px] disabled:opacity-60"
+                className="rounded-[10px] bg-[#064E3B] px-4 py-2 text-xs font-semibold text-white min-h-[40px] disabled:opacity-60"
               >
                 {savingEdit ? 'Saving…' : 'Save changes'}
               </button>
@@ -308,12 +308,12 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
       </div>
 
       {error && (
-        <div className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] px-4 py-3 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
+        <div className="rounded-[10px] border border-[#FCA5A5] bg-[#FEF2F2] dark:bg-[#2B1414] px-4 py-3 text-xs text-[#991B1B] dark:text-[#FCA5A5]">
           {error}
         </div>
       )}
       {notice && (
-        <div className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] dark:bg-[#0F291E] px-4 py-3 text-xs text-[#065F46] dark:text-[#6EE7B7]">
+        <div className="rounded-[10px] border border-[#A7F3D0] bg-[#ECFDF5] dark:bg-[#0F291E] px-4 py-3 text-xs text-[#065F46] dark:text-[#6EE7B7]">
           {notice}
         </div>
       )}
@@ -332,10 +332,10 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`rounded-xl px-3.5 py-2 text-xs font-semibold min-h-[40px] ${
+            className={`rounded-[10px] px-3.5 py-2 text-xs font-semibold min-h-[40px] ${
               tab === t.id
                 ? 'bg-[#064E3B] text-white'
-                : 'border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] text-[#444A45] dark:text-[#C5CCC7]'
+                : 'border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] text-[#374151] dark:text-[#C5CCC7]'
             }`}
           >
             {t.label}
@@ -345,29 +345,29 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
 
       {/* TAB: STATEMENT OF ACCOUNT */}
       {tab === 'statement' && (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-4">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-wrap items-end gap-2.5">
               <div>
-                <label className="text-[11px] font-semibold text-[#5C635D] dark:text-[#9BA39D] block mb-1">
+                <label className="text-[11px] font-semibold text-[#6B7280] dark:text-[#9CA3AF] block mb-1">
                   From
                 </label>
                 <input
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[38px]"
+                  className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[38px]"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-[#5C635D] dark:text-[#9BA39D] block mb-1">
+                <label className="text-[11px] font-semibold text-[#6B7280] dark:text-[#9CA3AF] block mb-1">
                   To
                 </label>
                 <input
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs min-h-[38px]"
+                  className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs min-h-[38px]"
                 />
               </div>
               <div className="flex gap-1.5">
@@ -377,7 +377,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                     setFromDate(`${todayLagos.slice(0, 7)}-01`);
                     setToDate(todayLagos);
                   }}
-                  className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-2.5 py-2 text-[11px] font-medium min-h-[38px]"
+                  className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-2.5 py-2 text-[11px] font-medium min-h-[38px]"
                 >
                   This month
                 </button>
@@ -387,7 +387,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                     setFromDate(shiftLagosDate(todayLagos, -90));
                     setToDate(todayLagos);
                   }}
-                  className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-2.5 py-2 text-[11px] font-medium min-h-[38px]"
+                  className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-2.5 py-2 text-[11px] font-medium min-h-[38px]"
                 >
                   90 days
                 </button>
@@ -397,7 +397,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                     setFromDate(`${todayLagos.slice(0, 4)}-01-01`);
                     setToDate(todayLagos);
                   }}
-                  className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-2.5 py-2 text-[11px] font-medium min-h-[38px]"
+                  className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-2.5 py-2 text-[11px] font-medium min-h-[38px]"
                 >
                   This year
                 </button>
@@ -409,7 +409,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 type="button"
                 disabled={!statement || pdfBusy}
                 onClick={handleDownloadPdf}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white min-h-[38px] disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#064E3B] px-3.5 py-2 text-xs font-semibold text-white min-h-[38px] disabled:opacity-50"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>{pdfBusy ? 'Building PDF…' : 'Download PDF'}</span>
@@ -418,7 +418,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 type="button"
                 disabled={!statement || pdfBusy}
                 onClick={handleSharePdf}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 py-2 text-xs font-semibold min-h-[38px] disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 py-2 text-xs font-semibold min-h-[38px] disabled:opacity-50"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Share</span>
@@ -427,47 +427,47 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 href={waSummaryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 py-2 text-xs font-semibold min-h-[38px]"
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 py-2 text-xs font-semibold min-h-[38px]"
               >
-                <MessageSquare className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#10B981]" />
+                <MessageSquare className="w-3.5 h-3.5 text-[#064E3B] dark:text-[#6EE7B7]" />
                 <span>WhatsApp</span>
               </a>
             </div>
           </div>
 
           {stmtLoading || !statement ? (
-            <p className="py-8 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="py-8 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               Calculating statement…
             </p>
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="rounded-xl bg-[#FAF8F3] dark:bg-[#111714] border border-[#EFE9DA] dark:border-[#202924] p-3">
-                  <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">Opening balance</p>
+                <div className="rounded-[10px] bg-[#F6F7F8] dark:bg-[#111715] border border-gray-100 dark:border-[#1F2925] p-3">
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Opening balance</p>
                   <p className="font-mono-num text-sm font-bold mt-0.5">
                     {formatKobo(statement.openingBalanceKobo, business.currency)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#FAF8F3] dark:bg-[#111714] border border-[#EFE9DA] dark:border-[#202924] p-3">
-                  <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">Billed</p>
+                <div className="rounded-[10px] bg-[#F6F7F8] dark:bg-[#111715] border border-gray-100 dark:border-[#1F2925] p-3">
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Billed</p>
                   <p className="font-mono-num text-sm font-bold mt-0.5">
                     {formatKobo(statement.periodDebitsKobo, business.currency)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#FAF8F3] dark:bg-[#111714] border border-[#EFE9DA] dark:border-[#202924] p-3">
-                  <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+                <div className="rounded-[10px] bg-[#F6F7F8] dark:bg-[#111715] border border-gray-100 dark:border-[#1F2925] p-3">
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     Payments{statement.periodWriteOffsKobo > 0 ? ' & write-offs' : ''}
                   </p>
-                  <p className="font-mono-num text-sm font-bold text-[#064E3B] dark:text-[#10B981] mt-0.5">
+                  <p className="font-mono-num text-sm font-bold text-[#064E3B] dark:text-[#6EE7B7] mt-0.5">
                     {formatKobo(
                       statement.periodPaymentsKobo + statement.periodWriteOffsKobo,
                       business.currency
                     )}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#FAF8F3] dark:bg-[#111714] border border-[#064E3B]/30 p-3">
-                  <p className="text-[11px] text-[#5C635D] dark:text-[#9BA39D]">Closing balance</p>
-                  <p className="font-mono-num text-sm font-bold text-[#064E3B] dark:text-[#10B981] mt-0.5">
+                <div className="rounded-[10px] bg-[#F6F7F8] dark:bg-[#111715] border border-[#064E3B]/30 p-3">
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Closing balance</p>
+                  <p className="font-mono-num text-sm font-bold text-[#064E3B] dark:text-[#6EE7B7] mt-0.5">
                     {formatKobo(statement.closingBalanceKobo, business.currency)}
                   </p>
                 </div>
@@ -476,7 +476,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-[#E5DEC9] dark:border-[#242D28] text-[11px] text-[#5C635D] dark:text-[#9BA39D] uppercase">
+                    <tr className="border-b border-gray-200/70 dark:border-[#1F2925] text-[11px] text-[#6B7280] dark:text-[#9CA3AF] uppercase">
                       <th className="py-2 pr-3 font-semibold">Date</th>
                       <th className="py-2 pr-3 font-semibold">Entry</th>
                       <th className="py-2 px-2 text-right font-semibold">Debit</th>
@@ -484,9 +484,9 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                       <th className="py-2 pl-2 text-right font-semibold">Balance</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#EFE9DA] dark:divide-[#202924]">
-                    <tr className="bg-[#FAF8F3] dark:bg-[#111714] font-semibold">
-                      <td className="py-2.5 pr-3 font-mono-num text-[#5C635D] dark:text-[#9BA39D]">
+                  <tbody className="divide-y divide-gray-100 dark:divide-[#1F2925]">
+                    <tr className="bg-[#F6F7F8] dark:bg-[#111715] font-semibold">
+                      <td className="py-2.5 pr-3 font-mono-num text-[#6B7280] dark:text-[#9CA3AF]">
                         {statement.fromDate}
                       </td>
                       <td className="py-2.5 pr-3">Opening balance brought forward</td>
@@ -500,7 +500,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                       <tr>
                         <td
                           colSpan={5}
-                          className="py-6 text-center text-[#5C635D] dark:text-[#9BA39D]"
+                          className="py-6 text-center text-[#6B7280] dark:text-[#9CA3AF]"
                         >
                           No transactions in this date range.
                         </td>
@@ -508,14 +508,14 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                     ) : (
                       statement.lines.map((line) => (
                         <tr key={line.id}>
-                          <td className="py-2.5 pr-3 font-mono-num whitespace-nowrap text-[#5C635D] dark:text-[#9BA39D]">
+                          <td className="py-2.5 pr-3 font-mono-num whitespace-nowrap text-[#6B7280] dark:text-[#9CA3AF]">
                             {line.date}
                           </td>
                           <td className="py-2.5 pr-3">
                             <span
                               className={
                                 line.kind === 'WRITE_OFF'
-                                  ? 'font-medium text-[#5C635D] dark:text-[#9BA39D]'
+                                  ? 'font-medium text-[#6B7280] dark:text-[#9CA3AF]'
                                   : ''
                               }
                             >
@@ -527,7 +527,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                               ? formatKobo(line.debitKobo, business.currency)
                               : '—'}
                           </td>
-                          <td className="py-2.5 px-2 text-right font-mono-num whitespace-nowrap text-[#064E3B] dark:text-[#10B981]">
+                          <td className="py-2.5 px-2 text-right font-mono-num whitespace-nowrap text-[#064E3B] dark:text-[#6EE7B7]">
                             {line.creditKobo > 0
                               ? formatKobo(line.creditKobo, business.currency)
                               : '—'}
@@ -548,9 +548,9 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
 
       {/* TAB: INVOICES */}
       {tab === 'invoices' && (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#EFE9DA] dark:divide-[#202924]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
           {detail.invoices.length === 0 ? (
-            <div className="p-6 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <div className="p-6 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               No invoices for this customer yet.
             </div>
           ) : (
@@ -558,11 +558,11 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
               <Link
                 key={inv.id}
                 to={`/app/invoices/${inv.id}`}
-                className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+                className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
               >
                 <div>
                   <p className="text-sm font-semibold">{inv.invoiceNumber || 'Draft Invoice'}</p>
-                  <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                     Issued {formatLagosDateOnly(inv.issueDate)} · Due {formatLagosDateOnly(inv.dueDate)} · {inv.status}
                   </p>
                 </div>
@@ -582,9 +582,9 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
 
       {/* TAB: QUOTES */}
       {tab === 'quotes' && (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#EFE9DA] dark:divide-[#202924]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
           {detail.quotes.length === 0 ? (
-            <div className="p-6 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <div className="p-6 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               No quotes for this customer yet.
             </div>
           ) : (
@@ -592,11 +592,11 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
               <Link
                 key={q.id}
                 to={`/app/quotes/${q.id}`}
-                className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#FAF8F3] dark:hover:bg-[#1B231F]"
+                className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#F6F7F8] dark:hover:bg-[#1A221F]"
               >
                 <div>
                   <p className="text-sm font-semibold">{q.quoteNumber || 'Draft Quote'}</p>
-                  <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                     Issued {formatLagosDateOnly(q.issueDate)} · Valid until {formatLagosDateOnly(q.validUntil)} ·{' '}
                     {q.isExpired ? 'EXPIRED' : q.status}
                   </p>
@@ -612,9 +612,9 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
 
       {/* TAB: PAYMENTS */}
       {tab === 'payments' && (
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] divide-y divide-[#EFE9DA] dark:divide-[#202924]">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] divide-y divide-gray-100 dark:divide-[#1F2925]">
           {detail.payments.length === 0 ? (
-            <div className="p-6 text-center text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <div className="p-6 text-center text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               No payments recorded for this customer yet.
             </div>
           ) : (
@@ -625,7 +625,7 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                     {p.receiptNumber || 'Payment'} · {p.paymentMethod}
                     {p.isVoided ? ' (VOID)' : ''}
                   </p>
-                  <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                     {formatLagosDateOnly(p.paymentDate)}
                     {p.debtReference ? ` · For ${p.debtReference}` : ''}
                     {p.reference ? ` · Ref: ${p.reference}` : ''}
@@ -634,8 +634,8 @@ export function CustomerDetailPage({ business, customerId }: CustomerDetailPageP
                 <p
                   className={`font-mono-num text-sm font-bold ${
                     p.isVoided
-                      ? 'line-through text-[#5C635D]'
-                      : 'text-[#064E3B] dark:text-[#10B981]'
+                      ? 'line-through text-[#6B7280]'
+                      : 'text-[#064E3B] dark:text-[#6EE7B7]'
                   }`}
                 >
                   {formatKobo(p.amountKobo, business.currency)}

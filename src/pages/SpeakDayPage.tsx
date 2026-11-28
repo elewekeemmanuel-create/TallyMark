@@ -305,28 +305,28 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
   if (step === 'done') {
     return (
       <div className="max-w-2xl mx-auto space-y-5">
-        <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-6 sm:p-8 space-y-5">
+        <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-6 sm:p-8 space-y-5">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#064E3B]/10 dark:bg-[#10B981]/15 text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-[20px] bg-[#064E3B]/10 dark:bg-[#10B981]/15 text-[#064E3B] dark:text-[#6EE7B7] flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Saved to Cash Book</p>
-              <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+              <p className="label-caps text-[#064E3B] dark:text-[#6EE7B7]">Saved to Cash Book</p>
+              <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
                 {savedEntries.length} voice {savedEntries.length === 1 ? 'entry' : 'entries'} recorded
               </h1>
-              <p className="mt-1 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+              <p className="mt-1 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                 Marked with source: voice in your Cash Book and Expenses ledger.
               </p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#ECE6D8] dark:border-[#242D28] divide-y divide-[#ECE6D8] dark:divide-[#242D28]">
+          <div className="rounded-[10px] border border-gray-100 dark:border-[#1F2925] divide-y divide-gray-100 dark:divide-[#1F2925]">
             {savedEntries.map((e) => (
               <div key={e.id} className="px-4 py-3 flex items-center justify-between gap-3 text-sm">
                 <div className="min-w-0">
                   <p className="font-medium truncate">{e.note || e.entryKind}</p>
-                  <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                     {e.entryDate} · {e.paymentMethod || 'Cash'}
                     {e.customerName ? ` · ${e.customerName}` : ''} · Voice
                   </p>
@@ -337,7 +337,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                       ? 'text-[#B91C1C] dark:text-red-400'
                       : e.entryKind === 'CREDIT_SALE'
                       ? 'text-[#B45309] dark:text-amber-400'
-                      : 'text-[#064E3B] dark:text-[#10B981]'
+                      : 'text-[#064E3B] dark:text-[#6EE7B7]'
                   }`}
                 >
                   {e.entryType === 'EXPENSE' ? '-' : '+'}
@@ -350,7 +350,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
           <div className="flex flex-wrap gap-2.5">
             <Link
               to="/app/cashbook"
-              className="min-h-[46px] inline-flex items-center gap-2 rounded-xl bg-[#064E3B] px-5 text-xs font-semibold text-white hover:bg-[#04392B]"
+              className="min-h-[46px] inline-flex items-center gap-2 rounded-[10px] bg-[#064E3B] px-5 text-xs font-semibold text-white hover:bg-[#04392B]"
             >
               <BookOpen className="w-4 h-4" />
               <span>Open Cash Book</span>
@@ -358,14 +358,14 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
             <button
               type="button"
               onClick={resetAll}
-              className="min-h-[46px] inline-flex items-center gap-2 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 text-xs font-semibold"
+              className="min-h-[46px] inline-flex items-center gap-2 rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 text-xs font-semibold"
             >
-              <Mic className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+              <Mic className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
               <span>Speak More</span>
             </button>
             <Link
               to="/app"
-              className="min-h-[46px] inline-flex items-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 text-xs font-semibold"
+              className="min-h-[46px] inline-flex items-center rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 text-xs font-semibold"
             >
               Back Home
             </Link>
@@ -386,58 +386,58 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                 setError(null);
                 setStep('capture');
               }}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513]"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827]"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Edit transcript</span>
             </button>
-            <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+            <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
               Drafted for you. Please check before saving.
             </h1>
           </div>
           <button
             type="button"
             onClick={addRow}
-            className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 text-xs font-semibold"
+            className="min-h-[44px] inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-4 text-xs font-semibold"
           >
-            <Plus className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+            <Plus className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
             <span>Add Entry</span>
           </button>
         </div>
 
         {/* Mandatory Review Notice */}
-        <div className="rounded-2xl border border-[#064E3B]/25 dark:border-[#10B981]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 flex items-start gap-3">
-          <Sparkles className="w-4 h-4 text-[#064E3B] dark:text-[#10B981] mt-0.5 shrink-0" />
-          <div className="text-xs text-[#121513] dark:text-[#F4F1EA] space-y-1">
+        <div className="rounded-[20px] border border-[#064E3B]/25 dark:border-[#10B981]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 flex items-start gap-3">
+          <Sparkles className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7] mt-0.5 shrink-0" />
+          <div className="text-xs text-[#111827] dark:text-[#F3F4F6] space-y-1">
             <p className="font-semibold">
               Nothing is saved yet. Review, edit, remove, or add entries below, then tap Confirm &amp; Save.
             </p>
             {summaryNote && (
-              <p className="text-[#5C635D] dark:text-[#9BA39D]">{summaryNote}</p>
+              <p className="text-[#6B7280] dark:text-[#9CA3AF]">{summaryNote}</p>
             )}
           </div>
         </div>
 
         {/* Live Totals Summary */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-3.5">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Draft Items</p>
+          <div className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-3.5">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Draft Items</p>
             <p className="mt-1 font-mono-num text-lg font-semibold">{rows.length}</p>
           </div>
-          <div className="rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-3.5">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Money In</p>
-            <p className="mt-1 font-mono-num text-lg font-semibold text-[#064E3B] dark:text-[#10B981]">
+          <div className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-3.5">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Money In</p>
+            <p className="mt-1 font-mono-num text-lg font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
               {formatKobo(reviewTotals.inKobo, business.currency)}
             </p>
           </div>
-          <div className="rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-3.5">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Money Out</p>
+          <div className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-3.5">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Money Out</p>
             <p className="mt-1 font-mono-num text-lg font-semibold text-[#B91C1C] dark:text-red-400">
               {formatKobo(reviewTotals.outKobo, business.currency)}
             </p>
           </div>
-          <div className="rounded-xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-3.5">
-            <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">Needs Check</p>
+          <div className="rounded-[10px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-3.5">
+            <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">Needs Check</p>
             <p
               className={`mt-1 font-mono-num text-lg font-semibold ${
                 reviewTotals.checkCount > 0 ? 'text-[#B45309] dark:text-amber-400' : ''
@@ -449,29 +449,29 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300">
+          <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300">
             {error}
           </div>
         )}
 
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-8 text-center space-y-3">
+          <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-8 text-center space-y-3">
             <p className="font-display text-2xl">All draft entries removed</p>
-            <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
               Nothing was saved to your cash book. Add a row or speak again.
             </p>
             <div className="flex justify-center gap-2">
               <button
                 type="button"
                 onClick={addRow}
-                className="min-h-[44px] rounded-xl bg-[#064E3B] px-4 text-xs font-semibold text-white"
+                className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-4 text-xs font-semibold text-white"
               >
                 + Add Entry
               </button>
               <button
                 type="button"
                 onClick={() => setStep('capture')}
-                className="min-h-[44px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 text-xs font-semibold"
+                className="min-h-[44px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 text-xs font-semibold"
               >
                 Speak Again
               </button>
@@ -491,15 +491,15 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                 <div
                   key={row.id}
                   data-testid="voice-draft-row"
-                  className={`rounded-2xl border bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3.5 ${
+                  className={`rounded-[20px] border bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3.5 ${
                     needsAttention
                       ? 'border-[#B45309]/60 dark:border-amber-500/50'
-                      : 'border-[#E5DEC9] dark:border-[#242D28]'
+                      : 'border-gray-200/70 dark:border-[#1F2925]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono-num text-xs font-semibold text-[#5C635D] dark:text-[#9BA39D]">
+                      <span className="font-mono-num text-xs font-semibold text-[#6B7280] dark:text-[#9CA3AF]">
                         Entry #{idx + 1}
                       </span>
                       {needsAttention && (
@@ -513,14 +513,14 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                       type="button"
                       onClick={() => removeRow(row.id)}
                       aria-label={`Remove entry ${idx + 1}`}
-                      className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] text-[#5C635D] hover:text-[#B91C1C]"
+                      className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] text-[#6B7280] hover:text-[#B91C1C]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
                   {needsAttention && (
-                    <p className="text-xs text-[#92400E] dark:text-amber-300 bg-[#FEF3C7]/60 dark:bg-amber-950/30 rounded-xl px-3 py-2">
+                    <p className="text-xs text-[#92400E] dark:text-amber-300 bg-[#FEF3C7]/60 dark:bg-amber-950/30 rounded-[10px] px-3 py-2">
                       {row.ambiguityReason ||
                         (amountKobo <= 0
                           ? 'Amount unclear — enter the exact amount before saving.'
@@ -532,7 +532,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         Entry Type
                       </label>
                       <select
@@ -543,7 +543,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                             ambiguous: false,
                           })
                         }
-                        className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs font-semibold min-h-[44px]"
+                        className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs font-semibold min-h-[44px]"
                       >
                         {Object.entries(ENTRY_TYPE_LABELS).map(([k, label]) => (
                           <option key={k} value={k}>
@@ -554,7 +554,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         Amount ({business.currency}) *
                       </label>
                       <div className="flex gap-1.5">
@@ -569,25 +569,25 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                             })
                           }
                           placeholder="0.00"
-                          className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 font-mono-num text-sm font-semibold min-h-[44px]"
+                          className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 font-mono-num text-sm font-semibold min-h-[44px]"
                         />
                         <button
                           type="button"
                           onClick={() => setKeypadRowId(row.id)}
                           aria-label={`Open numeric keypad for entry ${idx + 1}`}
-                          className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714]"
+                          className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715]"
                         >
-                          <Keyboard className="w-4 h-4 text-[#064E3B] dark:text-[#10B981]" />
+                          <Keyboard className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7]" />
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         {row.type === 'credit_sale' ? 'Payment Status' : 'Payment Method'}
                       </label>
                       {row.type === 'credit_sale' ? (
-                        <div className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 py-2 text-xs text-[#B45309] dark:text-amber-400 font-medium min-h-[44px] flex items-center">
+                        <div className="rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 py-2 text-xs text-[#B45309] dark:text-amber-400 font-medium min-h-[44px] flex items-center">
                           Unpaid credit (debt)
                         </div>
                       ) : (
@@ -596,7 +596,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                           onChange={(e) =>
                             updateRow(row.id, { paymentMethod: e.target.value as PaymentMethod })
                           }
-                          className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[44px]"
+                          className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[44px]"
                         >
                           {(['Cash', 'Transfer', 'POS', 'Card', 'Other'] as PaymentMethod[]).map((m) => (
                             <option key={m} value={m}>
@@ -611,13 +611,13 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {row.type === 'expense' && (
                       <div>
-                        <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                        <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                           Category
                         </label>
                         <select
                           value={row.categoryPreset}
                           onChange={(e) => updateRow(row.id, { categoryPreset: e.target.value })}
-                          className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[44px]"
+                          className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[44px]"
                         >
                           {EXPENSE_CATEGORY_PRESETS.map((cat) => (
                             <option key={cat} value={cat}>
@@ -632,14 +632,14 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                             value={row.customCategory}
                             onChange={(e) => updateRow(row.id, { customCategory: e.target.value })}
                             placeholder="Category name"
-                            className="mt-2 w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[40px]"
+                            className="mt-2 w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[40px]"
                           />
                         )}
                       </div>
                     )}
 
                     <div>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         {row.type === 'expense'
                           ? 'Payee / Supplier'
                           : row.type === 'credit_sale'
@@ -662,12 +662,12 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                             ? 'Optional supplier'
                             : 'Optional customer'
                         }
-                        className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[44px]"
+                        className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[44px]"
                       />
                     </div>
 
                     <div className={row.type === 'expense' ? '' : 'sm:col-span-2'}>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         Note / Description
                       </label>
                       <input
@@ -675,25 +675,25 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                         value={row.note}
                         onChange={(e) => updateRow(row.id, { note: e.target.value })}
                         placeholder="What was sold, spent, or paid"
-                        className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[44px]"
+                        className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[44px]"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         Entry Date
                       </label>
                       <input
                         type="date"
                         value={row.entryDate}
                         onChange={(e) => updateRow(row.id, { entryDate: e.target.value })}
-                        className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[42px]"
+                        className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[42px]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium mb-1 text-[#5C635D] dark:text-[#9BA39D]">
+                      <label className="block text-[11px] font-medium mb-1 text-[#6B7280] dark:text-[#9CA3AF]">
                         Sold / Logged by (optional)
                       </label>
                       <input
@@ -701,7 +701,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                         value={row.soldBy}
                         onChange={(e) => updateRow(row.id, { soldBy: e.target.value })}
                         placeholder="Staff name"
-                        className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2 text-xs min-h-[42px]"
+                        className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2 text-xs min-h-[42px]"
                       />
                     </div>
                   </div>
@@ -715,7 +715,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
           <button
             type="button"
             onClick={addRow}
-            className="min-h-[46px] inline-flex items-center gap-1.5 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#151B18] px-4 text-xs font-semibold"
+            className="min-h-[46px] inline-flex items-center gap-1.5 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#131917] px-4 text-xs font-semibold"
           >
             <Plus className="w-4 h-4" />
             <span>Add Another Entry</span>
@@ -725,7 +725,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
             type="button"
             onClick={handleConfirmSave}
             disabled={saving || rows.length === 0}
-            className="min-h-[50px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#064E3B] px-6 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
+            className="min-h-[50px] inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#064E3B] px-6 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>
@@ -758,15 +758,15 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
       <div>
         <Link
           to="/app"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C635D] dark:text-[#9BA39D] hover:text-[#121513]"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827]"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back Home</span>
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+        <h1 className="mt-2 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
           Speak your day
         </h1>
-        <p className="mt-1 text-sm text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="mt-1 text-sm text-[#6B7280] dark:text-[#9CA3AF]">
           Say what you sold, spent, or gave on credit in natural English. We draft the entries for you to check — nothing is saved until you confirm.
         </p>
       </div>
@@ -774,7 +774,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
       {/* Main Mic Card */}
       <form
         onSubmit={handleDraftEntries}
-        className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-7 space-y-5"
+        className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 sm:p-7 space-y-5"
       >
         <div className="flex flex-col items-center text-center space-y-3">
           {voice.supported && voice.status !== 'denied' ? (
@@ -799,7 +799,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                 </span>
               </button>
 
-              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
                 <span>
                   {voice.listening
                     ? `Listening (${voice.activeLang})… speak naturally`
@@ -808,7 +808,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
                 <button
                   type="button"
                   onClick={() => voice.start(voice.activeLang === 'en-NG' ? 'en-US' : 'en-NG')}
-                  className="text-[#064E3B] dark:text-[#10B981] font-medium hover:underline"
+                  className="text-[#064E3B] dark:text-[#6EE7B7] font-medium hover:underline"
                 >
                   Switch to {voice.activeLang === 'en-NG' ? 'en-US' : 'en-NG'}
                 </button>
@@ -817,7 +817,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
           ) : (
             <div
               role="status"
-              className="w-full rounded-xl border border-[#B45309]/40 bg-[#FEF3C7]/60 dark:bg-amber-950/30 p-4 text-left space-y-2"
+              className="w-full rounded-[10px] border border-[#B45309]/40 bg-[#FEF3C7]/60 dark:bg-amber-950/30 p-4 text-left space-y-2"
             >
               <div className="flex items-start gap-2.5 text-sm text-[#92400E] dark:text-amber-300">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -839,7 +839,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
           <div className="flex items-center justify-between mb-1.5">
             <label
               htmlFor="voice-transcript"
-              className="text-xs font-semibold text-[#121513] dark:text-[#F4F1EA]"
+              className="text-xs font-semibold text-[#111827] dark:text-[#F3F4F6]"
             >
               Your transcript (live &amp; editable)
             </label>
@@ -847,7 +847,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
               <button
                 type="button"
                 onClick={() => voice.setFinalTranscript('')}
-                className="text-xs text-[#5C635D] hover:text-[#B91C1C]"
+                className="text-xs text-[#6B7280] hover:text-[#B91C1C]"
               >
                 Clear
               </button>
@@ -859,20 +859,20 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
             value={voice.finalTranscript}
             onChange={(e) => voice.setFinalTranscript(e.target.value)}
             placeholder='Example: "I spent five thousand on transport and twelve thousand on stock, Mama Ngozi owes me eight thousand, and I sold two bags for twenty thousand cash."'
-            className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3.5 py-3 text-sm text-[#121513] dark:text-[#F4F1EA] placeholder:text-[#8B918B] focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30 focus:border-[#064E3B]"
+            className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3.5 py-3 text-sm text-[#111827] dark:text-[#F3F4F6] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30 focus:border-[#064E3B]"
           />
           {voice.interimTranscript && (
-            <p className="mt-1.5 text-xs italic text-[#064E3B] dark:text-[#10B981]">
+            <p className="mt-1.5 text-xs italic text-[#064E3B] dark:text-[#6EE7B7]">
               Hearing: “{voice.interimTranscript}”
             </p>
           )}
-          <p className="mt-1.5 text-[11px] text-[#5C635D] dark:text-[#9BA39D]">
+          <p className="mt-1.5 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
             Privacy: only the transcript text above is sent to draft entries. Nothing else leaves your book.
           </p>
         </div>
 
         {error && (
-          <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300 flex items-center justify-between gap-3">
+          <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-4 text-sm text-[#B91C1C] dark:text-red-300 flex items-center justify-between gap-3">
             <p>{error}</p>
             <button
               type="button"
@@ -888,7 +888,7 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
         <button
           type="submit"
           disabled={drafting || combinedLiveText.trim().length < 2}
-          className="w-full min-h-[50px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#064E3B] px-5 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
+          className="w-full min-h-[50px] inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#064E3B] px-5 text-sm font-semibold text-white hover:bg-[#04392B] disabled:opacity-60"
         >
           <Sparkles className="w-4 h-4" />
           <span>{drafting ? 'Drafting entries for review…' : 'Draft Entries to Review'}</span>
@@ -896,8 +896,8 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
       </form>
 
       {/* Manual Forms Fallback */}
-      <div className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-4 sm:p-5 space-y-3">
-        <p className="label-caps text-[#5C635D] dark:text-[#9BA39D]">
+      <div className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-4 sm:p-5 space-y-3">
+        <p className="label-caps text-[#6B7280] dark:text-[#9CA3AF]">
           Or enter manually anytime
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -907,9 +907,9 @@ export function SpeakDayPage({ business }: { business: BusinessProfile }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className="rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-3 py-2.5 flex items-center gap-2 text-xs font-semibold hover:bg-[#F5F1E7] dark:hover:bg-[#1B231F] min-h-[44px]"
+                className="rounded-[10px] border border-gray-200 dark:border-[#232D29] px-3 py-2.5 flex items-center gap-2 text-xs font-semibold hover:bg-[#F4F6F8] dark:hover:bg-[#1A221F] min-h-[44px]"
               >
-                <Icon className="w-4 h-4 text-[#064E3B] dark:text-[#10B981] shrink-0" />
+                <Icon className="w-4 h-4 text-[#064E3B] dark:text-[#6EE7B7] shrink-0" />
                 <span>{item.label}</span>
               </Link>
             );

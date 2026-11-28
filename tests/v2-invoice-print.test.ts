@@ -252,3 +252,27 @@ test('QuoteEditorPage, QuoteDetailPage, and QuoteDocument expose Download PDF, P
   assert.match(apiSrc, /007_v2_slice3_quotations\.sql/);
   assert.match(apiSrc, /Supabase SQL Editor/);
 });
+
+test('InvoiceDetailPage exposes a floating Print button using print-compact-80mm thermal layout', () => {
+  const detailSrc = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'v2', 'pages', 'InvoiceDetailPage.tsx'),
+    'utf8'
+  );
+  assert.match(detailSrc, /thermalPrintMode/);
+  assert.match(detailSrc, /<InvoiceDocument invoice=\{previewDoc\} thermalPrint=\{thermalPrintMode\} \/>/);
+  assert.match(detailSrc, /aria-label="Print invoice \(80mm thermal layout\)"/);
+  assert.match(detailSrc, /fixed bottom-24 md:bottom-6 right-4/);
+  assert.match(detailSrc, /window\.print\(\)/);
+
+  const docSrc = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'v2', 'components', 'InvoiceDocument.tsx'),
+    'utf8'
+  );
+  assert.match(docSrc, /thermalPrint\?: boolean/);
+  assert.match(docSrc, /print-compact-80mm/);
+
+  const cssSrc = fs.readFileSync(path.join(process.cwd(), 'src', 'index.css'), 'utf8');
+  assert.match(cssSrc, /@page thermal80mm/);
+  assert.match(cssSrc, /\.invoice-print-sheet\.print-compact-80mm/);
+});
+

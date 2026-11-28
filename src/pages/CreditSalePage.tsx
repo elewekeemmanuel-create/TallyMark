@@ -129,9 +129,9 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
 
   if (savedCredit) {
     return (
-      <div className="max-w-lg mx-auto rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-6 sm:p-8 space-y-5">
+      <div className="max-w-lg mx-auto rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-6 sm:p-8 space-y-5">
         <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#B45309]/10 text-[#B45309] dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-[20px] bg-[#B45309]/10 text-[#B45309] dark:text-amber-400 flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
@@ -139,11 +139,11 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
             <h1 className="mt-1 font-display text-3xl">
               {formatKobo(savedCredit.totalKobo, business.currency)}
             </h1>
-            <p className="mt-1 text-sm text-[#121513] dark:text-[#F4F1EA]">
+            <p className="mt-1 text-sm text-[#111827] dark:text-[#F3F4F6]">
               Owed by <strong>{savedCredit.customerName}</strong>
               {savedCredit.dueDate ? ` · Due ${savedCredit.dueDate}` : ''}
             </p>
-            <p className="mt-1 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               ₦0.00 counted as money received today until customer pays.
             </p>
           </div>
@@ -152,14 +152,14 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
         <div className="grid grid-cols-2 gap-3 pt-2">
           <Link
             to="/app/debtors"
-            className="min-h-[46px] rounded-xl bg-[#064E3B] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#04392B] inline-flex items-center justify-center"
+            className="min-h-[46px] rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#04392B] inline-flex items-center justify-center"
           >
             View Debtors
           </Link>
           <button
             type="button"
             onClick={resetForm}
-            className="min-h-[46px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2.5 text-sm font-medium"
+            className="min-h-[46px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2.5 text-sm font-medium"
           >
             Record Another
           </button>
@@ -175,21 +175,21 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
           <CreditCard className="w-3.5 h-3.5" />
           <span>Borrowed / Pay Later</span>
         </div>
-        <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+        <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
           Credit Sale
         </h1>
-        <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
           Creates a customer debt in Debtors. Money is only counted in your Cash Book when the customer pays.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-6 space-y-5"
+        className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 sm:p-6 space-y-5"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Customer Name *
             </label>
             <SpeechInput
@@ -206,7 +206,7 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
             </datalist>
           </div>
           <div>
-            <label htmlFor="cs-phone" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label htmlFor="cs-phone" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Phone (for WhatsApp reminder)
             </label>
             <input
@@ -215,13 +215,13 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               placeholder="0803 000 0000"
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 font-mono-num text-sm min-h-[44px]"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="cs-amount" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="cs-amount" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Amount Owed ({business.currency}) *
           </label>
           <div className="flex gap-2">
@@ -232,13 +232,13 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-4 py-3 font-mono-num text-2xl font-semibold min-h-[54px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-4 py-3 font-mono-num text-2xl font-semibold min-h-[54px]"
               required
             />
             <button
               type="button"
               onClick={() => setKeypadOpen(true)}
-              className="shrink-0 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-4 text-xs font-semibold min-h-[54px]"
+              className="shrink-0 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-4 text-xs font-semibold min-h-[54px]"
             >
               Keypad
             </button>
@@ -246,7 +246,7 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Items taken on credit
           </label>
           <SpeechInput
@@ -258,7 +258,7 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label htmlFor="cs-date" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label htmlFor="cs-date" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Sale Date
             </label>
             <input
@@ -266,11 +266,11 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
               type="date"
               value={entryDate}
               onChange={(e) => setEntryDate(e.target.value)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2.5 text-sm min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2.5 text-sm min-h-[44px]"
             />
           </div>
           <div>
-            <label htmlFor="cs-due" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label htmlFor="cs-due" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Due Date (optional)
             </label>
             <input
@@ -278,11 +278,11 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3 py-2.5 text-sm min-h-[44px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3 py-2.5 text-sm min-h-[44px]"
             />
           </div>
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Sold by (optional)
             </label>
             <SpeechInput value={soldBy} onChangeValue={setSoldBy} placeholder="Staff name" />
@@ -290,7 +290,7 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 flex items-center justify-between gap-3">
+          <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 flex items-center justify-between gap-3">
             <p className="text-xs text-[#B91C1C] dark:text-red-300">{error}</p>
             <button
               type="submit"
@@ -305,7 +305,7 @@ export function CreditSalePage({ business }: { business: BusinessProfile }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full min-h-[52px] rounded-xl bg-[#064E3B] px-6 py-3 text-base font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
+          className="w-full min-h-[52px] rounded-[10px] bg-[#064E3B] px-6 py-3 text-base font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
         >
           {submitting ? 'Saving Credit Sale…' : 'Record Credit Sale'}
         </button>

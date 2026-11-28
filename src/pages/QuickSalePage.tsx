@@ -152,17 +152,17 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
 
   if (savedEntry) {
     return (
-      <div className="max-w-lg mx-auto rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-6 sm:p-8 space-y-5">
+      <div className="max-w-lg mx-auto rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-6 sm:p-8 space-y-5">
         <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#064E3B]/10 dark:bg-[#10B981]/15 text-[#064E3B] dark:text-[#10B981] flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-[20px] bg-[#064E3B]/10 dark:bg-[#10B981]/15 text-[#064E3B] dark:text-[#6EE7B7] flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <p className="label-caps text-[#064E3B] dark:text-[#10B981]">Quick Sale Recorded</p>
-            <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+            <p className="label-caps text-[#064E3B] dark:text-[#6EE7B7]">Quick Sale Recorded</p>
+            <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
               {formatKobo(savedEntry.amountKobo, business.currency)}
             </h1>
-            <p className="mt-1 text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               {savedEntry.paymentMethod} · {savedEntry.entryDate}
               {savedEntry.note ? ` · ${savedEntry.note}` : ''}
             </p>
@@ -170,17 +170,17 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
         </div>
 
         {issuedReceipt ? (
-          <div className="rounded-xl border border-[#064E3B]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 space-y-2">
-            <p className="text-xs font-semibold text-[#064E3B] dark:text-[#10B981]">
+          <div className="rounded-[10px] border border-[#064E3B]/30 bg-[#064E3B]/5 dark:bg-[#10B981]/10 p-4 space-y-2">
+            <p className="text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
               Official Receipt Issued: {issuedReceipt.receiptNumber}
             </p>
-            <p className="text-xs text-[#5C635D] dark:text-[#9BA39D]">
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">
               Linked to your Cash Book entry without double-counting sales.
             </p>
             <button
               type="button"
               onClick={() => navigate(`/app/receipts/${issuedReceipt.id}`)}
-              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#064E3B] dark:text-[#10B981] hover:underline"
+              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:underline"
             >
               <span>Open Receipt &amp; Share</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -191,7 +191,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
             type="button"
             onClick={handleIssueReceiptLater}
             disabled={issuingReceipt}
-            className="w-full min-h-[48px] inline-flex items-center justify-center gap-2 rounded-xl border border-[#064E3B] dark:border-[#10B981] px-4 py-2.5 text-sm font-semibold text-[#064E3B] dark:text-[#10B981] hover:bg-[#064E3B] hover:text-white dark:hover:bg-[#10B981] dark:hover:text-[#0D110F] transition-colors disabled:opacity-60"
+            className="w-full min-h-[48px] inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#064E3B] dark:border-[#10B981] px-4 py-2.5 text-sm font-semibold text-[#064E3B] dark:text-[#6EE7B7] hover:bg-[#064E3B] hover:text-white dark:hover:bg-[#10B981] dark:hover:text-[#0B0F0E] transition-colors disabled:opacity-60"
           >
             <FileText className="w-4 h-4" />
             <span>{issuingReceipt ? 'Issuing receipt…' : 'Issue Receipt for This Sale'}</span>
@@ -204,13 +204,13 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
           <button
             type="button"
             onClick={resetForm}
-            className="min-h-[46px] rounded-xl bg-[#064E3B] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#04392B]"
+            className="min-h-[46px] rounded-[10px] bg-[#064E3B] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#04392B]"
           >
             Record Another
           </button>
           <Link
             to="/app/cashbook"
-            className="min-h-[46px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] px-4 py-2.5 text-sm font-medium inline-flex items-center justify-center"
+            className="min-h-[46px] rounded-[10px] border border-gray-200 dark:border-[#232D29] px-4 py-2.5 text-sm font-medium inline-flex items-center justify-center"
           >
             View Cash Book
           </Link>
@@ -222,24 +222,24 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#064E3B] dark:text-[#10B981]">
+        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#064E3B] dark:text-[#6EE7B7]">
           <Zap className="w-3.5 h-3.5" />
           <span>5-Second Entry · No Receipt Needed</span>
         </div>
-        <h1 className="mt-1 font-display text-3xl text-[#121513] dark:text-[#F4F1EA]">
+        <h1 className="mt-1 font-display text-3xl text-[#111827] dark:text-[#F3F4F6]">
           Quick Sale
         </h1>
-        <p className="text-sm text-[#5C635D] dark:text-[#9BA39D]">
+        <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
           Log fast over-the-counter cash, transfer, or POS sales directly into your Cash Book. You can still issue a receipt from the entry later.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-[#E5DEC9] dark:border-[#242D28] bg-white dark:bg-[#151B18] p-5 sm:p-6 space-y-5"
+        className="rounded-[20px] border border-gray-200/70 dark:border-[#1F2925] bg-white dark:bg-[#131917] p-5 sm:p-6 space-y-5"
       >
         <div>
-          <label htmlFor="qs-amount" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="qs-amount" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Sale Amount ({business.currency}) *
           </label>
           <div className="flex gap-2">
@@ -251,13 +251,13 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
               onChange={(e) => setAmountInput(e.target.value)}
               placeholder="0.00"
               autoFocus
-              className="w-full rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-4 py-3 font-mono-num text-2xl font-semibold text-[#121513] dark:text-[#F4F1EA] min-h-[54px]"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-4 py-3 font-mono-num text-2xl font-semibold text-[#111827] dark:text-[#F3F4F6] min-h-[54px]"
               required
             />
             <button
               type="button"
               onClick={() => setKeypadOpen(true)}
-              className="shrink-0 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-4 text-xs font-semibold min-h-[54px]"
+              className="shrink-0 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-4 text-xs font-semibold min-h-[54px]"
             >
               Keypad
             </button>
@@ -269,7 +269,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
                 key={amt}
                 type="button"
                 onClick={() => setAmountInput(String(amt))}
-                className="min-h-[36px] rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-[#FAF8F3] dark:bg-[#111714] px-3 font-mono-num text-xs font-medium hover:bg-[#EAE3D3] dark:hover:bg-[#1E2722]"
+                className="min-h-[36px] rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-[#F6F7F8] dark:bg-[#111715] px-3 font-mono-num text-xs font-medium hover:bg-gray-200/70 dark:hover:bg-[#1E2722]"
               >
                 {formatKobo(amt * 100, business.currency)}
               </button>
@@ -278,7 +278,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Payment Method *
           </label>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -287,10 +287,10 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
                 key={method}
                 type="button"
                 onClick={() => setPaymentMethod(method)}
-                className={`min-h-[44px] rounded-xl border text-xs font-semibold transition-colors ${
+                className={`min-h-[44px] rounded-[10px] border text-xs font-semibold transition-colors ${
                   paymentMethod === method
                     ? 'border-[#064E3B] bg-[#064E3B] text-white'
-                    : 'border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] text-[#121513] dark:text-[#F4F1EA]'
+                    : 'border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] text-[#111827] dark:text-[#F3F4F6]'
                 }`}
               >
                 {method}
@@ -300,7 +300,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
         </div>
 
         <div>
-          <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             What was sold? (optional)
           </label>
           <SpeechInput
@@ -312,7 +312,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Customer (optional)
             </label>
             <SpeechInput
@@ -328,7 +328,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
             </datalist>
           </div>
           <div>
-            <label className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+            <label className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
               Sold by (optional)
             </label>
             <SpeechInput
@@ -340,7 +340,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
         </div>
 
         <div>
-          <label htmlFor="qs-date" className="block label-caps text-[#5C635D] dark:text-[#9BA39D] mb-1.5">
+          <label htmlFor="qs-date" className="block label-caps text-[#6B7280] dark:text-[#9CA3AF] mb-1.5">
             Date
           </label>
           <input
@@ -348,12 +348,12 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
             type="date"
             value={entryDate}
             onChange={(e) => setEntryDate(e.target.value)}
-            className="w-full sm:w-48 rounded-xl border border-[#DED6C2] dark:border-[#2B352F] bg-white dark:bg-[#111714] px-3.5 py-2.5 text-sm min-h-[44px]"
+            className="w-full sm:w-48 rounded-[10px] border border-gray-200 dark:border-[#232D29] bg-white dark:bg-[#111715] px-3.5 py-2.5 text-sm min-h-[44px]"
           />
         </div>
 
         {error && (
-          <div className="rounded-xl border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 flex items-center justify-between gap-3">
+          <div className="rounded-[10px] border border-[#B91C1C]/30 bg-[#FEF2F2] dark:bg-red-950/30 p-3.5 flex items-center justify-between gap-3">
             <p className="text-xs text-[#B91C1C] dark:text-red-300">{error}</p>
             <button
               type="submit"
@@ -368,7 +368,7 @@ export function QuickSalePage({ business }: { business: BusinessProfile }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full min-h-[52px] rounded-xl bg-[#064E3B] px-6 py-3 text-base font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
+          className="w-full min-h-[52px] rounded-[10px] bg-[#064E3B] px-6 py-3 text-base font-semibold text-white hover:bg-[#04392B] transition-colors disabled:opacity-60"
         >
           {submitting
             ? 'Saving Quick Sale…'

@@ -26,7 +26,13 @@ function getStamp(inv: PublicInvoiceRecord): { label: string; className: string 
  * Paper-ledger Invoice template matching Tallymark receipts (modern / classic / compact).
  * Renders strictly from `invoice.snapshot` so later settings changes never alter sent documents.
  */
-export function InvoiceDocument({ invoice }: { invoice: PublicInvoiceRecord }) {
+export function InvoiceDocument({
+  invoice,
+  thermalPrint = false,
+}: {
+  invoice: PublicInvoiceRecord;
+  thermalPrint?: boolean;
+}) {
   const snap = invoice.snapshot;
   const cur = snap.business.currency || 'NGN';
   const accent = snap.business.brandColor || '#064E3B';
@@ -39,7 +45,9 @@ export function InvoiceDocument({ invoice }: { invoice: PublicInvoiceRecord }) {
     <article
       className={`invoice-print-sheet print-only-container rounded-2xl border border-[#E5DEC9] bg-[#FFFDF9] text-[#121513] overflow-hidden shadow-xs print:rounded-none print:border-0 print:shadow-none ${
         isCompact ? 'max-w-md mx-auto' : 'w-full'
-      } ${isDense ? 'invoice-print-dense' : ''}`}
+      } ${isDense ? 'invoice-print-dense' : ''} ${
+        thermalPrint || isCompact ? 'print-compact-80mm' : ''
+      }`}
     >
       <div className="h-2 print:h-1.5 w-full" style={{ backgroundColor: accent }} />
 

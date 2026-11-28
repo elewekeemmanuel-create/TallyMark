@@ -127,13 +127,41 @@ async function request<T>(path: string, init: RequestInit = {}, timeoutMs?: numb
   return data as T;
 }
 
+const LOCAL_SIG_PREFIX = 'tallymark_issuer_sig_';
+
+function readLocalIssuerSignature(ownerId: string): string | null {
+  try {
+    return localStorage.getItem(`${LOCAL_SIG_PREFIX}${ownerId}`) || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalIssuerSignature(ownerId: string, dataUrl: string | null) {
+  try {
+    const key = `${LOCAL_SIG_PREFIX}${ownerId}`;
+    if (dataUrl) {
+      localStorage.setItem(key, dataUrl);
+    } else {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
 function mapSupaBusiness(row: any): BusinessProfile {
   const modsRaw = row.modules_enabled || {};
+  const hasSignatureColumn = Object.prototype.hasOwnProperty.call(row, 'signature_data_url');
+  const signatureDataUrl = hasSignatureColumn
+    ? row.signature_data_url || null
+    : readLocalIssuerSignature(row.owner_id);
   return {
     id: row.id,
     ownerId: row.owner_id,
     name: row.name,
     logoDataUrl: row.logo_data_url || null,
+    signatureDataUrl,
     address: row.address || '',
     phone: row.phone || '',
     email: row.email || '',
@@ -210,6 +238,7 @@ function mapSupaPublicReceipt(row: any): PublicReceiptRecord {
     parentReceiptNumber: row.parent_receipt_number || null,
     businessName: row.business_name,
     businessLogoDataUrl: row.business_logo_data_url || null,
+    businessSignatureDataUrl: row.business_signature_data_url || null,
     businessAddress: row.business_address || '',
     businessPhone: row.business_phone || '',
     businessEmail: row.business_email || '',
@@ -472,7 +501,11 @@ export const api = {
     if (isSupabaseConfigured && supabase) {
       const { data: userRes } = await supabase.auth.getUser();
       if (!userRes.user) throw new ApiError('Authentication required', 401);
-      const rowPayload = {
+      const signatureDataUrl =
+        typeof payload.signatureDataUrl === 'string' && payload.signatureDataUrl.trim()
+          ? payload.signatureDataUrl.trim()
+          : null;
+      const basePayload = {
         owner_id: userRes.user.id,
         name: payload.name,
         logo_data_url: payload.logoDataUrl ?? null,
@@ -489,11 +522,37 @@ export const api = {
         close_day_reminder_time: payload.closeDayReminderTime ?? '19:00',
         updated_at: new Date().toISOString(),
       };
-      const { data, error } = await supabase
+      const rowPayload =
+        payload.signatureDataUrl !== undefined
+          ? { ...basePayload, signature_data_url: signatureDataUrl }
+          : basePayload;
+
+      let { data, error } = await supabase
         .from('businesses')
         .upsert(rowPayload, { onConflict: 'owner_id' })
         .select('*')
         .single();
+
+      // Graceful fallback if migration 009_receipt_issuer_signature.sql has not been applied in Supabase yet
+      if (
+        error &&
+        payload.signatureDataUrl !== undefined &&
+        (error.code === 'PGRST204' ||
+          error.code === '42703' ||
+          (error.message || '').includes('signature_data_url'))
+      ) {
+        writeLocalIssuerSignature(userRes.user.id, signatureDataUrl);
+        const retry = await supabase
+          .from('businesses')
+          .upsert(basePayload, { onConflict: 'owner_id' })
+          .select('*')
+          .single();
+        data = retry.data;
+        error = retry.error;
+      } else if (!error && payload.signatureDataUrl !== undefined) {
+        writeLocalIssuerSignature(userRes.user.id, signatureDataUrl);
+      }
+
       if (error) {
         const isMissingTable =
           error.code === 'PGRST205' ||
